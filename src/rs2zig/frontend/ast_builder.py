@@ -156,7 +156,7 @@ class ASTBuilder:
         if type_params:
             for child in type_params.children:
                 if get_node_type(child) in ("type_parameter", "constrained_type_parameter", "type_identifier"):
-                    gname = self.get_text(child).split(":")[0].strip()
+                    gname = self.get_text(child).split("=")[0].split(":")[0].strip()
                     if gname not in ("<", ">", ","):
                         generic_params.append(GenericParam(name=gname))
 
@@ -248,7 +248,7 @@ class ASTBuilder:
         if type_params:
             for child in type_params.children:
                 if get_node_type(child) in ("type_parameter", "constrained_type_parameter", "type_identifier"):
-                    gname = self.get_text(child).split(":")[0].strip()
+                    gname = self.get_text(child).split("=")[0].split(":")[0].strip()
                     if gname not in ("<", ">", ","):
                         generic_params.append(GenericParam(name=gname))
 

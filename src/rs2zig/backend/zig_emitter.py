@@ -202,9 +202,15 @@ class ZigEmitter:
 
         field_names = {field.name.replace("r#", "") for field in struct.fields}
 
+        seen_method_names: Set[str] = set()
         for method in methods:
-            if method.name in field_names:
-                method.name = f"get_{method.name}"
+            mname = method.name
+            if mname in field_names:
+                mname = f"get_{mname}"
+            if mname in seen_method_names:
+                continue
+            seen_method_names.add(mname)
+            method.name = mname
             method_str = self._emit_function(method, parent_struct_name=sname)
             for mline in method_str.splitlines():
                 lines.append(f"{self._indent()}{mline}")
@@ -479,11 +485,13 @@ class ZigEmitter:
                 if parts[0][0].islower() and parts[0].isidentifier():
                     if parts[0] not in ("self", "super", "crate", "std", "bevy", "bevy_ecs"):
                         self.imported_modules.add(parts[0])
-                    return ".".join(parts)
+                    escaped_parts = [f'@"{p}"' if (p in ZIG_RESERVED_KEYWORDS and not p.startswith("@")) else p for p in parts]
+                    return ".".join(escaped_parts)
                 if len(parts) > 1 and parts[1][0].islower():
                     if parts[0] in ("Transform", "Velocity", "Time", "App", "Commands"):
                         return f"bevy_ecs.{parts[0]}.{parts[1]}"
-                    return f"{parts[0]}.{parts[1]}"
+                    escaped_parts = [f'@"{p}"' if (p in ZIG_RESERVED_KEYWORDS and not p.startswith("@")) else p for p in parts]
+                    return f"{escaped_parts[0]}.{escaped_parts[1]}"
                 return f".{parts[-1]}"
             if name == "Some":
                 return ""
@@ -552,7 +560,7 @@ class ZigEmitter:
             fname = expr.field_name
             if fname == "await":
                 return target_str
-            if fname.isdigit():
+            if (fname.isdigit() or fname in ZIG_RESERVED_KEYWORDS) and not fname.startswith("@"):
                 fname = f'@"{fname}"'
             if "::<" in fname:
                 base, rest = fname.split("::<", 1)
@@ -752,7 +760,12 @@ class ZigEmitter:
                 params_parts.append(f"{pname}: {ptype}")
                 param_names.append(pname)
             params_str = ", ".join(params_parts)
-            ret_type = map_type(expr.return_type) if expr.return_type else "i32"
+            if expr.return_type:
+                ret_type = map_type(expr.return_type)
+            elif isinstance(expr.body, BlockExpr) and not expr.body.trailing_expr and not any(isinstance(s, ReturnExpr) and s.value for s in expr.body.stmts):
+                ret_type = "void"
+            else:
+                ret_type = "i32"
 
             if isinstance(expr.body, BlockExpr):
                 body_lines = self._emit_block_lines(expr.body)

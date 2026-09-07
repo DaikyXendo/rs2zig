@@ -566,6 +566,54 @@ class TestPatternFixesPart2(unittest.TestCase):
         self.assertNotIn("pub fn new() (", zig)
         self.assertIn('struct { @"0": A, @"1": B }', zig)
 
+    def test_reserved_keyword_field_access_escaping(self) -> None:
+        """Verify env.var() field method call lowers to env.@"var"() in Zig."""
+        code = """
+        pub fn check_env() {
+            let val = env::var("KEY");
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn('env.var("KEY")', zig)
+        self.assertIn('env.@"var"', zig)
+
+    def test_duplicate_struct_method_name_deduplication(self) -> None:
+        """Verify duplicate method names across impl blocks for a struct are deduplicated in Zig struct declaration."""
+        code = """
+        pub struct Hasher;
+        impl Hasher {
+            pub fn write_usize(&mut self) {}
+        }
+        impl Hasher {
+            pub fn write_usize(&mut self) {}
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertEqual(zig.count("fn write_usize"), 1)
+
+    def test_zero_param_closure_expression_lowering(self) -> None:
+        """Verify zero parameter closure || expr lowers cleanly without invalid || in Zig."""
+        code = """
+        pub fn run_closure() {
+            let f = || 42;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("|| 42", zig)
+        self.assertIn("return 42;", zig)
+
+    def test_generic_default_param_name_stripping(self) -> None:
+        """Verify generic type parameter with default S = RandomState extracts parameter name S as comptime S: type."""
+        code = """
+        pub struct Map<K, V, S = RandomState> {
+            k: K,
+            v: V,
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("comptime S = RandomState: type", zig)
+        self.assertIn("comptime S: type", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
