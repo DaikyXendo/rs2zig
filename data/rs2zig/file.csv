@@ -12,7 +12,7 @@ src/rs2zig/__init__.py,src.rs2zig,7,132
 src/rs2zig/backend/__init__.py,src.rs2zig.backend,5,101
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,45,1204
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,385,14342
-src/rs2zig/cli.py,src.rs2zig.cli,209,7793
+src/rs2zig/cli.py,src.rs2zig.cli,229,8933
 src/rs2zig/frontend/__init__.py,src.rs2zig.frontend,5,126
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,532,21758
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,67,2380

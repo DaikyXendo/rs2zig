@@ -8,7 +8,8 @@ import sys
 import os
 import argparse
 import logging
-from typing import Optional, List
+from typing import Optional, List, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from rs2zig import __version__
 from rs2zig.frontend.ts_parser import RustParser
@@ -49,9 +50,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     convert_parser.add_argument("--no-expand", action="store_true", help="Skip macro expansion pass")
 
     # Convert multi-file project subcommand
-    project_parser = subparsers.add_parser("convert-project", help="Convert multi-module Rust project directory to Zig")
+    project_parser = subparsers.add_parser("convert-project", help="Convert multi-module Rust project directory to Zig in parallel")
     project_parser.add_argument("project_dir", help="Path to input Rust project directory")
     project_parser.add_argument("-o", "--output-dir", required=True, help="Path to output directory for Zig files & build.zig")
+    project_parser.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 4, help="Number of parallel worker threads (default CPU count)")
 
     # AST subcommand
     ast_parser = subparsers.add_parser("ast", help="Parse Rust source and dump internal IR AST")
@@ -123,12 +125,19 @@ def run_transpile(input_path: str, output_path: Optional[str] = None, format_cod
     return zig_code
 
 
-def run_transpile_project(project_dir: str, output_dir: str) -> List[str]:
-    """Transpile a multi-module Rust project directory to a Zig project with build.zig.
+def _transpile_worker(task_tuple: Tuple[str, str]) -> str:
+    """Worker task function for parallel project transpilation."""
+    rs_file, target_out = task_tuple
+    return run_transpile(input_path=rs_file, output_path=target_out, format_code=True, validate=True, expand=False)
+
+
+def run_transpile_project(project_dir: str, output_dir: str, jobs: int = 4) -> List[str]:
+    """Transpile a multi-module Rust project directory concurrently using multithreading.
 
     Args:
         project_dir: Input Rust project directory path.
         output_dir: Target output directory path.
+        jobs: Number of parallel worker threads.
 
     Returns:
         List of generated Zig file paths.
@@ -139,13 +148,23 @@ def run_transpile_project(project_dir: str, output_dir: str) -> List[str]:
 
     os.makedirs(output_dir, exist_ok=True)
 
+    tasks: List[Tuple[str, str]] = []
     for rs_file in rs_files:
         rel_path = os.path.relpath(rs_file, project_dir)
         zig_rel_path = os.path.splitext(rel_path)[0] + ".zig"
         target_out = os.path.join(output_dir, zig_rel_path)
+        tasks.append((rs_file, target_out))
 
-        run_transpile(input_path=rs_file, output_path=target_out, format_code=True, validate=True, expand=False)
-        generated_files.append(target_out)
+    logger.info("Starting multithreaded project transpilation across %d worker threads...", jobs)
+    with ThreadPoolExecutor(max_workers=jobs) as executor:
+        futures = {executor.submit(_transpile_worker, t): t[1] for t in tasks}
+        for future in as_completed(futures):
+            target_out = futures[future]
+            try:
+                future.result()
+                generated_files.append(target_out)
+            except Exception as err:
+                logger.error("Failed to transpile file %s: %s", target_out, err)
 
     # Generate build.zig
     build_zig_content = generate_build_zig("app", "main.zig")
@@ -154,7 +173,7 @@ def run_transpile_project(project_dir: str, output_dir: str) -> List[str]:
         f.write(build_zig_content)
     generated_files.append(build_zig_path)
 
-    logger.info("Project transpilation complete. Generated %d files in %s", len(generated_files), output_dir)
+    logger.info("Multithreaded project transpilation complete. Generated %d files in %s", len(generated_files), output_dir)
     return generated_files
 
 
@@ -185,7 +204,8 @@ def main() -> None:
             sys.exit(1)
     elif args.command == "convert-project":
         try:
-            run_transpile_project(args.project_dir, args.output_dir)
+            jobs_cnt = getattr(args, "jobs", os.cpu_count() or 4)
+            run_transpile_project(args.project_dir, args.output_dir, jobs=jobs_cnt)
         except Exception as err:
             logger.error("Project transpilation failed: %s", err)
             sys.exit(1)
