@@ -5,6 +5,7 @@ Renders IR nodes into standard Zig source code (.zig).
 """
 
 import os
+import re
 import logging
 from typing import List, Optional, Set
 from rs2zig.ir.nodes import (
@@ -200,16 +201,18 @@ class ZigEmitter:
 
         self.current_indent += 1
         if fn.body:
-            body_text = str(fn.body)
+            body_lines = self._emit_block_lines(fn.body)
+            body_text = "\n".join(body_lines)
+            discard_lines: List[str] = []
             for p in fn.params:
                 if p.is_self:
-                    if "self" not in body_text:
-                        lines.append(f"{self._indent()}_ = self;")
+                    if not re.search(r"\bself\b", body_text):
+                        discard_lines.append(f"{self._indent()}_ = self;")
                 elif p.name and p.name != "_" and not p.name.startswith("_") and p.param_type.name != "type" and "comptime" not in p.name:
-                    if p.name not in body_text:
-                        lines.append(f"{self._indent()}_ = {p.name};")
+                    if not re.search(r"\b" + re.escape(p.name) + r"\b", body_text):
+                        discard_lines.append(f"{self._indent()}_ = {p.name};")
 
-            body_lines = self._emit_block_lines(fn.body)
+            lines.extend(discard_lines)
             lines.extend(body_lines)
         self.current_indent -= 1
 

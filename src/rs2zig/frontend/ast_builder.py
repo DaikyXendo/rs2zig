@@ -305,6 +305,8 @@ class ASTBuilder:
         children = [c for c in node.children if get_node_type(c) not in ("{", "}")]
         for idx, child in enumerate(children):
             ntype = get_node_type(child)
+            if ntype in ("attribute_item", "inner_attribute_item") or ntype.startswith("attribute"):
+                continue
             if ntype == "let_declaration":
                 stmts.append(self._build_let_stmt(child))
             elif ntype == "expression_statement":

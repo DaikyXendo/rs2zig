@@ -46,7 +46,10 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
             gen = gen.rstrip(">").strip()
             mapped_gen = map_type(gen)
             if base.strip() in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
-                return f"?{mapped_gen}"
+                res = f"?{mapped_gen}"
+                while res.startswith("??"):
+                    res = res[1:]
+                return res
             return f"{map_type(base.strip())}({mapped_gen})"
         return RUST_TO_ZIG_TYPES.get(name, name.replace("::", "."))
 
@@ -56,7 +59,10 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         gen = gen.rstrip(">").strip()
         mapped_gen = map_type(gen)
         if base.strip() in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
-            return f"?{mapped_gen}"
+            res = f"?{mapped_gen}"
+            while res.startswith("??"):
+                res = res[1:]
+            return res
         return f"{map_type(base.strip())}({mapped_gen})"
 
     if name.startswith("["):
@@ -77,7 +83,10 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         if name == "Vec":
             return f"std.ArrayList({args_str})"
         if name in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
-            return f"?{args_str}"
+            res = f"?{args_str}"
+            while res.startswith("??"):
+                res = res[1:]
+            return res
         return f"{zig_type_name}({args_str})"
 
     return zig_type_name

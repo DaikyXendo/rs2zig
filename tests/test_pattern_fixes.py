@@ -78,6 +78,38 @@ class TestPatternFixes(unittest.TestCase):
         zig = self._transpile_code(code)
         self.assertIn("items.iter().map", zig)
 
+    def test_macro_args_discard_when_eprintln_dropped(self) -> None:
+        """Verify parameter used only in dropped macro produces _ = param; in emitted Zig."""
+        code = """
+        pub fn run_lan(game_port: u16) {
+            eprintln!("Listening on port {}", game_port);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("_ = game_port;", zig)
+
+    def test_block_attribute_item_ignored(self) -> None:
+        """Verify Rust #[cfg(...)] block attribute inside a function does not emit invalid attribute statement."""
+        code = """
+        pub fn main() {
+            #[cfg(target_os = "ios")]
+            {
+                println!("ios");
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("#[cfg", zig)
+
+    def test_nested_option_type_mapping(self) -> None:
+        """Verify Option<Option<T>> lowers to ?T without invalid double ? prefix."""
+        code = """
+        pub fn process(val: Option<Option<Vec<u8>>>) {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("??", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
