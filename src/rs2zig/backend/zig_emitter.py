@@ -349,9 +349,9 @@ class ZigEmitter:
 
         if isinstance(stmt, ExprStmt):
             expr_str = self._emit_expr(stmt.expr)
-            if expr_str == "{}" or expr_str.endswith("}"):
-                return expr_str
             if isinstance(stmt.expr, (IfExpr, LoopExpr, MatchExpr)):
+                return expr_str
+            if expr_str.startswith("{") and expr_str.endswith("}") and not isinstance(stmt.expr, (ReturnExpr, AssignStmt, CallExpr, StructInitExpr)):
                 return expr_str
             return f"{expr_str};"
 
@@ -650,9 +650,11 @@ class ZigEmitter:
 
         if isinstance(expr, ClosureExpr):
             params_parts = []
-            for p in expr.params:
+            for idx, p in enumerate(expr.params):
                 ptype = map_type(p.param_type) if (p.param_type and p.param_type.name != "anytype") else "anytype"
-                pname = p.name if (p.name and p.name != "_") else "arg"
+                pname = p.name.replace("(", "").replace(")", "").replace(" ", "_").replace("&", "").strip() if p.name else f"arg{idx}"
+                if "," in pname or not pname.isidentifier() or pname == "_":
+                    pname = f"arg{idx}"
                 if pname in ZIG_RESERVED_KEYWORDS and not pname.startswith("@"):
                     pname = f'@"{pname}"'
                 params_parts.append(f"{pname}: {ptype}")
