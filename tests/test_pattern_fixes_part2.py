@@ -455,6 +455,58 @@ class TestPatternFixesPart2(unittest.TestCase):
         zig = self._transpile_code(code)
         self.assertIn("pub fn Scale(comptime F: type) type {", zig)
         self.assertIn("return struct {", zig)
+        self.assertNotIn("};\n};", zig)
+
+    def test_tuple_field_index_access_lowering(self) -> None:
+        """Verify tuple field access self.0 or tuple.1 lowers to self.@"0" and tuple.@"1" in Zig."""
+        code = """
+        pub fn get_val(s: &TupleStruct) -> u8 {
+            return s.0 + s.1;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("s.0", zig)
+        self.assertNotIn("s.1", zig)
+        self.assertIn('s.@"0"', zig)
+        self.assertIn('s.@"1"', zig)
+
+    def test_fn_param_shadowing_let_stmt_lowering(self) -> None:
+        """Verify let p0 = p0.into() in a function with parameter p0 renames let binding to avoid Zig parameter shadowing error."""
+        code = """
+        pub fn from_points(p0: Point) {
+            let p0 = p0.into();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("const p0 = p0", zig)
+        self.assertIn("const p0_var = p0", zig)
+
+    def test_match_arm_struct_wildcard_lowering(self) -> None:
+        """Verify enum pattern match arm .Inactive { .. } lowers to .Inactive in Zig switch."""
+        code = """
+        pub fn check(s: State) {
+            match s {
+                State::Inactive { .. } => None,
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("{ .. }", zig)
+        self.assertIn(".Inactive => null", zig)
+
+    def test_self_constructor_expression_lowering(self) -> None:
+        """Verify Self(font) or Self { .. } expression lowers Self to @This() in Zig struct method."""
+        code = """
+        pub struct FontArc;
+        impl FontArc {
+            pub fn new(font: Arc) -> Self {
+                return Self(font);
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("Self(font)", zig)
+        self.assertIn("@This()(font)", zig)
 
 
 if __name__ == "__main__":

@@ -9,37 +9,11 @@ import re
 import logging
 from typing import List, Optional, Set
 from rs2zig.ir.nodes import (
-    SourceFile,
-    StructDecl,
-    EnumDecl,
-    EnumVariant,
-    TraitDecl,
-    ImplBlock,
-    FnDecl,
-    Param,
-    TypeNode,
-    BlockExpr,
-    Stmt,
-    LetStmt,
-    AssignStmt,
-    ExprStmt,
-    Expr,
-    LiteralExpr,
-    IdentifierExpr,
-    BinaryExpr,
-    UnaryExpr,
-    CallExpr,
-    FieldAccessExpr,
-    StructInitExpr,
-    MacroCallExpr,
-    ReturnExpr,
-    IfExpr,
-    LoopExpr,
-    MatchExpr,
-    MatchArm,
-    TryExpr,
-    OptionalUnwrapExpr,
-    ClosureExpr,
+    SourceFile, StructDecl, EnumDecl, EnumVariant, TraitDecl, ImplBlock, FnDecl,
+    Param, TypeNode, BlockExpr, Stmt, LetStmt, AssignStmt, ExprStmt, Expr,
+    LiteralExpr, IdentifierExpr, BinaryExpr, UnaryExpr, CallExpr, FieldAccessExpr,
+    StructInitExpr, MacroCallExpr, ReturnExpr, IfExpr, LoopExpr, MatchExpr, MatchArm,
+    TryExpr, OptionalUnwrapExpr, ClosureExpr
 )
 from rs2zig.lowering.stdlib_map import map_type
 from rs2zig.lowering.control_flow import lower_println_macro
@@ -236,11 +210,12 @@ class ZigEmitter:
         lines.append(f"{self._indent()}}};")
         if is_generic:
             self.current_indent -= 1
-            lines.append("};")
+            lines.append("}")
         return "\n".join(lines)
 
     def _emit_function(self, fn: FnDecl, parent_struct_name: Optional[str] = None) -> str:
         """Emit Zig function or method definition."""
+        self.current_fn_param_names = {p.name for p in fn.params}
         vis = "pub " if fn.is_pub or fn.name == "main" else ""
         fn_name = fn.name.split("<")[0].strip() if "<" in fn.name else fn.name
         if fn_name in ZIG_KEYWORDS_AND_PRIMITIVES:
@@ -389,7 +364,10 @@ class ZigEmitter:
                         lines.append(f"{kw} {clean_vname} = {tmp_var}.{clean_fname};")
                 return f"\n{self._indent()}".join(lines)
             kw = "var" if stmt.is_mutable else "const"
-            vname = f'@"{stmt.name}"' if (stmt.name in ZIG_RESERVED_KEYWORDS and not stmt.name.startswith("@")) else stmt.name
+            vname = stmt.name
+            if vname in getattr(self, "current_fn_param_names", set()):
+                vname = f"{vname}_var"
+            vname = f'@"{vname}"' if (vname in ZIG_RESERVED_KEYWORDS and not vname.startswith("@")) else vname
             type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
             val_expr_str = self._emit_expr(stmt.value).rstrip(";").strip() if stmt.value else ""
             val_part = f" = {val_expr_str}" if stmt.value else ""
@@ -503,6 +481,8 @@ class ZigEmitter:
                 return ""
             if name == "None":
                 return "null"
+            if name == "Self":
+                return "@This()"
             if name in ZIG_RESERVED_KEYWORDS and not name.startswith("@") and not name.startswith("std.") and not name.startswith("*"):
                 return f'@"{name}"'
             return name
@@ -631,6 +611,8 @@ class ZigEmitter:
             has_else = False
             for arm in expr.arms:
                 pat_str = arm.pattern.strip()
+                if "{" in pat_str and "}" in pat_str:
+                    pat_str = re.sub(r"\s*\{\s*\.\.\s*\}", "", pat_str).strip()
                 guard_cond: Optional[str] = None
                 if " if " in pat_str:
                     pat_clean, _, guard_part = pat_str.partition(" if ")
