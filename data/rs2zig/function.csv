@@ -113,7 +113,7 @@ src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,SerdePlugin
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,SerdePlugin.lower_source_file,"(self, sf: SourceFile)",bool,False,True,,Traverse SourceFile AST and lower Serde derives.,22,40
 src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,_split_angle_brackets,(s: str),"Optional[Tuple[str, str, str]]",False,False,,"Extract base type, inner generic args, and suffix from angle bracketed type string.",37,53
 src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,_split_top_level_commas,(s: str),List[str],False,False,,Split comma-separated arguments respecting nested bracket depth.,56,75
-src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,map_type,"(rust_type: Union[TypeNode, str])",str,False,False,,Map a Rust TypeNode or type string into Zig target type string representation.,78,224
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,map_type,"(rust_type: Union[TypeNode, str])",str,False,False,,Map a Rust TypeNode or type string into Zig target type string representation.,78,236
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.crate_name,(self),str,False,True,,Return crate name.,26,28
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.lower_type,"(self, type_node: TypeNode)",Optional[TypeNode],False,True,,Lower std collection and system types to Zig equivalents.,30,60
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.lower_call,"(self, expr: CallExpr)",Optional[Expr],False,True,,Lower std collection constructors and function calls.,62,76
@@ -172,3 +172,5 @@ tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_if_le
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_logical_operator_lowering,(self),None,False,True,,Verify Rust logical operators && and || lower to Zig and / or operators.,370,381
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_while_let_loop_lowering,(self),None,False,True,,Verify while let Some(x) = iter.next() lowers to Zig while (iter.next()) |x|.,383,393
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_closure_unused_parameter_discarding,(self),None,False,True,,Verify unused closure parameters are auto-discarded with _ = param; in closure helper struct.,395,403
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_ref_keyword_in_payload_capture,(self),None,False,True,,Verify ref and ref mut keywords in if let payload capture are stripped for valid Zig capture.,405,415
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_function_type_mapping,(self),None,False,True,,Verify Rust function signature type fn(T) -> R lowers to Zig *const fn(T) R.,417,426

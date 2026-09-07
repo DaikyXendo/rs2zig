@@ -88,6 +88,12 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         name = rust_type.strip()
         if "'" in name:
             name = re.sub(r"'[a-zA-Z0-9_]+\s*", "", name).strip()
+        if name.startswith("fn(") or name.startswith("fn ("):
+            args_and_ret = name[name.find("(")+1:]
+            args_part, _, ret_part = args_and_ret.partition(")")
+            ret_str = map_type(ret_part.strip().lstrip("->").strip()) if ret_part.strip() else "void"
+            args_list = [map_type(a.strip()) for a in _split_top_level_commas(args_part) if a.strip()]
+            return f"*const fn({', '.join(args_list)}) {ret_str}"
         if name.startswith("impl "):
             return "anytype"
         if name.startswith("(") and name.endswith(")"):
@@ -139,6 +145,12 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
     name = rust_type.name.strip()
     if "'" in name:
         name = re.sub(r"'[a-zA-Z0-9_]+\s*", "", name).strip()
+    if name.startswith("fn(") or name.startswith("fn ("):
+        args_and_ret = name[name.find("(")+1:]
+        args_part, _, ret_part = args_and_ret.partition(")")
+        ret_str = map_type(ret_part.strip().lstrip("->").strip()) if ret_part.strip() else "void"
+        args_list = [map_type(a.strip()) for a in _split_top_level_commas(args_part) if a.strip()]
+        return f"*const fn({', '.join(args_list)}) {ret_str}"
     if name.startswith("impl "):
         return "anytype"
     if name.startswith("(") and name.endswith(")"):

@@ -61,4 +61,4 @@ src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_report
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,ZigValidator,,3,,Invokes Zig toolchain to validate generated code syntax and semantics.,17,98
 tests/test_cargo_parser.py,tests.test_cargo_parser,TestCargoParserAndBuildGen,unittest.TestCase,2,,Test suite for Cargo.toml parser and build.zig generator.,13,50
 tests/test_golden.py,tests.test_golden,TestGolden,unittest.TestCase,2,,Test suite executing golden tests in tests/golden/.,13,57
-tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes,unittest.TestCase,37,,Test suite verifying transpiler accuracy on isolated Rust syntax patterns.,13,403
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes,unittest.TestCase,39,,Test suite verifying transpiler accuracy on isolated Rust syntax patterns.,13,426

@@ -543,7 +543,7 @@ class ZigEmitter:
                     target_part = parts[1].strip() if len(parts) > 1 else ""
                     cap_var = "item"
                     if "(" in pat_part and ")" in pat_part:
-                        cap_var = pat_part.split("(", 1)[1].rstrip(")").lstrip("(").strip().replace("mut ", "")
+                        cap_var = pat_part.split("(", 1)[1].rstrip(")").lstrip("(").strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
                         if "," in cap_var or not cap_var.isidentifier():
                             cap_var = "item"
                     if pat_part.startswith("Err"):
@@ -584,7 +584,7 @@ class ZigEmitter:
                         pat_part = parts[0].strip()
                         cond_str = parts[1].strip() if len(parts) > 1 else cond_str
                         if not cap_var and "(" in pat_part and ")" in pat_part:
-                            cap_var = pat_part.split("(", 1)[1].rstrip(")").lstrip("(").strip().replace("mut ", "")
+                            cap_var = pat_part.split("(", 1)[1].rstrip(")").lstrip("(").strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
                             if "," in cap_var or not cap_var.isidentifier():
                                 cap_var = "item"
                 capture_str = f" |{cap_var}|" if cap_var else ""

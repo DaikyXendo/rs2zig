@@ -402,6 +402,29 @@ class TestPatternFixes(unittest.TestCase):
         zig = self._transpile_code(code)
         self.assertIn("_ = y;", zig)
 
+    def test_ref_keyword_in_payload_capture(self) -> None:
+        """Verify ref and ref mut keywords in if let payload capture are stripped for valid Zig capture."""
+        code = """
+        pub fn process() {
+            if let Some(ref shared) = self.shared {
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("|ref shared|", zig)
+        self.assertIn("|shared|", zig)
+
+    def test_function_type_mapping(self) -> None:
+        """Verify Rust function signature type fn(T) -> R lowers to Zig *const fn(T) R."""
+        code = """
+        pub struct Handler<T> {
+            callback: fn(T) -> bool,
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("callback: fn(T)", zig)
+        self.assertIn("*const fn(T) bool", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
