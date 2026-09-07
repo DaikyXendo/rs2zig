@@ -70,8 +70,8 @@ src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._b
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_block,"(self, node: tree_sitter.Node)",BlockExpr,False,True,,Build BlockExpr from block node.,318,342
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_let_stmt,"(self, node: tree_sitter.Node)",LetStmt,False,True,,Build LetStmt from let_declaration node.,344,362
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_assign_stmt,"(self, node: tree_sitter.Node)",AssignStmt,False,True,,Build AssignStmt from assignment_expression node.,364,374
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,376,651
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,653,664
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,376,655
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,657,668
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,parse_cargo_toml,(cargo_path: str),Optional[CargoManifest],False,False,,Parse Cargo.toml file and return CargoManifest dataclass.,32,68
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,expand_macros,"(code_or_file: str, is_file_path: bool = False)",str,False,False,,Expand macros in Rust source code using cargo expand if available.,15,55
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,_read_or_return,"(code_or_file: str, is_file_path: bool)",str,False,False,,Helper to read file content or return code string.,58,67
@@ -153,3 +153,4 @@ tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_lifet
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_unsized_slice_type_mapping,(self),None,False,True,,Verify Rust unsized slice type [u8] lowers to Zig slice []u8.,184,192
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_as_cast_expression_lowering,(self),None,False,True,,"Verify Rust type cast expr as u64 lowers to Zig @as(u64, expr).",194,203
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_tuple_field_access_lowering,(self),None,False,True,,"Verify Rust tuple field access self.0 lowers to Zig self.@""0"".",205,214
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_tuple_literal_lowering,(self),None,False,True,,"Verify Rust tuple literal (a, b, c) lowers to Zig anonymous struct .{ a, b, c }.",216,225

@@ -410,11 +410,14 @@ class ASTBuilder:
                 right=self._build_expr(right_node) if right_node else LiteralExpr("0", "int")
             )
 
-        if ntype == "unary_expression":
+        if ntype in ("unary_expression", "reference_expression"):
             op_node = node.child_by_field_name("operator") or (node.children[0] if len(node.children) > 0 else None)
-            arg_node = node.child_by_field_name("argument") or (node.children[1] if len(node.children) > 1 else None)
+            arg_node = node.child_by_field_name("argument") or node.child_by_field_name("value")
+            if not arg_node and len(node.children) > 1:
+                arg_node = node.children[1] if get_node_type(node.children[0]) in ("&", "-", "!") else node.children[-1]
+            op_str = "&" if ntype == "reference_expression" else (self.get_text(op_node) if op_node else "-")
             return UnaryExpr(
-                op=self.get_text(op_node) if op_node else "-",
+                op=op_str,
                 operand=self._build_expr(arg_node) if arg_node else LiteralExpr("0", "int")
             )
 
@@ -538,22 +541,23 @@ class ASTBuilder:
                 fields=inits
             )
 
-        if ntype == "tuple_expression":
-            tuple_inits: List[StructFieldInit] = []
-            elem_idx = 0
-            for child in node.children:
-                if get_node_type(child) not in ("(", ")", ","):
+        if ntype in ("tuple_expression", "parenthesized_expression"):
+            children = [c for c in node.children if get_node_type(c) not in ("(", ")", ",")]
+            if len(children) > 1 or ntype == "tuple_expression":
+                tuple_inits: List[StructFieldInit] = []
+                for elem_idx, child in enumerate(children):
                     tuple_inits.append(
                         StructFieldInit(
                             field_name=str(elem_idx),
                             value=self._build_expr(child)
                         )
                     )
-                    elem_idx += 1
-            return StructInitExpr(
-                struct_name=".",
-                fields=tuple_inits
-            )
+                return StructInitExpr(
+                    struct_name=".",
+                    fields=tuple_inits
+                )
+            elif len(children) == 1:
+                return self._build_expr(children[0])
 
         if ntype == "closure_expression":
             params_node = node.child_by_field_name("parameters")

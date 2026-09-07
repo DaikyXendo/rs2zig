@@ -2,7 +2,7 @@ file_path,module,class_name,base_classes,methods_count,decorators,docstring,star
 script/extract_data/find_classes.py,script.extract_data.find_classes,ClassVisitor,ast.NodeVisitor,2,,AST NodeVisitor to collect Python class definitions.,32,75
 script/extract_data/find_functions.py,script.extract_data.find_functions,FunctionVisitor,ast.NodeVisitor,5,,AST NodeVisitor to collect functions and class methods.,71,139
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter,,11,,Walks rs2zig IR nodes and emits formatted Zig source code.,50,588
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder,,16,,Walks tree-sitter syntax nodes and constructs IR AST objects.,67,664
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder,,16,,Walks tree-sitter syntax nodes and constructs IR AST objects.,67,668
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,CargoPackage,,0,dataclass,Metadata for a Cargo package.,17,21
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,CargoManifest,,0,dataclass,Parsed representation of a Cargo.toml file.,25,29
 src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,ModuleResolver,,2,,Discovers and resolves sub-modules in multi-file Rust projects.,14,42
@@ -61,4 +61,4 @@ src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_report
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,ZigValidator,,3,,Invokes Zig toolchain to validate generated code syntax and semantics.,17,98
 tests/test_cargo_parser.py,tests.test_cargo_parser,TestCargoParserAndBuildGen,unittest.TestCase,2,,Test suite for Cargo.toml parser and build.zig generator.,13,50
 tests/test_golden.py,tests.test_golden,TestGolden,unittest.TestCase,2,,Test suite executing golden tests in tests/golden/.,13,57
-tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes,unittest.TestCase,20,,Test suite verifying transpiler accuracy on isolated Rust syntax patterns.,13,214
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes,unittest.TestCase,21,,Test suite verifying transpiler accuracy on isolated Rust syntax patterns.,13,225

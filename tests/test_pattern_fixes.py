@@ -213,6 +213,17 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("self.0", zig)
         self.assertIn('self.@"0"', zig)
 
+    def test_tuple_literal_lowering(self) -> None:
+        """Verify Rust tuple literal (a, b, c) lowers to Zig anonymous struct .{ a, b, c }."""
+        code = """
+        pub fn make_tuple(a: i32, b: i32) {
+            let t = &(a, b);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("&(a, b)", zig)
+        self.assertIn("&.{a, b}", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
