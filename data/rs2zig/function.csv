@@ -111,7 +111,7 @@ src/rs2zig/lowering/plugin_registry.py,src.rs2zig.lowering.plugin_registry,Plugi
 src/rs2zig/lowering/plugin_registry.py,src.rs2zig.lowering.plugin_registry,PluginRegistry.run_lowering_passes,"(self, sf: SourceFile)",List[str],False,True,,Run all registered lowering plugins on SourceFile AST.,31,50
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,SerdePlugin.crate_name,(self),str,False,True,,Return crate name.,18,20
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,SerdePlugin.lower_source_file,"(self, sf: SourceFile)",bool,False,True,,Traverse SourceFile AST and lower Serde derives.,22,40
-src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,map_type,"(rust_type: Union[TypeNode, str])",str,False,False,,Map a Rust TypeNode or type string into Zig target type string representation.,36,126
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,map_type,"(rust_type: Union[TypeNode, str])",str,False,False,,Map a Rust TypeNode or type string into Zig target type string representation.,36,127
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.crate_name,(self),str,False,True,,Return crate name.,26,28
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.lower_type,"(self, type_node: TypeNode)",Optional[TypeNode],False,True,,Lower std collection and system types to Zig equivalents.,30,60
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.lower_call,"(self, expr: CallExpr)",Optional[Expr],False,True,,Lower std collection constructors and function calls.,62,76
@@ -150,3 +150,4 @@ tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_alloc
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_await_field_lowering,(self),None,False,True,,Verify Rust expr.await lowers cleanly without invalid .await syntax.,153,162
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_fn_generic_params_lowering,(self),None,False,True,,Verify Rust function generics fn foo<T: Send>() lower to (comptime T: type) in Zig.,164,171
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_lifetime_in_struct_field_type,(self),None,False,True,,"Verify struct field generic types with lifetimes like slice.Iter('a, T.Item) strip lifetime 'a.",173,182
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_unsized_slice_type_mapping,(self),None,False,True,,Verify Rust unsized slice type [u8] lowers to Zig slice []u8.,184,192

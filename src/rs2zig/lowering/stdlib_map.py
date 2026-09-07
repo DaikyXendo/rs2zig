@@ -96,8 +96,9 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
             return f"std.ArrayList({mapped_gen})"
         return f"{map_type(base_clean)}({mapped_gen})"
 
-    if name.startswith("["):
-        return name
+    if name.startswith("[") and name.endswith("]"):
+        inner = name[1:-1].strip()
+        return f"[]{map_type(inner)}"
     zig_type_name = RUST_TO_ZIG_TYPES.get(name, name.replace("::", "."))
 
     if rust_type.is_reference:

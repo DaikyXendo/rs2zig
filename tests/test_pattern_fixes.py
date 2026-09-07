@@ -181,6 +181,16 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("'a", zig)
         self.assertIn("slice.Iter(T)", zig)
 
+    def test_unsized_slice_type_mapping(self) -> None:
+        """Verify Rust unsized slice type [u8] lowers to Zig slice []u8."""
+        code = """
+        pub fn bytes_of(t: &[u8]) -> [u8] {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("[u8]", zig)
+        self.assertIn("[]u8", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
