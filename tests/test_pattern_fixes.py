@@ -191,6 +191,28 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("[u8]", zig)
         self.assertIn("[]u8", zig)
 
+    def test_as_cast_expression_lowering(self) -> None:
+        """Verify Rust type cast expr as u64 lowers to Zig @as(u64, expr)."""
+        code = """
+        pub fn convert(x: i32) -> u64 {
+            x as u64
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn(" as u64", zig)
+        self.assertIn("@as(u64,", zig)
+
+    def test_tuple_field_access_lowering(self) -> None:
+        """Verify Rust tuple field access self.0 lowers to Zig self.@"0"."""
+        code = """
+        pub fn get_first(self: Point) -> i32 {
+            self.0
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("self.0", zig)
+        self.assertIn('self.@"0"', zig)
+
 
 if __name__ == "__main__":
     unittest.main()
