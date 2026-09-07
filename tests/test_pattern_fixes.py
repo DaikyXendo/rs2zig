@@ -139,6 +139,28 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn(";;", zig)
         self.assertIn("pub const BOM: []const u8 =", zig)
 
+    def test_alloc_path_type_mapping(self) -> None:
+        """Verify alloc::string::String and alloc::vec::Vec lower to Zig types cleanly."""
+        code = """
+        pub fn process(s: alloc::string::String, v: alloc::vec::Vec<u8>) -> std::string::String {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("alloc.string.String", zig)
+        self.assertNotIn("std.string.String", zig)
+        self.assertIn("[]u8", zig)
+
+    def test_await_field_lowering(self) -> None:
+        """Verify Rust expr.await lowers cleanly without invalid .await syntax."""
+        code = """
+        pub fn fetch() {
+            let res = request().send().await;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn(".await", zig)
+        self.assertIn("request().send()", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

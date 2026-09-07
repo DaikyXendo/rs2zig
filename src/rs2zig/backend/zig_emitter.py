@@ -413,6 +413,8 @@ class ZigEmitter:
         if isinstance(expr, FieldAccessExpr):
             target_str = self._emit_expr(expr.target)
             fname = expr.field_name
+            if fname == "await":
+                return target_str
             if "::<" in fname:
                 base, rest = fname.split("::<", 1)
                 gen_part, _, trailing = rest.partition(">")

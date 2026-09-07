@@ -441,6 +441,10 @@ class ASTBuilder:
                 return FieldAccessExpr(target=fn_expr.target, field_name=f"{fn_expr.field_name}{type_args_str}")
             return fn_expr
 
+        if ntype == "await_expression":
+            operand_node = node.children[0] if node.children else None
+            return self._build_expr(operand_node) if operand_node else IdentifierExpr("future")
+
         if ntype == "try_expression":
             operand_node = node.children[0] if node.children else None
             return TryExpr(operand=self._build_expr(operand_node) if operand_node else IdentifierExpr("res"))

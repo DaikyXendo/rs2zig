@@ -26,6 +26,9 @@ RUST_TO_ZIG_TYPES: Dict[str, str] = {
     "char": "u21",
     "str": "[]const u8",
     "String": "[]u8",
+    "alloc::string::String": "[]u8",
+    "std::string::String": "[]u8",
+    "core::string::String": "[]u8",
     "()": "void",
 }
 
@@ -41,6 +44,8 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
     """
     if isinstance(rust_type, str):
         name = rust_type.strip()
+        if name in RUST_TO_ZIG_TYPES:
+            return RUST_TO_ZIG_TYPES[name]
         if name.startswith("&mut "):
             return f"*{map_type(name[5:].strip())}"
         if name.startswith("&"):
@@ -52,12 +57,15 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
             if not gen_parts:
                 return map_type(base.strip())
             mapped_gen = ", ".join(map_type(p) for p in gen_parts)
-            if base.strip() in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
+            base_clean = base.strip()
+            if base_clean in ("Option", "std::option::Option", "alloc::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
                 res = f"?{mapped_gen}"
                 while res.startswith("??"):
                     res = res[1:]
                 return res
-            return f"{map_type(base.strip())}({mapped_gen})"
+            if base_clean in ("Vec", "alloc::vec::Vec", "std::vec::Vec"):
+                return f"std.ArrayList({mapped_gen})"
+            return f"{map_type(base_clean)}({mapped_gen})"
         return RUST_TO_ZIG_TYPES.get(name, name.replace("::", "."))
 
     name = rust_type.name.strip()
@@ -78,12 +86,15 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         if not gen_parts:
             return map_type(base.strip())
         mapped_gen = ", ".join(map_type(p) for p in gen_parts)
-        if base.strip() in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
+        base_clean = base.strip()
+        if base_clean in ("Option", "std::option::Option", "alloc::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
             res = f"?{mapped_gen}"
             while res.startswith("??"):
                 res = res[1:]
             return res
-        return f"{map_type(base.strip())}({mapped_gen})"
+        if base_clean in ("Vec", "alloc::vec::Vec", "std::vec::Vec"):
+            return f"std.ArrayList({mapped_gen})"
+        return f"{map_type(base_clean)}({mapped_gen})"
 
     if name.startswith("["):
         return name
@@ -91,7 +102,7 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
 
     if rust_type.is_reference:
         prefix = "*const " if not rust_type.is_mutable else "*"
-        if name == "str":
+        if name in ("str", "alloc::string::String", "std::string::String"):
             return "[]const u8"
         return f"{prefix}{zig_type_name}"
 
@@ -103,9 +114,9 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         if not non_lifetime_args:
             return zig_type_name
         args_str = ", ".join(map_type(arg) for arg in non_lifetime_args)
-        if name == "Vec":
+        if name in ("Vec", "alloc::vec::Vec", "std::vec::Vec"):
             return f"std.ArrayList({args_str})"
-        if name in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
+        if name in ("Option", "std::option::Option", "alloc::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
             res = f"?{args_str}"
             while res.startswith("??"):
                 res = res[1:]
