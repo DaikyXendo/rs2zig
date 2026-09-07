@@ -45,7 +45,7 @@ script/rs2zig_query.py,script.rs2zig_query,EXTRACT_SCRIPT,"os.path.join(PROJECT_
 script/rs2zig_query.py,script.rs2zig_query,CSV_FILES,"{'file': os.path.join(DATA_DIR, 'file.csv'), 'function': os.path.join(DATA_DIR, 'function.csv'), 'cl",21
 src/main.py,src.main,logger,logging.getLogger('rs2zig'),15
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,logger,logging.getLogger('rs2zig.backend.build_zig_gen'),10
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,logger,logging.getLogger('rs2zig.backend.zig_emitter'),46
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,logger,logging.getLogger('rs2zig.backend.zig_emitter'),47
 src/rs2zig/cli.py,src.rs2zig.cli,logger,logging.getLogger('rs2zig.cli'),33
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),51
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,logger,logging.getLogger('rs2zig.frontend.cargo_parser'),13

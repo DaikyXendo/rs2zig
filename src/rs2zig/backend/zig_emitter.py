@@ -17,6 +17,7 @@ from rs2zig.ir.nodes import (
     ImplBlock,
     FnDecl,
     Param,
+    TypeNode,
     BlockExpr,
     Stmt,
     LetStmt,
@@ -197,14 +198,23 @@ class ZigEmitter:
     def _emit_function(self, fn: FnDecl, parent_struct_name: Optional[str] = None) -> str:
         """Emit Zig function or method definition."""
         vis = "pub " if fn.is_pub or fn.name == "main" else ""
-        params_str = self._emit_params(fn.params, parent_struct_name)
+        fn_name = fn.name.split("<")[0].strip() if "<" in fn.name else fn.name
 
-        if fn.name == "main":
+        gp_params: List[Param] = []
+        if fn.generic_params:
+            for gp in fn.generic_params:
+                gp_name = gp.name.split(":")[0].strip() if ":" in gp.name else gp.name
+                gp_params.append(Param(name=f"comptime {gp_name}", param_type=TypeNode(name="type")))
+
+        all_params = gp_params + fn.params
+        params_str = self._emit_params(all_params, parent_struct_name)
+
+        if fn_name == "main":
             ret_str = "!void" if fn.return_type is None else map_type(fn.return_type)
         else:
             ret_str = map_type(fn.return_type) if fn.return_type else "void"
 
-        lines: List[str] = [f"{vis}fn {fn.name}({params_str}) {ret_str} {{"]
+        lines: List[str] = [f"{vis}fn {fn_name}({params_str}) {ret_str} {{"]
 
         self.current_indent += 1
         if fn.body:

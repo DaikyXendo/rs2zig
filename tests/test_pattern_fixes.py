@@ -161,6 +161,15 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn(".await", zig)
         self.assertIn("request().send()", zig)
 
+    def test_fn_generic_params_lowering(self) -> None:
+        """Verify Rust function generics fn foo<T: Send>() lower to (comptime T: type) in Zig."""
+        code = """
+        pub fn _assert_send_sync<T: Send + Sync>() {}
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("<T", zig)
+        self.assertIn("comptime T: type", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
