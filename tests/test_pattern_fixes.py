@@ -657,9 +657,101 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("const parse = @import", zig)
         self.assertIn("fn parse()", zig)
 
+    def test_token_bracket_macro_type_lowering(self) -> None:
+        """Verify Token![|] or Token![,] macro type syntax lowers cleanly to Token without invalid brackets."""
+        code = """
+        pub struct Items {
+            p: Punctuated<Lit, Token![|]>,
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("Token![|]", zig)
+        self.assertIn("Punctuated(Lit, Token)", zig)
+
+    def test_return_unit_expr_lowering(self) -> None:
+        """Verify return () in Rust functions lowers to return; in Zig without parens."""
+        code = """
+        pub fn process() {
+            return ();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("return ();", zig)
+        self.assertIn("return;", zig)
+
+    def test_match_arm_unit_expr_lowering(self) -> None:
+        """Verify match arm returning () like .Ident(_) => () lowers to .Ident => {} in Zig."""
+        code = """
+        pub fn check(pat: Pat) {
+            match pat {
+                Pat::Ident(_) => (),
+                _ => {},
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("=> (),", zig)
+        self.assertIn("=> {},", zig)
+
+    def test_unit_struct_decl_lowering(self) -> None:
+        """Verify unit struct declaration struct BreakRules; lowers to const BreakRules = struct {}; in Zig."""
+        code = """
+        pub struct BreakRules;
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("struct BreakRules;", zig)
+        self.assertIn("const BreakRules = struct {", zig)
+
+    def test_byte_char_literal_lowering(self) -> None:
+        """Verify byte character literal b'/' lowers to Zig character literal '/' without b prefix."""
+        code = """
+        pub fn check(b: u8) -> bool {
+            b == b'/'
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("b'/'", zig)
+        self.assertIn("'/'", zig)
+
+    def test_array_literal_initializer_lowering(self) -> None:
+        """Verify array literal elements [X, Y] lower to Zig anonymous struct initializer .{ X, Y }."""
+        code = """
+        pub fn init() {
+            let arr = [X, Y];
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("[X, Y]", zig)
+        self.assertIn(".{X, Y}", zig)
+
+    def test_tuple_field_index_access_lowering(self) -> None:
+        """Verify tuple numeric index access it.1 lowers to Zig field access it.@\"1\"."""
+        code = """
+        pub fn get_second(it: Pair) {
+            let x = it.1;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("it.1;", zig)
+        self.assertIn("it.@\"1\";", zig)
+
+    def test_primitive_name_module_import_escaping(self) -> None:
+        """Verify module import named after primitive type like mod usize; escapes module name as @\"usize\"."""
+        code = """
+        pub fn run() {
+            let x = usize::val();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("const usize =", zig)
+        self.assertIn("const @\"usize\" =", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
+
+
+
 
 
 

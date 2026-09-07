@@ -551,6 +551,14 @@ class ASTBuilder:
                 val_clean = parts[0].strip().replace("_u8", "").replace("u8", "")
                 count_clean = parts[1].strip()
                 return LiteralExpr(value=f"([_]u8{{{val_clean}}} ** {count_clean})", kind="array")
+            else:
+                elem_nodes = [c for c in node.children if get_node_type(c) not in ("[", "]", ",")]
+                if elem_nodes:
+                    inits = [
+                        StructFieldInit(field_name=str(idx), value=self._build_expr(c))
+                        for idx, c in enumerate(elem_nodes)
+                    ]
+                    return StructInitExpr(struct_name=".", fields=inits)
 
         if ntype == "field_expression":
             val_node = node.child_by_field_name("value")

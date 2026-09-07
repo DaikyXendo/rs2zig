@@ -96,6 +96,8 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             ret_str = map_type(clean_ret, is_return_type=True) if (clean_ret and clean_ret not in ("()", "void")) else "void"
             args_list = [map_type(a.strip()) for a in _split_top_level_commas(args_part) if a.strip()]
             return f"*const fn({', '.join(args_list)}) {ret_str}"
+        if name.startswith("Token![") and name.endswith("]"):
+            return "Token"
         if name.startswith("impl "):
             return "type" if is_return_type else "anytype"
         if name.startswith("(") and name.endswith(")"):
@@ -198,6 +200,8 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
         ret_str = map_type(clean_ret, is_return_type=True) if (clean_ret and clean_ret not in ("()", "void")) else "void"
         args_list = [map_type(a.strip()) for a in _split_top_level_commas(args_part) if a.strip()]
         return f"*const fn({', '.join(args_list)}) {ret_str}"
+    if name.startswith("Token![") and name.endswith("]"):
+        return "Token"
     if name.startswith("impl "):
         return "type" if is_return_type else "anytype"
     if name.startswith("(") and name.endswith(")"):

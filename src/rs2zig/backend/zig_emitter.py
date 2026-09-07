@@ -135,7 +135,7 @@ class ZigEmitter:
             if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app"):
                 if mod_name in top_level_names:
                     continue
-                clean_mod_name = f'@"{mod_name}"' if mod_name in ZIG_RESERVED_KEYWORDS else mod_name
+                clean_mod_name = f'@"{mod_name}"' if mod_name in ZIG_KEYWORDS_AND_PRIMITIVES else mod_name
                 if mod_name == "aok":
                     header_lines.append('const aok = aok_core;')
                 elif out_dir and os.path.exists(os.path.join(out_dir, f"{mod_name}.zig")):
@@ -366,6 +366,8 @@ class ZigEmitter:
             val = expr.value
             if val.startswith('b"') and val.endswith('"'):
                 val = val[1:]
+            elif val.startswith("b'") and val.endswith("'"):
+                val = val[1:]
             if val.startswith("r") and '"' in val:
                 val = re.sub(r'^r#*"(.*)"#*$', r'"\1"', val)
             if val.startswith('"') and val.endswith('"'):
@@ -552,6 +554,8 @@ class ZigEmitter:
                     has_else = True
 
                 body_str = self._emit_expr(arm.body)
+                if body_str.rstrip(";").strip() in ("()", ".{}"):
+                    body_str = "{}"
                 if pat.startswith("else =>"):
                     lines.append(f"{self._indent()}{pat} {body_str},")
                 else:
