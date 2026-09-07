@@ -48,7 +48,7 @@ src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,loggin
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,logger,logging.getLogger('rs2zig.frontend.macro_expand'),12
 src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,logger,logging.getLogger('rs2zig.frontend.mod_resolver'),11
 src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,logger,logging.getLogger('rs2zig.frontend.ts_parser'),12
-src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,logger,logging.getLogger('rs2zig.lowering.bevy_lowering'),18
+src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,logger,logging.getLogger('rs2zig.lowering.bevy_lowering'),21
 src/rs2zig/lowering/control_flow.py,src.rs2zig.lowering.control_flow,logger,logging.getLogger('rs2zig.lowering.control_flow'),13
 src/rs2zig/lowering/enum_lowering.py,src.rs2zig.lowering.enum_lowering,logger,logging.getLogger('rs2zig.lowering.enum_lowering'),19
 src/rs2zig/lowering/ownership_pass.py,src.rs2zig.lowering.ownership_pass,logger,logging.getLogger('rs2zig.lowering.ownership_pass'),21

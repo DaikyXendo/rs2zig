@@ -48,7 +48,7 @@ src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emi
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,199,212
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,214,226
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,228,247
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,249,385
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,249,400
 src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,29,62
 src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,65,125
 src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])",str,False,False,,Worker task function for parallel project transpilation.,128,131
@@ -68,8 +68,8 @@ src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._b
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_block,"(self, node: tree_sitter.Node)",BlockExpr,False,True,,Build BlockExpr from block node.,290,312
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_let_stmt,"(self, node: tree_sitter.Node)",LetStmt,False,True,,Build LetStmt from let_declaration node.,314,332
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_assign_stmt,"(self, node: tree_sitter.Node)",AssignStmt,False,True,,Build AssignStmt from assignment_expression node.,334,344
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,346,519
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,521,532
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,346,536
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,538,549
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,expand_macros,"(code_or_file: str, is_file_path: bool = False)",str,False,False,,Expand macros in Rust source code using cargo expand if available.,15,55
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,_read_or_return,"(code_or_file: str, is_file_path: bool)",str,False,False,,Helper to read file content or return code string.,58,67
 src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,ModuleResolver.discover_project_files,"(self, project_dir: str)",List[str],False,True,,Discover all Rust source files in a project directory.,17,31
@@ -78,8 +78,9 @@ src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.__init
 src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.parse_code,"(self, code: str)",tree_sitter.Tree,False,True,,Parse Rust source code string into tree-sitter Tree.,28,41
 src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.parse_file,"(self, file_path: str)",tree_sitter.Tree,False,True,,Parse Rust file into tree-sitter Tree.,43,58
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,TypeNode.__str__,(self),str,False,True,,String representation of type.,40,51
-src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,BevyLoweringPass.lower_source_file,"(self, sf: SourceFile)",bool,False,True,,Run Bevy ECS lowering pass on SourceFile.,24,44
-src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,BevyLoweringPass._lower_call_chain,"(self, expr: CallExpr)",bool,False,True,,Recursively lower method chain calls (e.g. App::new().add_systems(...).run()).,46,78
+src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,BevyLoweringPass.lower_source_file,"(self, sf: SourceFile)",bool,False,True,,Run Bevy ECS lowering pass on SourceFile.,27,68
+src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,BevyLoweringPass._lower_block,"(self, block: BlockExpr)",None,False,True,,Recursively lower statements inside block.,70,97
+src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,BevyLoweringPass._lower_call_chain,"(self, expr: CallExpr)",bool,False,True,,Recursively lower method chain calls (e.g. App::new().add_systems(...).run()).,99,131
 src/rs2zig/lowering/control_flow.py,src.rs2zig.lowering.control_flow,split_macro_args,(args_str: str),List[str],False,False,,Split macro arguments respecting string literal boundaries.,16,48
 src/rs2zig/lowering/control_flow.py,src.rs2zig.lowering.control_flow,lower_println_macro,(macro_expr: MacroCallExpr),"Tuple[str, List[Expr]]",False,False,,Lower Rust println! / print! macro call into Zig std.debug.print format and args.,51,100
 src/rs2zig/lowering/enum_lowering.py,src.rs2zig.lowering.enum_lowering,EnumLoweringPass.is_tagged_union,"(self, enum_decl: EnumDecl)",bool,False,True,,Check if enum decl contains any payload fields requiring a Zig tagged union.,25,34

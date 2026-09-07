@@ -151,6 +151,9 @@ src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,rs2zig.ir
 src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,rs2zig.ir.nodes,LetStmt,,8
 src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,rs2zig.ir.nodes,ExprStmt,,8
 src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,rs2zig.ir.nodes,FnDecl,,8
+src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,rs2zig.ir.nodes,LoopExpr,,8
+src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,rs2zig.ir.nodes,TypeNode,,8
+src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,rs2zig.ir.nodes,BlockExpr,,8
 src/rs2zig/lowering/control_flow.py,src.rs2zig.lowering.control_flow,re,,,7
 src/rs2zig/lowering/control_flow.py,src.rs2zig.lowering.control_flow,logging,,,8
 src/rs2zig/lowering/control_flow.py,src.rs2zig.lowering.control_flow,typing,Tuple,,9

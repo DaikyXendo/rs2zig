@@ -268,6 +268,10 @@ class ZigEmitter:
                 if parts[0][0].islower():
                     self.imported_modules.add(parts[0])
                     return f"{parts[0]}.{parts[1]}"
+                if parts[1][0].islower():
+                    if parts[0] in ("Transform", "Velocity", "Time", "App", "Commands"):
+                        return f"bevy_ecs.{parts[0]}.{parts[1]}"
+                    return f"{parts[0]}.{parts[1]}"
                 return f".{parts[-1]}"
             if name == "Some":
                 return ""
@@ -309,10 +313,20 @@ class ZigEmitter:
             return f"{target_str}.{expr.field_name}"
 
         if isinstance(expr, StructInitExpr):
+            s_name = f"bevy_ecs.{expr.struct_name}" if expr.struct_name in ("Transform", "Velocity", "Time", "Commands") else expr.struct_name
+            if expr.struct_name == ".":
+                if all(f.field_name.isdigit() for f in expr.fields):
+                    elems_str = ", ".join(self._emit_expr(f.value) for f in expr.fields)
+                    return f".{{{elems_str}}}"
+                else:
+                    fields_str = ", ".join(
+                        f".{f.field_name} = {self._emit_expr(f.value)}" for f in expr.fields
+                    )
+                    return f".{{ {fields_str} }}"
             fields_str = ", ".join(
                 f".{f.field_name} = {self._emit_expr(f.value)}" for f in expr.fields
             )
-            return f"{expr.struct_name}{{ {fields_str} }}"
+            return f"{s_name}{{ {fields_str} }}"
 
         if isinstance(expr, MacroCallExpr):
             if expr.macro_name in ("println", "print"):
@@ -368,7 +382,8 @@ class ZigEmitter:
         if isinstance(expr, LoopExpr):
             if expr.loop_kind == "while" and expr.condition:
                 cond_str = self._emit_expr(expr.condition)
-                lines = [f"while ({cond_str}) {{"]
+                capture_str = f" |{expr.var_name}|" if expr.var_name else ""
+                lines = [f"while ({cond_str}){capture_str} {{"]
                 self.current_indent += 1
                 lines.extend(self._emit_block_lines(expr.body))
                 self.current_indent -= 1

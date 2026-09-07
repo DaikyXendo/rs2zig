@@ -454,6 +454,23 @@ class ASTBuilder:
                 fields=inits
             )
 
+        if ntype == "tuple_expression":
+            tuple_inits: List[StructFieldInit] = []
+            elem_idx = 0
+            for child in node.children:
+                if get_node_type(child) not in ("(", ")", ","):
+                    tuple_inits.append(
+                        StructFieldInit(
+                            field_name=str(elem_idx),
+                            value=self._build_expr(child)
+                        )
+                    )
+                    elem_idx += 1
+            return StructInitExpr(
+                struct_name=".",
+                fields=tuple_inits
+            )
+
         if ntype == "macro_invocation":
             macro_node = node.children[0] if node.children else None
             macro_name = self.get_text(macro_node).replace("!", "").strip() if macro_node else "macro"
