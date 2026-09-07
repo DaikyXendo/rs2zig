@@ -28,6 +28,7 @@ from rs2zig.frontend.cargo_parser import parse_cargo_toml
 from rs2zig.backend.zig_emitter import ZigEmitter
 from rs2zig.backend.build_zig_gen import generate_build_zig
 from rs2zig.validate.zig_fmt_check import ZigValidator
+from rs2zig.validate.conversion_reporter import ConversionReporter
 
 logger = logging.getLogger("rs2zig.cli")
 
@@ -136,10 +137,17 @@ def run_transpile(input_path: str, output_path: Optional[str] = None, format_cod
     return zig_code
 
 
-def _transpile_worker(task_tuple: Tuple[str, str]) -> str:
+def _transpile_worker(task_tuple: Tuple[str, str]) -> Tuple[str, str, bool, int, Optional[str]]:
     """Worker task function for parallel project transpilation."""
     rs_file, target_out = task_tuple
-    return run_transpile(input_path=rs_file, output_path=target_out, format_code=True, validate=True, expand=False)
+    line_count = 0
+    try:
+        with open(rs_file, "r", encoding="utf-8", errors="ignore") as f:
+            line_count = len(f.readlines())
+        run_transpile(input_path=rs_file, output_path=target_out, format_code=True, validate=True, expand=False)
+        return (rs_file, target_out, True, line_count, None)
+    except Exception as err:
+        return (rs_file, target_out, False, line_count, str(err))
 
 
 def run_transpile_project(project_dir: str, output_dir: str, jobs: int = 4, target_wasm: bool = False) -> List[str]:
@@ -157,6 +165,7 @@ def run_transpile_project(project_dir: str, output_dir: str, jobs: int = 4, targ
     resolver = ModuleResolver()
     rs_files = resolver.discover_project_files(project_dir)
     generated_files: List[str] = []
+    reporter = ConversionReporter(project_name=os.path.basename(os.path.abspath(project_dir)))
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -169,17 +178,20 @@ def run_transpile_project(project_dir: str, output_dir: str, jobs: int = 4, targ
 
     logger.info("Starting multithreaded project transpilation across %d worker threads...", jobs)
     with ThreadPoolExecutor(max_workers=jobs) as executor:
-        futures = {executor.submit(_transpile_worker, t): t[1] for t in tasks}
+        futures = {executor.submit(_transpile_worker, t): t for t in tasks}
         for future in as_completed(futures):
-            target_out = futures[future]
             try:
-                future.result()
-                generated_files.append(target_out)
+                rs_file, target_out, success, line_count, err_msg = future.result()
+                reporter.add_file_result(rs_file, target_out, success, line_count, err_msg)
+                if success:
+                    generated_files.append(target_out)
+                else:
+                    logger.warning("Failed transpiling %s: %s", rs_file, err_msg)
             except Exception as err:
-                logger.error("Failed to transpile file %s: %s", target_out, err)
+                logger.error("Worker thread error: %s", err)
 
     # Parse Cargo.toml if available
-    app_name = "app"
+    app_name = os.path.basename(os.path.abspath(project_dir))
     dependencies: List[str] = []
     cargo_file = os.path.join(project_dir, "Cargo.toml")
     manifest = parse_cargo_toml(cargo_file)
@@ -198,6 +210,10 @@ def run_transpile_project(project_dir: str, output_dir: str, jobs: int = 4, targ
     with open(build_zig_path, "w", encoding="utf-8") as f:
         f.write(build_zig_content)
     generated_files.append(build_zig_path)
+
+    # Print summary and save report files
+    reporter.print_cli_summary()
+    reporter.save_reports(output_dir)
 
     logger.info("Multithreaded project transpilation complete. Generated %d files in %s", len(generated_files), output_dir)
     return generated_files

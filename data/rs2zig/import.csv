@@ -94,6 +94,7 @@ src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.frontend.cargo_parser,parse_cargo_toml,,
 src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.backend.zig_emitter,ZigEmitter,,28
 src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.backend.build_zig_gen,generate_build_zig,,29
 src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.validate.zig_fmt_check,ZigValidator,,30
+src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.validate.conversion_reporter,ConversionReporter,,31
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logging,,,7
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,typing,List,,8
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,typing,Optional,,8
@@ -260,6 +261,17 @@ src/rs2zig/lowering/trait_lowering.py,src.rs2zig.lowering.trait_lowering,rs2zig.
 src/rs2zig/lowering/trait_lowering.py,src.rs2zig.lowering.trait_lowering,rs2zig.ir.nodes,IdentifierExpr,,8
 src/rs2zig/lowering/trait_lowering.py,src.rs2zig.lowering.trait_lowering,rs2zig.ir.nodes,LetStmt,,8
 src/rs2zig/lowering/trait_lowering.py,src.rs2zig.lowering.trait_lowering,rs2zig.ir.nodes,ExprStmt,,8
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,os,,,7
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,json,,,8
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,time,,,9
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,logging,,,10
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,typing,List,,11
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,typing,Dict,,11
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,typing,Any,,11
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,typing,Optional,,11
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,dataclasses,dataclass,,12
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,dataclasses,field,,12
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,dataclasses,asdict,,12
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,logging,,,7
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,subprocess,,,8
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,shutil,,,9

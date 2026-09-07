@@ -43,7 +43,7 @@ script/rs2zig_query.py,script.rs2zig_query,CSV_FILES,"{'file': os.path.join(DATA
 src/main.py,src.main,logger,logging.getLogger('rs2zig'),15
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,logger,logging.getLogger('rs2zig.backend.build_zig_gen'),10
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,logger,logging.getLogger('rs2zig.backend.zig_emitter'),45
-src/rs2zig/cli.py,src.rs2zig.cli,logger,logging.getLogger('rs2zig.cli'),32
+src/rs2zig/cli.py,src.rs2zig.cli,logger,logging.getLogger('rs2zig.cli'),33
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),50
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,logger,logging.getLogger('rs2zig.frontend.cargo_parser'),13
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,logger,logging.getLogger('rs2zig.frontend.macro_expand'),12
@@ -60,4 +60,5 @@ src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,logger,logg
 src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,RUST_TO_ZIG_TYPES,"{'i8': 'i8', 'i16': 'i16', 'i32': 'i32', 'i64': 'i64', 'i128': 'i128', 'isize': 'isize', 'u8': 'u8',",10
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,logger,logging.getLogger('rs2zig.lowering.stdlib_plugin'),20
 src/rs2zig/lowering/trait_lowering.py,src.rs2zig.lowering.trait_lowering,logger,logging.getLogger('rs2zig.lowering.trait_lowering'),19
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,logger,logging.getLogger('rs2zig.validate.conversion_reporter'),14
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,logger,logging.getLogger('rs2zig.validate.zig_fmt_check'),14

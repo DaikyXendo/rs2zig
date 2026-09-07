@@ -49,11 +49,11 @@ src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emi
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,215,227
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,229,251
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,253,420
-src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,35,68
-src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,71,136
-src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])",str,False,False,,Worker task function for parallel project transpilation.,139,142
-src/rs2zig/cli.py,src.rs2zig.cli,run_transpile_project,"(project_dir: str, output_dir: str, jobs: int = 4, target_wasm: bool = False)",List[str],False,False,,Transpile a multi-module Rust project directory concurrently using multithreading.,145,203
-src/rs2zig/cli.py,src.rs2zig.cli,main,(),None,False,False,,CLI application main entry point.,206,252
+src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,36,69
+src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,72,137
+src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])","Tuple[str, str, bool, int, Optional[str]]",False,False,,Worker task function for parallel project transpilation.,140,150
+src/rs2zig/cli.py,src.rs2zig.cli,run_transpile_project,"(project_dir: str, output_dir: str, jobs: int = 4, target_wasm: bool = False)",List[str],False,False,,Transpile a multi-module Rust project directory concurrently using multithreading.,153,219
+src/rs2zig/cli.py,src.rs2zig.cli,main,(),None,False,False,,CLI application main entry point.,222,268
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,get_node_type,(node: tree_sitter.Node),str,False,False,,Safely get string node type (handles differences between tree-sitter versions).,53,62
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.__init__,"(self, code_bytes: bytes)",None,False,True,,Initialize ASTBuilder with original source code bytes for exact text extraction.,68,74
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.get_text,"(self, node: tree_sitter.Node)",str,False,True,,Extract substring text corresponding to a tree-sitter node.,76,87
@@ -116,6 +116,13 @@ src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlu
 src/rs2zig/lowering/trait_lowering.py,src.rs2zig.lowering.trait_lowering,TraitLoweringPass.lower_source_file,"(self, sf: SourceFile)",None,False,True,,Run trait and generic lowering pass on SourceFile.,25,45
 src/rs2zig/lowering/trait_lowering.py,src.rs2zig.lowering.trait_lowering,TraitLoweringPass._lower_function_generics,"(self, fn: FnDecl)",None,False,True,,Convert FnDecl.generic_params into Zig comptime parameters.,47,62
 src/rs2zig/lowering/trait_lowering.py,src.rs2zig.lowering.trait_lowering,TraitLoweringPass._update_generic_callers,"(self, fn: FnDecl, generic_funcs: set)",None,False,True,,Update callers of generic functions to supply comptime type parameter.,64,74
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,ConversionReport.finalize,(self),None,False,True,,Compute summary statistics.,41,49
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,ConversionReporter.__init__,"(self, project_name: str = 'project')",None,False,True,,Initialize reporter instance.,55,57
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,ConversionReporter.add_file_result,"(self, input_file: str, output_file: str, success: bool, line_count: int = 0, error_message: Optional[str] = None)",None,False,True,,Record transpilation result for a single file.,59,84
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,ConversionReporter.generate_json_report,(self),str,False,True,,Return JSON string representation of report.,86,89
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,ConversionReporter.generate_markdown_report,(self),str,False,True,,Return Markdown formatted summary of conversion diagnostics.,91,118
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,ConversionReporter.print_cli_summary,(self),None,False,True,,Print concise summary statistics to console output.,120,132
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,ConversionReporter.save_reports,"(self, output_dir: str)",None,False,True,,Save json and markdown reports into target output directory.,134,151
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,ZigValidator.__init__,(self),None,False,True,,Check availability of Zig compiler binary on system PATH.,20,24
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,ZigValidator.format_code,"(self, zig_code: str)",str,False,True,,Format Zig code using `zig fmt --stdin`.,26,53
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,ZigValidator.check_syntax,"(self, zig_code: str)","Tuple[bool, str]",False,True,,Validate Zig source code by invoking `zig ast-check` or `zig build-obj`.,55,98

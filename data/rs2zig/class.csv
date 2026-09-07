@@ -54,6 +54,9 @@ src/rs2zig/lowering/plugin_registry.py,src.rs2zig.lowering.plugin_registry,Plugi
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,SerdePlugin,LibraryLoweringPlugin,2,,Lowering plugin for Serde serialization framework.,15,40
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin,LibraryLoweringPlugin,4,,Lowering plugin for Rust standard library components.,23,110
 src/rs2zig/lowering/trait_lowering.py,src.rs2zig.lowering.trait_lowering,TraitLoweringPass,,3,,Pass to lower traits and generics into Zig equivalents.,22,74
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,FileConversionStatus,,0,dataclass,Status record for a single file transpilation.,18,24
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,ConversionReport,,1,dataclass,Aggregate statistics report for project transpilation.,28,49
+src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_reporter,ConversionReporter,,6,,Reporter engine tracking transpilation run diagnostics.,52,151
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,ZigValidator,,3,,Invokes Zig toolchain to validate generated code syntax and semantics.,17,98
 tests/test_cargo_parser.py,tests.test_cargo_parser,TestCargoParserAndBuildGen,unittest.TestCase,2,,Test suite for Cargo.toml parser and build.zig generator.,13,50
 tests/test_golden.py,tests.test_golden,TestGolden,unittest.TestCase,2,,Test suite executing golden tests in tests/golden/.,13,57
