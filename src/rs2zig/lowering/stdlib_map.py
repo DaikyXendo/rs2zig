@@ -31,6 +31,17 @@ RUST_TO_ZIG_TYPES: Dict[str, str] = {
     "std::string::String": "[]u8",
     "core::string::String": "[]u8",
     "()": "void",
+    "Option": "?anytype",
+    "std::option::Option": "?anytype",
+    "alloc::option::Option": "?anytype",
+    "__u8": "u8",
+    "__u16": "u16",
+    "__u32": "u32",
+    "__u64": "u64",
+    "__s8": "i8",
+    "__s16": "i16",
+    "__s32": "i32",
+    "__s64": "i64",
 }
 
 
@@ -98,8 +109,15 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             return f"*const fn({', '.join(args_list)}) {ret_str}"
         if name.startswith("Token![") and name.endswith("]"):
             return "Token"
+        if name.startswith("dyn "):
+            dyn_body = name[4:].strip()
+            if "Error" in dyn_body:
+                return "anyerror"
+            return "anyopaque"
         if name.startswith("impl "):
             return "type" if is_return_type else "anytype"
+        if name in ("PhantomData", "std::marker::PhantomData", "core::marker::PhantomData"):
+            return "void"
         if name.startswith("(") and name.endswith(")"):
             inner = name[1:-1].strip()
             if not inner:
@@ -142,6 +160,8 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             mapped_gen = ", ".join(map_type(p) for p in gen_parts) if gen_parts else ""
             base_clean = base.strip()
             suffix_mapped = map_type(suffix) if suffix else ""
+            if base_clean in ("PhantomData", "std::marker::PhantomData", "core::marker::PhantomData"):
+                return "void"
             if base_clean in ("Option", "std::option::Option", "alloc::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
                 res = f"?{mapped_gen}{suffix_mapped}"
                 while res.startswith("??"):
@@ -156,116 +176,27 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             return f"{map_type(base_clean)}{suffix_mapped}"
         return RUST_TO_ZIG_TYPES.get(name, name.replace("::", "."))
 
-    name = rust_type.name.strip()
-    if "'" in name:
-        name = re.sub(r"'[a-zA-Z0-9_]+\s*", "", name).strip()
+    if isinstance(rust_type, TypeNode):
+        if rust_type.generic_args:
+            non_lifetime = [a for a in rust_type.generic_args if not str(getattr(a, "name", a)).strip().startswith("'")]
+            if non_lifetime:
+                args_str = ", ".join(map_type(a) for a in non_lifetime)
+                name_str = f"{rust_type.name}<{args_str}>"
+            else:
+                name_str = rust_type.name
+        else:
+            name_str = rust_type.name
 
-    if name.startswith("&mut [") and name.endswith("]"):
-        inner = name[6:-1].strip()
-        return f"[]{map_type(inner)}"
-    if name.startswith("&[") and name.endswith("]"):
-        inner = name[2:-1].strip()
-        return f"[]const {map_type(inner)}"
-    if name.startswith("&mut "):
-        rust_type.name = name[5:].strip()
-        rust_type.is_reference = True
-        rust_type.is_mutable = True
-        name = rust_type.name
-    elif name.startswith("&"):
-        rust_type.name = name[1:].strip()
-        rust_type.is_reference = True
-        rust_type.is_mutable = False
-        name = rust_type.name
-    elif name.startswith("*mut [") and name.endswith("]"):
-        inner = name[6:-1].strip()
-        return f"[]{map_type(inner)}"
-    elif name.startswith("*const [") and name.endswith("]"):
-        inner = name[8:-1].strip()
-        return f"[]const {map_type(inner)}"
-    elif name.startswith("*mut "):
-        rust_type.name = name[5:].strip()
-        rust_type.is_raw_pointer = True
-        rust_type.is_mutable = True
-        name = rust_type.name
-    elif name.startswith("*const "):
-        rust_type.name = name[7:].strip()
-        rust_type.is_raw_pointer = True
-        rust_type.is_mutable = False
-        name = rust_type.name
-
-    if name.startswith("fn(") or name.startswith("fn ("):
-        args_and_ret = name[name.find("(")+1:]
-        args_part, _, ret_part = args_and_ret.partition(")")
-        clean_ret = ret_part.strip().lstrip("->").strip()
-        ret_str = map_type(clean_ret, is_return_type=True) if (clean_ret and clean_ret not in ("()", "void")) else "void"
-        args_list = [map_type(a.strip()) for a in _split_top_level_commas(args_part) if a.strip()]
-        return f"*const fn({', '.join(args_list)}) {ret_str}"
-    if name.startswith("Token![") and name.endswith("]"):
-        return "Token"
-    if name.startswith("impl "):
-        return "type" if is_return_type else "anytype"
-    if name.startswith("(") and name.endswith(")"):
-        inner = name[1:-1].strip()
-        if not inner:
-            return "void"
-        if "," in inner:
-            elems = [map_type(p.strip()) for p in _split_top_level_commas(inner) if p.strip()]
-            return f"struct {{ {', '.join(elems)} }}"
-    if name.startswith("[") and name.endswith("]"):
-        inner = name[1:-1].strip()
-        if ";" in inner:
-            elem, count = inner.split(";", 1)
-            return f"[{map_type(count.strip())}]{map_type(elem.strip())}"
-        prefix = "[]const " if (rust_type.is_reference and not rust_type.is_mutable) else "[]"
-        return f"{prefix}{map_type(inner)}"
-    split_res = _split_angle_brackets(name)
-    if split_res:
-        base, gen, suffix = split_res
-        gen_parts = [p.strip() for p in _split_top_level_commas(gen) if not p.strip().startswith("'")]
-        mapped_gen = ", ".join(map_type(p) for p in gen_parts) if gen_parts else ""
-        base_clean = base.strip()
-        suffix_mapped = map_type(suffix) if suffix else ""
-        if base_clean in ("Option", "std::option::Option", "alloc::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
-            res = f"?{mapped_gen}{suffix_mapped}"
-            while res.startswith("??"):
-                res = res[1:]
-            return res
-        if base_clean in ("Vec", "alloc::vec::Vec", "std::vec::Vec"):
-            return f"std.ArrayList({mapped_gen}){suffix_mapped}"
-        if base_clean in ("Box", "alloc::boxed::Box", "std::boxed::Box"):
-            return f"{mapped_gen}{suffix_mapped}"
-        if mapped_gen:
-            return f"{map_type(base_clean)}({mapped_gen}){suffix_mapped}"
-        return f"{map_type(base_clean)}{suffix_mapped}"
-
-    if name.startswith("[") and name.endswith("]"):
-        inner = name[1:-1].strip()
-        return f"[]{map_type(inner)}"
-    zig_type_name = RUST_TO_ZIG_TYPES.get(name, name.replace("::", "."))
-
-    if rust_type.is_reference or rust_type.is_raw_pointer:
-        prefix = "*const " if not rust_type.is_mutable else "*"
-        if name in ("str", "alloc::string::String", "std::string::String"):
-            return "[]const u8"
-        return f"{prefix}{zig_type_name}"
-
-    if rust_type.is_slice:
-        return f"[]{zig_type_name}"
-
-    if rust_type.generic_args:
-        non_lifetime_args = [arg for arg in rust_type.generic_args if not str(arg).strip().startswith("'")]
-        if not non_lifetime_args:
-            return zig_type_name
-        args_str = ", ".join(map_type(arg) for arg in non_lifetime_args)
-        if name in ("Box", "alloc::boxed::Box", "std::boxed::Box"):
-            return args_str
-        if name in ("Vec", "alloc::vec::Vec", "std::vec::Vec"):
-            return f"std.ArrayList({args_str})"
-        if name in ("Option", "std::option::Option", "alloc::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
-            res = f"?{args_str}"
-            while res.startswith("??"):
-                res = res[1:]
-            return res
-        return f"{zig_type_name}({args_str})"
-
-    return zig_type_name
+        mapped = map_type(name_str, is_return_type=is_return_type)
+        if rust_type.is_slice:
+            if rust_type.is_reference and not rust_type.is_mutable and not mapped.startswith("[]const "):
+                elem = mapped[2:] if mapped.startswith("[]") else mapped
+                return f"[]const {elem}"
+            elif not (mapped.startswith("[]") or mapped.startswith("[")):
+                return f"[]{mapped}"
+            return mapped
+        if rust_type.is_reference or rust_type.is_raw_pointer:
+            if not (mapped.startswith("*") or mapped.startswith("[]")):
+                prefix = "*" if rust_type.is_mutable else "*const "
+                return f"{prefix}{mapped}"
+        return mapped

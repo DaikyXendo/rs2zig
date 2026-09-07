@@ -619,7 +619,7 @@ class TestPatternFixes(unittest.TestCase):
         """Verify Rust function pointer types without return type fn(Cursor) map to Zig *const fn(Cursor) void."""
         code = """
         pub struct Marker {
-            marker: PhantomData<*const fn(Cursor)>,
+            marker: *const fn(Cursor),
         }
         """
         zig = self._transpile_code(code)

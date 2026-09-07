@@ -182,6 +182,70 @@ class TestPatternFixesPart2(unittest.TestCase):
         self.assertNotIn("(x, y):", zig)
         self.assertIn("fn run(", zig)
 
+    def test_dyn_trait_type_lowering(self) -> None:
+        """Verify dyn Error and dyn Trait + Send types lower to anyerror/anyopaque in Zig."""
+        code = """
+        pub fn main() -> Result<void, dyn Error> {
+            return Ok(());
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("dyn Error", zig)
+        self.assertIn("anyerror", zig)
+
+    def test_phantom_data_struct_field_lowering(self) -> None:
+        """Verify PhantomData<T> struct fields lower to valid void fields without empty types."""
+        code = """
+        pub struct Icon {
+            _marker: PhantomData<T>,
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("_marker: ,", zig)
+        self.assertIn("_marker: void,", zig)
+
+    def test_function_local_use_statement_lowering(self) -> None:
+        """Verify use statements inside function bodies do not emit invalid use ...; in Zig."""
+        code = """
+        pub fn init() {
+            use tracing_subscriber::filter;
+            let x = 1;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("use tracing_subscriber", zig)
+        self.assertNotIn("use filter;", zig)
+
+    def test_self_return_type_lowering(self) -> None:
+        """Verify Self return type in struct methods lowers to struct name or @This()."""
+        code = """
+        pub struct OpenOptions {}
+
+        impl OpenOptions {
+            pub fn new() -> Self {
+                OpenOptions {}
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("fn new() Self {", zig)
+        self.assertIn("fn new() OpenOptions {", zig)
+
+    def test_raw_identifier_escaping(self) -> None:
+        """Verify Rust raw identifiers like r#type or r#match escape cleanly as @"type" or @"match" in Zig."""
+        code = """
+        pub struct FieldInfo {
+            pub r#type: u32,
+            pub r#match: bool,
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("r#type", zig)
+        self.assertNotIn("r#match", zig)
+        self.assertIn("@\"type\": u32,", zig)
+        self.assertIn("@\"match\": bool,", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
+

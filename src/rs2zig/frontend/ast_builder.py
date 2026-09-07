@@ -313,11 +313,12 @@ class ASTBuilder:
                         generic_args.append(TypeNode(name=arg_part.strip()))
                 clean_text = base_name.strip()
 
+        is_slice_type = clean_text.startswith("[") and clean_text.endswith("]") and ";" not in clean_text
         return TypeNode(
             name=clean_text,
             is_reference=is_ref,
             is_mutable=is_mut,
-            is_slice=False,
+            is_slice=is_slice_type,
             is_raw_pointer=is_raw_ptr,
             generic_args=generic_args
         )
@@ -330,7 +331,7 @@ class ASTBuilder:
         children = [c for c in node.children if get_node_type(c) not in ("{", "}")]
         for idx, child in enumerate(children):
             ntype = get_node_type(child)
-            if ntype in ("attribute_item", "inner_attribute_item") or ntype.startswith("attribute"):
+            if ntype in ("attribute_item", "inner_attribute_item", "use_declaration") or ntype.startswith("attribute"):
                 continue
             if ntype == "let_declaration":
                 stmts.append(self._build_let_stmt(child))

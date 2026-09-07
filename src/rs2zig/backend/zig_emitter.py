@@ -200,7 +200,15 @@ class ZigEmitter:
         self.current_indent += 1
         for field in struct.fields:
             ftype = map_type(field.field_type)
-            fname = f'@"{field.name}"' if (field.name in ZIG_RESERVED_KEYWORDS and not field.name.startswith("@")) else field.name
+            if not ftype:
+                ftype = "void"
+            raw_fname = field.name
+            if raw_fname.startswith("r#"):
+                fname = f'@"{raw_fname[2:]}"'
+            elif raw_fname in ZIG_RESERVED_KEYWORDS and not raw_fname.startswith("@"):
+                fname = f'@"{raw_fname}"'
+            else:
+                fname = raw_fname
             lines.append(f"{self._indent()}{fname}: {ftype},")
 
         if struct.fields and methods:
@@ -237,6 +245,12 @@ class ZigEmitter:
         else:
             ret_str = map_type(fn.return_type, is_return_type=True) if fn.return_type else "void"
 
+        stype = parent_struct_name or "@This()"
+        if ret_str == "Self":
+            ret_str = stype
+        elif "Self" in ret_str:
+            ret_str = re.sub(r"\bSelf\b", stype, ret_str)
+
         lines: List[str] = [f"{vis}fn {fn_name}({params_str}) {ret_str} {{"]
 
         self.current_indent += 1
@@ -262,15 +276,19 @@ class ZigEmitter:
     def _emit_params(self, params: List[Param], parent_struct_name: Optional[str] = None) -> str:
         """Emit comma-separated parameters list string."""
         parts: List[str] = []
+        stype = parent_struct_name or "@This()"
         for p in params:
             if p.is_self:
-                stype = parent_struct_name or "Self"
                 ptype = f"*const {stype}" if p.param_type.is_reference and not p.param_type.is_mutable else (
                     f"*{stype}" if p.param_type.is_reference and p.param_type.is_mutable else stype
                 )
                 parts.append(f"self: {ptype}")
             else:
                 ptype = map_type(p.param_type)
+                if ptype == "Self":
+                    ptype = stype
+                elif "Self" in ptype:
+                    ptype = re.sub(r"\bSelf\b", stype, ptype)
                 pname = f'@"{p.name}"' if (p.name in ZIG_RESERVED_KEYWORDS and not p.name.startswith("@")) else p.name
                 parts.append(f"{pname}: {ptype}")
         return ", ".join(parts)
