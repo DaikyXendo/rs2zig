@@ -310,6 +310,41 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("impl Iterator", zig)
         self.assertIn("trees: anytype", zig)
 
+    def test_number_literal_type_suffix_stripping(self) -> None:
+        """Verify Rust numeric type suffixes like _u64, u64, usize, i32 are stripped from literals."""
+        code = """
+        pub fn run() {
+            let x = 1_u64;
+            let y = 0x1FFFFFFF_u64;
+            let z = 100usize;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("1_u64", zig)
+        self.assertNotIn("0x1FFFFFFF_u64", zig)
+        self.assertNotIn("100usize", zig)
+        self.assertIn("1;", zig)
+        self.assertIn("0x1FFFFFFF;", zig)
+        self.assertIn("100;", zig)
+
+    def test_slice_reference_type_mapping(self) -> None:
+        """Verify Rust slice reference &[u8] lowers to Zig []const u8 instead of *const []u8."""
+        code = """
+        pub const DATA: &[u8] = b"data";
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("&[u8]", zig)
+        self.assertNotIn("*const []u8", zig)
+        self.assertIn("[]const u8", zig)
+
+    def test_double_semicolon_prevention(self) -> None:
+        """Verify const/static declarations do not emit double trailing semicolons (;;)."""
+        code = """
+        pub const MSG: &str = "hello";
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn(";;", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

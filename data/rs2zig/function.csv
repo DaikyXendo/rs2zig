@@ -48,8 +48,8 @@ src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emi
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_function,"(self, fn: FnDecl, parent_struct_name: Optional[str] = None)",str,False,True,,Emit Zig function or method definition.,209,250
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,252,265
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,267,279
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,281,342
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,344,603
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,281,343
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,345,604
 src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,36,69
 src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,72,138
 src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])","Tuple[str, str, bool, int, Optional[str]]",False,False,,Worker task function for parallel project transpilation.,141,151
@@ -113,7 +113,7 @@ src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,SerdePlugin
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,SerdePlugin.lower_source_file,"(self, sf: SourceFile)",bool,False,True,,Traverse SourceFile AST and lower Serde derives.,22,40
 src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,_split_angle_brackets,(s: str),"Optional[Tuple[str, str, str]]",False,False,,"Extract base type, inner generic args, and suffix from angle bracketed type string.",37,53
 src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,_split_top_level_commas,(s: str),List[str],False,False,,Split comma-separated arguments respecting nested bracket depth.,56,75
-src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,map_type,"(rust_type: Union[TypeNode, str])",str,False,False,,Map a Rust TypeNode or type string into Zig target type string representation.,78,211
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,map_type,"(rust_type: Union[TypeNode, str])",str,False,False,,Map a Rust TypeNode or type string into Zig target type string representation.,78,224
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.crate_name,(self),str,False,True,,Return crate name.,26,28
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.lower_type,"(self, type_node: TypeNode)",Optional[TypeNode],False,True,,Lower std collection and system types to Zig equivalents.,30,60
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.lower_call,"(self, expr: CallExpr)",Optional[Expr],False,True,,Lower std collection constructors and function calls.,62,76
@@ -164,3 +164,6 @@ tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_lifet
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_tuple_return_type_lowering,(self),None,False,True,,"Verify Rust tuple return type (usize, usize) lowers to Zig struct { usize, usize }.",280,289
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_keyword_call_escaping,(self),None,False,True,,"Verify calls to functions named after Zig keywords like test(...) are escaped with @"""".",291,300
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_impl_trait_parameter_lowering,(self),None,False,True,,Verify Rust impl Trait parameter type impl Iterator lowers to Zig anytype.,302,311
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_number_literal_type_suffix_stripping,(self),None,False,True,,"Verify Rust numeric type suffixes like _u64, u64, usize, i32 are stripped from literals.",313,328
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_slice_reference_type_mapping,(self),None,False,True,,Verify Rust slice reference &[u8] lowers to Zig []const u8 instead of *const []u8.,330,338
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_double_semicolon_prevention,(self),None,False,True,,Verify const/static declarations do not emit double trailing semicolons (;;).,340,346

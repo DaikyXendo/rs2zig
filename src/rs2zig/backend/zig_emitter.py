@@ -87,7 +87,7 @@ class ZigEmitter:
         for c in sf.constants:
             vis = "pub " if c.is_pub else ""
             type_str = map_type(c.const_type)
-            val_str = self._emit_expr(c.value)
+            val_str = self._emit_expr(c.value).rstrip(";").strip()
             body_lines.append(f"{vis}const {c.name}: {type_str} = {val_str};")
             body_lines.append("")
 
@@ -320,7 +320,8 @@ class ZigEmitter:
                 return f"\n{self._indent()}".join(lines)
             kw = "var" if stmt.is_mutable else "const"
             type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
-            val_part = f" = {self._emit_expr(stmt.value)}" if stmt.value else ""
+            val_expr_str = self._emit_expr(stmt.value).rstrip(";").strip() if stmt.value else ""
+            val_part = f" = {val_expr_str}" if stmt.value else ""
             res = f"{kw} {stmt.name}{type_part}{val_part};"
             if stmt.name == "ip":
                 res += f"\n{self._indent()}_ = ip;"
@@ -356,7 +357,7 @@ class ZigEmitter:
                 return f"([_]u8{{{vpart}}} ** {cpart})"
             if expr.kind == "bool":
                 return expr.value.lower()
-            return expr.value
+            return re.sub(r"_?(u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64)$", "", val)
 
         if isinstance(expr, IdentifierExpr):
             name = expr.name
