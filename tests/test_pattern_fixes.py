@@ -613,7 +613,7 @@ class TestPatternFixes(unittest.TestCase):
         """
         zig = self._transpile_code(code)
         self.assertNotIn("->", zig)
-        self.assertIn("fn assert(input: ParseStream) Result(void)", zig)
+        self.assertIn("fn assert(input: ParseStream) anyerror!void", zig)
 
     def test_fn_pointer_void_return_type_mapping(self) -> None:
         """Verify Rust function pointer types without return type fn(Cursor) map to Zig *const fn(Cursor) void."""
@@ -644,7 +644,7 @@ class TestPatternFixes(unittest.TestCase):
         """
         zig = self._transpile_code(code)
         self.assertNotIn("(Rc(", zig)
-        self.assertIn("fn inner_unexpected() Rc(Cell(Unexpected))", zig)
+        self.assertIn("fn inner_unexpected() *Cell(Unexpected)", zig)
 
     def test_shadow_import_name_collision_lowering(self) -> None:
         """Verify module import 'parse' alongside function 'pub fn parse()' renames import to avoid duplicate struct member error."""

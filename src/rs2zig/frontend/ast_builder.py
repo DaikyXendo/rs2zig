@@ -151,7 +151,16 @@ class ASTBuilder:
                             )
                         )
 
-        return StructDecl(name=struct_name, fields=fields, is_pub=is_pub)
+        generic_params: List[GenericParam] = []
+        type_params = node.child_by_field_name("type_parameters")
+        if type_params:
+            for child in type_params.children:
+                if get_node_type(child) in ("type_parameter", "constrained_type_parameter", "type_identifier"):
+                    gname = self.get_text(child).split(":")[0].strip()
+                    if gname not in ("<", ">", ","):
+                        generic_params.append(GenericParam(name=gname))
+
+        return StructDecl(name=struct_name, fields=fields, is_pub=is_pub, generic_params=generic_params)
 
     def _build_enum(self, node: tree_sitter.Node) -> EnumDecl:
         """Build EnumDecl from enum_item node."""

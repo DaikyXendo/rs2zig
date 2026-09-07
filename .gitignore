@@ -64,6 +64,7 @@ deps/
 *.zig.out
 conversion_report.json
 conversion_report.md
+data/aok_*.csv
 
 # macOS / OS artifacts
 .DS_Store

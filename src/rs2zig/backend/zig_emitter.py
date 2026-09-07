@@ -195,7 +195,15 @@ class ZigEmitter:
         """Emit Zig struct definition including any impl methods."""
         vis = "pub " if struct.is_pub else ""
         sname = struct.name.split("<")[0].strip() if "<" in struct.name else struct.name
-        lines: List[str] = [f"{vis}const {sname} = struct {{"]
+        type_params = [g.name for g in getattr(struct, "generic_params", []) if hasattr(g, "name") and not g.name.startswith("'")]
+        is_generic = len(type_params) > 0
+        if is_generic:
+            cargs = ", ".join(f"comptime {p}: type" for p in type_params)
+            lines: List[str] = [f"{vis}fn {sname}({cargs}) type {{"]
+            self.current_indent += 1
+            lines.append(f"{self._indent()}return struct {{")
+        else:
+            lines = [f"{vis}const {sname} = struct {{"]
 
         self.current_indent += 1
         for field in struct.fields:
@@ -225,7 +233,10 @@ class ZigEmitter:
             lines.append("")
 
         self.current_indent -= 1
-        lines.append("};")
+        lines.append(f"{self._indent()}}};")
+        if is_generic:
+            self.current_indent -= 1
+            lines.append("};")
         return "\n".join(lines)
 
     def _emit_function(self, fn: FnDecl, parent_struct_name: Optional[str] = None) -> str:
@@ -353,6 +364,29 @@ class ZigEmitter:
                         lines.append(f"_ = {tmp_var}.@\"{idx}\";")
                     else:
                         lines.append(f"{kw} {clean_vname} = {tmp_var}.@\"{idx}\";")
+                return f"\n{self._indent()}".join(lines)
+
+            if "{" in stmt.name and "}" in stmt.name:
+                body = stmt.name[stmt.name.find("{") + 1 : stmt.name.rfind("}")].strip()
+                fields = [f.strip() for f in body.split(",") if f.strip()]
+                val_str = self._emit_expr(stmt.value) if stmt.value else "undefined"
+                tmp_var = "__struct_tmp"
+                lines = [f"const {tmp_var} = {val_str};"]
+                kw = "var" if stmt.is_mutable else "const"
+                for fitem in fields:
+                    if ":" in fitem:
+                        fname, vname = fitem.split(":", 1)
+                        fname = fname.strip()
+                        vname = vname.replace("mut ", "").strip()
+                    else:
+                        fname = fitem.replace("mut ", "").strip()
+                        vname = fname
+                    clean_vname = f'@"{vname}"' if vname in ZIG_RESERVED_KEYWORDS else vname
+                    clean_fname = f'@"{fname}"' if fname in ZIG_RESERVED_KEYWORDS else fname
+                    if clean_vname == "_":
+                        lines.append(f"_ = {tmp_var}.{clean_fname};")
+                    else:
+                        lines.append(f"{kw} {clean_vname} = {tmp_var}.{clean_fname};")
                 return f"\n{self._indent()}".join(lines)
             kw = "var" if stmt.is_mutable else "const"
             vname = f'@"{stmt.name}"' if (stmt.name in ZIG_RESERVED_KEYWORDS and not stmt.name.startswith("@")) else stmt.name

@@ -409,6 +409,53 @@ class TestPatternFixesPart2(unittest.TestCase):
         self.assertNotIn('br"hello"', zig)
         self.assertIn('"hello"', zig)
 
+    def test_struct_pattern_destructuring_let(self) -> None:
+        """Verify let Rect { min, max } = bounds; lowers to destructured variable assignments in Zig."""
+        code = """
+        pub fn get_bounds(bounds: Rect) {
+            let Rect { min, max } = bounds;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("const Rect { min, max }", zig)
+        self.assertIn("const __struct_tmp = bounds;", zig)
+        self.assertIn("const min = __struct_tmp.min;", zig)
+        self.assertIn("const max = __struct_tmp.max;", zig)
+
+    def test_arc_type_lowering(self) -> None:
+        """Verify Arc<T> and bare Arc lower to *T and *anyopaque in Zig."""
+        code = """
+        pub fn process(f: Arc<Font>, g: Arc) {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("Arc(Font)", zig)
+        self.assertIn("*Font", zig)
+        self.assertIn("*anyopaque", zig)
+
+    def test_result_type_lowering(self) -> None:
+        """Verify Result<FontVec, InvalidFont> lowers to InvalidFont!FontVec in Zig."""
+        code = """
+        pub fn try_from_vec() -> Result<FontVec, InvalidFont> {
+            return Ok(FontVec {});
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("Result(FontVec, InvalidFont)", zig)
+        self.assertIn("InvalidFont!FontVec", zig)
+
+    def test_generic_struct_lowering(self) -> None:
+        """Verify generic struct Scale<F> lowers to fn Scale(comptime F: type) type return struct in Zig."""
+        code = """
+        pub struct Scale<F> {
+            pub font: F,
+            pub scale: PxScale,
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("pub fn Scale(comptime F: type) type {", zig)
+        self.assertIn("return struct {", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -65,6 +65,12 @@ RUST_TO_ZIG_TYPES: Dict[str, str] = {
     "std::sync::atomic::AtomicI32": "std.atomic.Value(i32)",
     "std::sync::atomic::AtomicU64": "std.atomic.Value(u64)",
     "std::sync::atomic::AtomicI64": "std.atomic.Value(i64)",
+    "Arc": "*anyopaque",
+    "std::sync::Arc": "*anyopaque",
+    "alloc::sync::Arc": "*anyopaque",
+    "Rc": "*anyopaque",
+    "alloc::rc::Rc": "*anyopaque",
+    "std::rc::Rc": "*anyopaque",
 }
 
 
@@ -195,6 +201,17 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
                 return f"std.ArrayList({mapped_gen}){suffix_mapped}"
             if base_clean in ("Box", "alloc::boxed::Box", "std::boxed::Box"):
                 return f"{mapped_gen}{suffix_mapped}"
+            if base_clean in ("Arc", "std::sync::Arc", "alloc::sync::Arc", "Rc", "alloc::rc::Rc", "std::rc::Rc"):
+                return f"*{mapped_gen}{suffix_mapped}" if mapped_gen and mapped_gen != "anyopaque" else f"*anyopaque{suffix_mapped}"
+            if base_clean in ("Result", "std::result::Result", "core::result::Result"):
+                if gen_parts and len(gen_parts) == 2:
+                    t_type = map_type(gen_parts[0])
+                    e_type = map_type(gen_parts[1])
+                    return f"{e_type}!{t_type}{suffix_mapped}"
+                elif gen_parts and len(gen_parts) == 1:
+                    t_type = map_type(gen_parts[0])
+                    return f"anyerror!{t_type}{suffix_mapped}"
+                return f"anyerror!void{suffix_mapped}"
             if mapped_gen:
                 return f"{map_type(base_clean)}({mapped_gen}){suffix_mapped}"
             return f"{map_type(base_clean)}{suffix_mapped}"
