@@ -455,6 +455,10 @@ class ASTBuilder:
             target_type_str = map_type(self._build_type(type_node)) if type_node else "anytype"
             return CallExpr(callee=IdentifierExpr("@as"), args=[IdentifierExpr(target_type_str), val_expr])
 
+        if ntype == "unsafe_block":
+            block_node = node.child_by_field_name("block") or (node.children[1] if len(node.children) > 1 else None)
+            return self._build_block(block_node) if block_node else BlockExpr()
+
         if ntype == "await_expression":
             operand_node = node.children[0] if node.children else None
             return self._build_expr(operand_node) if operand_node else IdentifierExpr("future")

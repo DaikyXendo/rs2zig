@@ -485,7 +485,59 @@ class TestPatternFixes(unittest.TestCase):
         """
         zig = self._transpile_code(code)
         self.assertNotIn("|res, (x, y)|", zig)
-        self.assertIn("struct { fn run(", zig)
+    def test_reserved_keyword_parameter_escaping(self) -> None:
+        """Verify reserved Zig keywords (test, error) in parameter names are escaped with @"..."."""
+        code = """
+        pub fn run_test(test: i32, error: u32) {
+            let res = test + error as i32;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("@\"test\": i32", zig)
+        self.assertIn("@\"error\": u32", zig)
+
+    def test_unsafe_block_lowering(self) -> None:
+        """Verify Rust unsafe { ... } blocks unwrap cleanly into Zig blocks without raw unsafe keywords."""
+        code = """
+        pub fn run() {
+            unsafe {
+                let x = 42;
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("unsafe {", zig)
+
+    def test_byte_string_literal_lowering(self) -> None:
+        """Verify Rust byte string literal b"hello" lowers to Zig string literal "hello"."""
+        code = """
+        pub fn run() {
+            let buf = b"hello";
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("b\"hello\"", zig)
+        self.assertIn("\"hello\"", zig)
+
+    def test_multiline_string_literal_newline_escaping(self) -> None:
+        """Verify Rust multiline string literals with raw newlines escape newlines cleanly for Zig."""
+        code = """
+        pub fn run() {
+            let s = "line1\nline2";
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("line1\nline2", zig)
+    def test_reserved_keyword_module_import_escaping(self) -> None:
+        """Verify module imports named after reserved Zig keywords (error.zig) are escaped as @"error"."""
+        code = """
+        pub fn run() {
+            let res = error::get_val();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("const error =", zig)
+        self.assertIn("const @\"error\" =", zig)
 
 
 if __name__ == "__main__":

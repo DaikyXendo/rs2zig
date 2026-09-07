@@ -39,17 +39,17 @@ script/rs2zig_query.py,script.rs2zig_query,cmd_sync,(),None,False,False,,Execute
 script/rs2zig_query.py,script.rs2zig_query,main,(),None,False,False,,Main CLI entry point.,251,276
 src/main.py,src.main,main,(),None,False,False,,Main application entry point.,17,19
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,generate_build_zig,"(executable_name: str = 'app', main_src: str = 'main.zig', dependencies: Optional[List[str]] = None, target_wasm: bool = False)",str,False,False,,Generate content for a build.zig script targeting Zig 0.16.0.,13,70
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.__init__,"(self, indent_str: str = '    ')",None,False,True,,Initialize emitter with specified indentation.,61,70
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.emit_source_file,"(self, sf: SourceFile, file_path: Optional[str] = None)",str,False,True,,Emit complete Zig source file string from SourceFile node.,72,142
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._indent,(self),str,False,True,,Get current indentation string.,144,146
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_trait,"(self, trait: TraitDecl)",str,False,True,,Emit Zig interface definition / comment for a trait.,148,154
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_enum,"(self, enum_decl: EnumDecl)",str,False,True,,Emit Zig enum or tagged union definition.,156,183
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_struct,"(self, struct: StructDecl, methods: List[FnDecl])",str,False,True,,Emit Zig struct definition including any impl methods.,185,207
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_function,"(self, fn: FnDecl, parent_struct_name: Optional[str] = None)",str,False,True,,Emit Zig function or method definition.,209,250
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,252,265
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,267,279
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,281,343
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,345,646
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.__init__,"(self, indent_str: str = '    ')",None,False,True,,Initialize emitter with specified indentation.,66,75
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.emit_source_file,"(self, sf: SourceFile, file_path: Optional[str] = None)",str,False,True,,Emit complete Zig source file string from SourceFile node.,77,148
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._indent,(self),str,False,True,,Get current indentation string.,150,152
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_trait,"(self, trait: TraitDecl)",str,False,True,,Emit Zig interface definition / comment for a trait.,154,160
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_enum,"(self, enum_decl: EnumDecl)",str,False,True,,Emit Zig enum or tagged union definition.,162,189
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_struct,"(self, struct: StructDecl, methods: List[FnDecl])",str,False,True,,Emit Zig struct definition including any impl methods.,191,213
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_function,"(self, fn: FnDecl, parent_struct_name: Optional[str] = None)",str,False,True,,Emit Zig function or method definition.,215,256
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,258,272
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,274,286
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,288,350
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,352,663
 src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,36,69
 src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,72,138
 src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])","Tuple[str, str, bool, int, Optional[str]]",False,False,,Worker task function for parallel project transpilation.,141,151
@@ -70,8 +70,8 @@ src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._b
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_block,"(self, node: tree_sitter.Node)",BlockExpr,False,True,,Build BlockExpr from block node.,320,344
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_let_stmt,"(self, node: tree_sitter.Node)",LetStmt,False,True,,Build LetStmt from let_declaration node.,346,364
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_assign_stmt,"(self, node: tree_sitter.Node)",AssignStmt,False,True,,Build AssignStmt from assignment_expression node.,366,376
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,378,661
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,663,674
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,378,665
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,667,678
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,parse_cargo_toml,(cargo_path: str),Optional[CargoManifest],False,False,,Parse Cargo.toml file and return CargoManifest dataclass.,32,68
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,expand_macros,"(code_or_file: str, is_file_path: bool = False)",str,False,False,,Expand macros in Rust source code using cargo expand if available.,15,55
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,_read_or_return,"(code_or_file: str, is_file_path: bool)",str,False,False,,Helper to read file content or return code string.,58,67
@@ -178,4 +178,9 @@ tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_raw_s
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_array_reference_lowering,(self),None,False,True,,"Verify Rust array reference &[""is_match"", ""find""] lowers to Zig &.{ ""is_match"", ""find"" }.",442,451
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_raw_pointer_type_lowering,(self),None,False,True,,"Verify Rust raw pointer types (*mut T, *const 'a T, *mut [u8]) map cleanly to Zig pointer types (*T, *const T, []u8).",453,467
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_unit_return_expression_lowering,(self),None,False,True,,Verify Rust return () lowers to clean Zig return without invalid tuple syntax.,468,477
-tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_closure_pattern_parameter_lowering,(self),None,False,True,,"Verify closures with tuple pattern parameters |res, (x, y)| build clean struct wrappers in Zig.",479,488
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_closure_pattern_parameter_lowering,(self),None,False,True,,"Verify closures with tuple pattern parameters |res, (x, y)| build clean struct wrappers in Zig.",479,487
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_reserved_keyword_parameter_escaping,(self),None,False,True,,"Verify reserved Zig keywords (test, error) in parameter names are escaped with @""..."".",488,497
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_unsafe_block_lowering,(self),None,False,True,,Verify Rust unsafe { ... } blocks unwrap cleanly into Zig blocks without raw unsafe keywords.,499,509
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_byte_string_literal_lowering,(self),None,False,True,,"Verify Rust byte string literal b""hello"" lowers to Zig string literal ""hello"".",511,520
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_multiline_string_literal_newline_escaping,(self),None,False,True,,Verify Rust multiline string literals with raw newlines escape newlines cleanly for Zig.,522,530
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_reserved_keyword_module_import_escaping,(self),None,False,True,,"Verify module imports named after reserved Zig keywords (error.zig) are escaped as @""error"".",531,540

@@ -44,15 +44,20 @@ from rs2zig.ir.nodes import (
 from rs2zig.lowering.stdlib_map import map_type
 from rs2zig.lowering.control_flow import lower_println_macro
 
-ZIG_KEYWORDS_AND_PRIMITIVES = {
+ZIG_PRIMITIVE_TYPES = {
     "u8", "u16", "u32", "u64", "u128", "i8", "i16", "i32", "i64", "i128",
-    "usize", "isize", "f32", "f64", "bool", "void", "type", "anytype",
+    "usize", "isize", "f32", "f64", "bool", "void", "type", "anytype"
+}
+
+ZIG_RESERVED_KEYWORDS = {
     "error", "test", "usingnamespace", "async", "await", "nosuspend",
     "resume", "suspend", "export", "extern", "inline", "noinline", "pub",
     "align", "const", "var", "struct", "enum", "union", "opaque", "comptime",
     "try", "catch", "if", "else", "switch", "while", "for", "break", "continue",
     "return", "defer", "errdefer", "unreachable", "asm", "threadlocal"
 }
+
+ZIG_KEYWORDS_AND_PRIMITIVES = ZIG_PRIMITIVE_TYPES | ZIG_RESERVED_KEYWORDS
 
 
 class ZigEmitter:
@@ -127,14 +132,15 @@ class ZigEmitter:
 
         for mod_name in sorted(self.imported_modules):
             if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app"):
+                clean_mod_name = f'@"{mod_name}"' if mod_name in ZIG_RESERVED_KEYWORDS else mod_name
                 if mod_name == "aok":
                     header_lines.append('const aok = aok_core;')
                 elif out_dir and os.path.exists(os.path.join(out_dir, f"{mod_name}.zig")):
-                    header_lines.append(f'const {mod_name} = @import("{mod_name}.zig");')
+                    header_lines.append(f'const {clean_mod_name} = @import("{mod_name}.zig");')
                 elif out_dir and (os.path.exists(os.path.join(out_dir, mod_name, "mod.zig")) or os.path.exists(os.path.join(out_dir, mod_name))):
-                    header_lines.append(f'const {mod_name} = @import("{mod_name}/mod.zig");')
+                    header_lines.append(f'const {clean_mod_name} = @import("{mod_name}/mod.zig");')
                 else:
-                    header_lines.append(f'const {mod_name} = @import("{mod_name}.zig");')
+                    header_lines.append(f'const {clean_mod_name} = @import("{mod_name}.zig");')
 
         header_lines.append("")
         all_lines = header_lines + body_lines
@@ -261,7 +267,8 @@ class ZigEmitter:
                 parts.append(f"self: {ptype}")
             else:
                 ptype = map_type(p.param_type)
-                parts.append(f"{p.name}: {ptype}")
+                pname = f'@"{p.name}"' if (p.name in ZIG_RESERVED_KEYWORDS and not p.name.startswith("@")) else p.name
+                parts.append(f"{pname}: {ptype}")
         return ", ".join(parts)
 
     def _emit_block_lines(self, block: BlockExpr) -> List[str]:
@@ -349,8 +356,14 @@ class ZigEmitter:
 
         if isinstance(expr, LiteralExpr):
             val = expr.value
+            if val.startswith('b"') and val.endswith('"'):
+                val = val[1:]
             if val.startswith("r") and '"' in val:
                 val = re.sub(r'^r#*"(.*)"#*$', r'"\1"', val)
+            if val.startswith('"') and val.endswith('"'):
+                if "\n" in val:
+                    inner = val[1:-1].replace("\r\n", "\\n").replace("\n", "\\n")
+                    val = f'"{inner}"'
             if val.startswith("[") and ";" in val and val.endswith("]"):
                 inner = val[1:-1]
                 vpart, cpart = inner.split(";", 1)
@@ -401,6 +414,8 @@ class ZigEmitter:
                 return ""
             if name == "None":
                 return "null"
+            if name in ZIG_RESERVED_KEYWORDS and not name.startswith("@") and not name.startswith("std.") and not name.startswith("*"):
+                return f'@"{name}"'
             return name
 
         if isinstance(expr, BinaryExpr):
@@ -615,6 +630,8 @@ class ZigEmitter:
             for p in expr.params:
                 ptype = map_type(p.param_type) if (p.param_type and p.param_type.name != "anytype") else "anytype"
                 pname = p.name if (p.name and p.name != "_") else "arg"
+                if pname in ZIG_RESERVED_KEYWORDS and not pname.startswith("@"):
+                    pname = f'@"{pname}"'
                 params_parts.append(f"{pname}: {ptype}")
             params_str = ", ".join(params_parts)
             ret_type = map_type(expr.return_type) if expr.return_type else "i32"
