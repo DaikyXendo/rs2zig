@@ -508,6 +508,64 @@ class TestPatternFixesPart2(unittest.TestCase):
         self.assertNotIn("Self(font)", zig)
         self.assertIn("@This()(font)", zig)
 
+    def test_pointer_anytype_lowering(self) -> None:
+        """Verify *const anytype or &anytype maps to anytype in Zig."""
+        code = """
+        pub fn process(filter: &anytype) {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("*const anytype", zig)
+        self.assertIn("filter: anytype", zig)
+
+    def test_generic_struct_discard_comptime_param(self) -> None:
+        """Verify generic struct fn Wrapper(comptime H: type) type discards H inside function body to avoid unused param error."""
+        code = """
+        pub struct ActionHandlerWrapper<H> {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("comptime H: type", zig)
+        self.assertIn("_ = H;", zig)
+
+    def test_match_arm_tuple_wildcard_lowering(self) -> None:
+        """Verify Event::UserEvent(..) match arm pattern lowers to .UserEvent in Zig."""
+        code = """
+        pub fn handle(e: Event) {
+            match e {
+                Event::UserEvent(..) => {},
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("(..)", zig)
+        self.assertIn(".UserEvent => {},", zig)
+
+    def test_let_stmt_shadow_discard(self) -> None:
+        """Verify let p0 = p0.into() emits _ = p0_var; to prevent unused variable error."""
+        code = """
+        pub fn from_points(p0: Point) {
+            let p0 = p0.into();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("const p0_var = p0.into();", zig)
+        self.assertIn("_ = p0_var;", zig)
+
+    def test_multiline_tuple_return_type(self) -> None:
+        """Verify multi-line tuple return type (A,\n B) lowers to struct { @"0": A, @"1": B }."""
+        code = """
+        pub fn new() -> (
+            A,
+            B
+        ) {
+            return (a, b);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("pub fn new() (", zig)
+        self.assertIn('struct { @"0": A, @"1": B }', zig)
+
 
 if __name__ == "__main__":
     unittest.main()

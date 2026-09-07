@@ -148,7 +148,7 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
         if name in ("PhantomData", "std::marker::PhantomData", "core::marker::PhantomData"):
             return "void"
         if name.startswith("(") and name.endswith(")"):
-            inner = name[1:-1].strip()
+            inner = " ".join(name[1:-1].split())
             if not inner:
                 return "void"
             if "," in inner:
@@ -157,6 +157,8 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
                 return f"struct {{ {fields_str} }}"
         if name in RUST_TO_ZIG_TYPES:
             return RUST_TO_ZIG_TYPES[name]
+        if name in ("&anytype", "&mut anytype", "*const anytype", "*mut anytype"):
+            return "anytype"
         if name.startswith("&mut [") and name.endswith("]"):
             inner = name[6:-1].strip()
             return f"[]{map_type(inner)}"
@@ -164,9 +166,11 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             inner = name[2:-1].strip()
             return f"[]const {map_type(inner)}"
         if name.startswith("&mut "):
-            return f"*{map_type(name[5:].strip())}"
+            target = map_type(name[5:].strip())
+            return "anytype" if target == "anytype" else f"*{target}"
         if name.startswith("&"):
-            return f"*const {map_type(name[1:].strip())}"
+            target = map_type(name[1:].strip())
+            return "anytype" if target == "anytype" else f"*const {target}"
         if name.startswith("*mut [") and name.endswith("]"):
             inner = name[6:-1].strip()
             return f"[]{map_type(inner)}"
@@ -236,6 +240,8 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             elif not (mapped.startswith("[]") or mapped.startswith("[")):
                 return f"[]{mapped}"
             return mapped
+        if mapped == "anytype":
+            return "anytype"
         if rust_type.is_reference or rust_type.is_raw_pointer:
             if not (mapped.startswith("*") or mapped.startswith("[]")):
                 prefix = "*" if rust_type.is_mutable else "*const "

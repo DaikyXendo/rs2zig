@@ -175,6 +175,10 @@ class ZigEmitter:
             cargs = ", ".join(f"comptime {p}: type" for p in type_params)
             lines: List[str] = [f"{vis}fn {sname}({cargs}) type {{"]
             self.current_indent += 1
+            fields_type_str = " ".join(str(f.field_type) for f in struct.fields)
+            for p in type_params:
+                if not re.search(r"\b" + re.escape(p) + r"\b", fields_type_str):
+                    lines.append(f"{self._indent()}_ = {p};")
             lines.append(f"{self._indent()}return struct {{")
         else:
             lines = [f"{vis}const {sname} = struct {{"]
@@ -365,13 +369,17 @@ class ZigEmitter:
                 return f"\n{self._indent()}".join(lines)
             kw = "var" if stmt.is_mutable else "const"
             vname = stmt.name
+            was_renamed = False
             if vname in getattr(self, "current_fn_param_names", set()):
                 vname = f"{vname}_var"
+                was_renamed = True
             vname = f'@"{vname}"' if (vname in ZIG_RESERVED_KEYWORDS and not vname.startswith("@")) else vname
             type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
             val_expr_str = self._emit_expr(stmt.value).rstrip(";").strip() if stmt.value else ""
             val_part = f" = {val_expr_str}" if stmt.value else ""
             res = f"{kw} {vname}{type_part}{val_part};"
+            if was_renamed:
+                res += f"\n{self._indent()}_ = {vname};"
             if stmt.name == "ip":
                 res += f"\n{self._indent()}_ = ip;"
             return res
@@ -630,7 +638,8 @@ class ZigEmitter:
                     var_name = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip() if "(" in pat_str else ""
                     pat = "else" if not has_else else "error.Unknown"
                 elif "::" in pat_str:
-                    pat = f".{pat_str.split('::')[-1]}"
+                    clean_enum_variant = re.sub(r"\(\s*\.\.\s*\)", "", pat_str.split("::")[-1]).strip()
+                    pat = f".{clean_enum_variant}"
                 else:
                     pat = pat_str
 
