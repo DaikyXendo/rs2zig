@@ -1,0 +1,3 @@
+# py_rustc / rs2zig project dependencies
+tree-sitter>=0.22.0
+tree-sitter-rust>=0.21.0

@@ -1,0 +1,51 @@
+file_path,module,const_name,value_repr,line_number
+script/extract_data/find_classes.py,script.extract_data.find_classes,SCRIPT_DIR,os.path.dirname(os.path.abspath(__file__)),11
+script/extract_data/find_classes.py,script.extract_data.find_classes,PROJECT_ROOT,os.path.dirname(os.path.dirname(SCRIPT_DIR)),12
+script/extract_data/find_classes.py,script.extract_data.find_classes,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",13
+script/extract_data/find_classes.py,script.extract_data.find_classes,OUTPUT_CSV,"os.path.join(DATA_DIR, 'class.csv')",14
+script/extract_data/find_classes.py,script.extract_data.find_classes,EXCLUDE_DIRS,"{'.git', 'venv', '.venv', '__pycache__', 'data', '.agents', '.mypy_cache', '.pytest_cache', '.ruff_c",16
+script/extract_data/find_consts.py,script.extract_data.find_consts,SCRIPT_DIR,os.path.dirname(os.path.abspath(__file__)),11
+script/extract_data/find_consts.py,script.extract_data.find_consts,PROJECT_ROOT,os.path.dirname(os.path.dirname(SCRIPT_DIR)),12
+script/extract_data/find_consts.py,script.extract_data.find_consts,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",13
+script/extract_data/find_consts.py,script.extract_data.find_consts,OUTPUT_CSV,"os.path.join(DATA_DIR, 'const.csv')",14
+script/extract_data/find_consts.py,script.extract_data.find_consts,EXCLUDE_DIRS,"{'.git', 'venv', '.venv', '__pycache__', 'data', '.agents', '.mypy_cache', '.pytest_cache', '.ruff_c",16
+script/extract_data/find_dependencies.py,script.extract_data.find_dependencies,SCRIPT_DIR,os.path.dirname(os.path.abspath(__file__)),11
+script/extract_data/find_dependencies.py,script.extract_data.find_dependencies,PROJECT_ROOT,os.path.dirname(os.path.dirname(SCRIPT_DIR)),12
+script/extract_data/find_dependencies.py,script.extract_data.find_dependencies,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",13
+script/extract_data/find_dependencies.py,script.extract_data.find_dependencies,OUTPUT_CSV,"os.path.join(DATA_DIR, 'dependency.csv')",14
+script/extract_data/find_files.py,script.extract_data.find_files,SCRIPT_DIR,os.path.dirname(os.path.abspath(__file__)),10
+script/extract_data/find_files.py,script.extract_data.find_files,PROJECT_ROOT,os.path.dirname(os.path.dirname(SCRIPT_DIR)),11
+script/extract_data/find_files.py,script.extract_data.find_files,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",12
+script/extract_data/find_files.py,script.extract_data.find_files,OUTPUT_CSV,"os.path.join(DATA_DIR, 'file.csv')",13
+script/extract_data/find_files.py,script.extract_data.find_files,EXCLUDE_DIRS,"{'.git', 'venv', '.venv', '__pycache__', 'data', '.agents', '.mypy_cache', '.pytest_cache', '.ruff_c",15
+script/extract_data/find_fix_roadmap.py,script.extract_data.find_fix_roadmap,SCRIPT_DIR,os.path.dirname(os.path.abspath(__file__)),11
+script/extract_data/find_fix_roadmap.py,script.extract_data.find_fix_roadmap,PROJECT_ROOT,os.path.dirname(os.path.dirname(SCRIPT_DIR)),12
+script/extract_data/find_fix_roadmap.py,script.extract_data.find_fix_roadmap,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",13
+script/extract_data/find_fix_roadmap.py,script.extract_data.find_fix_roadmap,FIX_DIR,"os.path.join(PROJECT_ROOT, 'data', 'fix')",14
+script/extract_data/find_fix_roadmap.py,script.extract_data.find_fix_roadmap,OUTPUT_CSV,"os.path.join(DATA_DIR, 'fix_roadmap.csv')",15
+script/extract_data/find_fix_roadmap.py,script.extract_data.find_fix_roadmap,EXCLUDE_DIRS,"{'.git', 'venv', '.venv', '__pycache__', 'data', '.agents', '.mypy_cache', '.pytest_cache', '.ruff_c",17
+script/extract_data/find_functions.py,script.extract_data.find_functions,SCRIPT_DIR,os.path.dirname(os.path.abspath(__file__)),11
+script/extract_data/find_functions.py,script.extract_data.find_functions,PROJECT_ROOT,os.path.dirname(os.path.dirname(SCRIPT_DIR)),12
+script/extract_data/find_functions.py,script.extract_data.find_functions,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",13
+script/extract_data/find_functions.py,script.extract_data.find_functions,OUTPUT_CSV,"os.path.join(DATA_DIR, 'function.csv')",14
+script/extract_data/find_functions.py,script.extract_data.find_functions,EXCLUDE_DIRS,"{'.git', 'venv', '.venv', '__pycache__', 'data', '.agents', '.mypy_cache', '.pytest_cache', '.ruff_c",16
+script/extract_data/find_imports.py,script.extract_data.find_imports,SCRIPT_DIR,os.path.dirname(os.path.abspath(__file__)),11
+script/extract_data/find_imports.py,script.extract_data.find_imports,PROJECT_ROOT,os.path.dirname(os.path.dirname(SCRIPT_DIR)),12
+script/extract_data/find_imports.py,script.extract_data.find_imports,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",13
+script/extract_data/find_imports.py,script.extract_data.find_imports,OUTPUT_CSV,"os.path.join(DATA_DIR, 'import.csv')",14
+script/extract_data/find_imports.py,script.extract_data.find_imports,EXCLUDE_DIRS,"{'.git', 'venv', '.venv', '__pycache__', 'data', '.agents', '.mypy_cache', '.pytest_cache', '.ruff_c",16
+script/rs2zig_query.py,script.rs2zig_query,SCRIPT_DIR,os.path.dirname(os.path.abspath(__file__)),15
+script/rs2zig_query.py,script.rs2zig_query,PROJECT_ROOT,os.path.dirname(SCRIPT_DIR),16
+script/rs2zig_query.py,script.rs2zig_query,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",17
+script/rs2zig_query.py,script.rs2zig_query,RULE_FILE,"os.path.join(PROJECT_ROOT, 'AGENTS.md')",18
+script/rs2zig_query.py,script.rs2zig_query,EXTRACT_SCRIPT,"os.path.join(PROJECT_ROOT, 'script', 'extract_data', 'extract_data.sh')",19
+script/rs2zig_query.py,script.rs2zig_query,CSV_FILES,"{'file': os.path.join(DATA_DIR, 'file.csv'), 'function': os.path.join(DATA_DIR, 'function.csv'), 'cl",21
+src/main.py,src.main,logger,logging.getLogger('rs2zig'),15
+src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,logger,logging.getLogger('rs2zig.backend.build_zig_gen'),9
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,logger,logging.getLogger('rs2zig.backend.zig_emitter'),36
+src/rs2zig/cli.py,src.rs2zig.cli,logger,logging.getLogger('rs2zig.cli'),20
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),39
+src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,logger,logging.getLogger('rs2zig.frontend.macro_expand'),12
+src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,logger,logging.getLogger('rs2zig.frontend.ts_parser'),12
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,RUST_TO_ZIG_TYPES,"{'i8': 'i8', 'i16': 'i16', 'i32': 'i32', 'i64': 'i64', 'i128': 'i128', 'isize': 'isize', 'u8': 'u8',",10
+src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,logger,logging.getLogger('rs2zig.validate.zig_fmt_check'),14
