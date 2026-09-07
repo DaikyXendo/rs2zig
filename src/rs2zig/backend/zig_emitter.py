@@ -373,6 +373,15 @@ class ZigEmitter:
                 return expr_str
             return f"{expr_str};"
 
+        if isinstance(stmt, StructDecl):
+            return self._emit_struct(stmt, [])
+
+        if isinstance(stmt, EnumDecl):
+            return self._emit_enum(stmt)
+
+        if isinstance(stmt, FnDecl):
+            return self._emit_function(stmt)
+
         return ""
 
     def _emit_expr(self, expr: Expr) -> str:
@@ -454,6 +463,11 @@ class ZigEmitter:
         if isinstance(expr, BinaryExpr):
             left_str = self._emit_expr(expr.left)
             right_str = self._emit_expr(expr.right)
+            if expr.op == "as":
+                mapped_target = map_type(right_str)
+                if mapped_target.startswith("*") or mapped_target == "_" or right_str in ("_", "*mut _", "*const _"):
+                    return f"@ptrCast({left_str})"
+                return f"@as({mapped_target}, {left_str})"
             if expr.op in ("=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="):
                 return f"{left_str} {expr.op} {right_str}"
             op_map = {"&&": "and", "||": "or"}
@@ -564,6 +578,14 @@ class ZigEmitter:
             has_else = False
             for arm in expr.arms:
                 pat_str = arm.pattern.strip()
+                guard_cond: Optional[str] = None
+                if " if " in pat_str:
+                    pat_clean, _, guard_part = pat_str.partition(" if ")
+                    pat_str = pat_clean.strip()
+                    guard_cond = guard_part.strip()
+                elif arm.guard:
+                    guard_cond = self._emit_expr(arm.guard)
+
                 if pat_str == "_":
                     pat = "else"
                 elif pat_str.startswith("Ok(") or pat_str.startswith("Some("):
@@ -585,6 +607,12 @@ class ZigEmitter:
                 body_str = self._emit_expr(arm.body)
                 if body_str.rstrip(";").strip() in ("()", ".{}"):
                     body_str = "{}"
+                if guard_cond:
+                    if body_str == "{}":
+                        body_str = f"if ({guard_cond}) {{}}"
+                    else:
+                        body_str = f"if ({guard_cond}) {body_str} else {{}}"
+
                 if pat.startswith("else =>"):
                     lines.append(f"{self._indent()}{pat} {body_str},")
                 else:

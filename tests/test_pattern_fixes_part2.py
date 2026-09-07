@@ -245,6 +245,55 @@ class TestPatternFixesPart2(unittest.TestCase):
         self.assertIn("@\"type\": u32,", zig)
         self.assertIn("@\"match\": bool,", zig)
 
+    def test_block_local_struct_decl_lowering(self) -> None:
+        """Verify struct declarations inside function blocks lower to const Name = struct {}; in Zig."""
+        code = """
+        pub fn process() {
+            struct DatetimeVisitor;
+            let x = 1;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("struct DatetimeVisitor;", zig)
+        self.assertIn("const DatetimeVisitor = struct {", zig)
+
+    def test_match_arm_if_guard_lowering(self) -> None:
+        """Verify match arm with if guard like .Assign(s) if s.is_empty() => {} lowers to if (s.is_empty()) {} in Zig."""
+        code = """
+        pub fn check_expr(e: Expr) {
+            match e {
+                Expr::Assign(s) if s.is_empty() => {},
+                _ => {},
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("if s.is_empty() =>", zig)
+        self.assertIn("if (s.is_empty())", zig)
+
+    def test_as_cast_expression_lowering(self) -> None:
+        """Verify Rust as cast expressions like (n / 8) as usize lower to @as(usize, (n / 8)) in Zig."""
+        code = """
+        pub fn get_byte(n: usize) -> usize {
+            let idx = (n / 8) as usize;
+            return idx;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("as usize", zig)
+        self.assertIn("@as(usize,", zig)
+
+    def test_pointer_as_cast_lowering(self) -> None:
+        """Verify pointer as casts like ptr as *mut u8 lower to @ptrCast(p) in Zig."""
+        code = """
+        pub fn cast_ptr(p: *const u8) {
+            let mut_p = p as *mut u8;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("as *mut", zig)
+        self.assertIn("@ptrCast(", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

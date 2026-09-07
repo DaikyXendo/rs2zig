@@ -347,6 +347,10 @@ class ASTBuilder:
                 )
             elif ntype == "function_item":
                 stmts.append(self._build_function(child))  # type: ignore
+            elif ntype == "struct_item":
+                stmts.append(self._build_struct(child))  # type: ignore
+            elif ntype == "enum_item":
+                stmts.append(self._build_enum(child))  # type: ignore
             elif ntype == "expression_statement":
                 sub_expr = child.children[0] if child.children else None
                 if sub_expr:
@@ -471,6 +475,8 @@ class ASTBuilder:
             type_node = node.child_by_field_name("type") or (node.children[2] if len(node.children) > 2 else None)
             val_expr = self._build_expr(val_node) if val_node else IdentifierExpr("val")
             target_type_str = map_type(self._build_type(type_node)) if type_node else "anytype"
+            if target_type_str.startswith("*") or target_type_str in ("_", "*mut _", "*const _"):
+                return CallExpr(callee=IdentifierExpr("@ptrCast"), args=[val_expr])
             return CallExpr(callee=IdentifierExpr("@as"), args=[IdentifierExpr(target_type_str), val_expr])
 
         if ntype == "unsafe_block":

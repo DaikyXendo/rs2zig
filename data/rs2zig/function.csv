@@ -48,8 +48,8 @@ src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emi
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_function,"(self, fn: FnDecl, parent_struct_name: Optional[str] = None)",str,False,True,,Emit Zig function or method definition.,227,274
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,276,294
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,296,308
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,310,376
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,378,706
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,310,385
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,387,734
 src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,36,69
 src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,72,138
 src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])","Tuple[str, str, bool, int, Optional[str]]",False,False,,Worker task function for parallel project transpilation.,141,151
@@ -67,11 +67,11 @@ src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._b
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_impl,"(self, node: tree_sitter.Node)",ImplBlock,False,True,,Build ImplBlock from impl_item node.,214,229
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_function,"(self, node: tree_sitter.Node)",FnDecl,False,True,,Build FnDecl from function_item node.,231,285
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_type,"(self, node: tree_sitter.Node)",TypeNode,False,True,,Build TypeNode from type syntax node.,287,324
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_block,"(self, node: tree_sitter.Node)",BlockExpr,False,True,,Build BlockExpr from block node.,326,362
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_let_stmt,"(self, node: tree_sitter.Node)",LetStmt,False,True,,Build LetStmt from let_declaration node.,364,382
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_assign_stmt,"(self, node: tree_sitter.Node)",AssignStmt,False,True,,Build AssignStmt from assignment_expression node.,384,394
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,396,707
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,709,720
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_block,"(self, node: tree_sitter.Node)",BlockExpr,False,True,,Build BlockExpr from block node.,326,366
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_let_stmt,"(self, node: tree_sitter.Node)",LetStmt,False,True,,Build LetStmt from let_declaration node.,368,386
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_assign_stmt,"(self, node: tree_sitter.Node)",AssignStmt,False,True,,Build AssignStmt from assignment_expression node.,388,398
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,400,713
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,715,726
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,parse_cargo_toml,(cargo_path: str),Optional[CargoManifest],False,False,,Parse Cargo.toml file and return CargoManifest dataclass.,32,68
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,expand_macros,"(code_or_file: str, is_file_path: bool = False)",str,False,False,,Expand macros in Rust source code using cargo expand if available.,15,55
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,_read_or_return,"(code_or_file: str, is_file_path: bool)",str,False,False,,Helper to read file content or return code string.,58,67
@@ -215,3 +215,7 @@ tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixe
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixesPart2.test_function_local_use_statement_lowering,(self),None,False,True,,Verify use statements inside function bodies do not emit invalid use ...; in Zig.,207,217
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixesPart2.test_self_return_type_lowering,(self),None,False,True,,Verify Self return type in struct methods lowers to struct name or @This().,219,232
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixesPart2.test_raw_identifier_escaping,(self),None,False,True,,"Verify Rust raw identifiers like r#type or r#match escape cleanly as @""type"" or @""match"" in Zig.",234,246
+tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixesPart2.test_block_local_struct_decl_lowering,(self),None,False,True,,Verify struct declarations inside function blocks lower to const Name = struct {}; in Zig.,248,258
+tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixesPart2.test_match_arm_if_guard_lowering,(self),None,False,True,,Verify match arm with if guard like .Assign(s) if s.is_empty() => {} lowers to if (s.is_empty()) {} in Zig.,260,272
+tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixesPart2.test_as_cast_expression_lowering,(self),None,False,True,,"Verify Rust as cast expressions like (n / 8) as usize lower to @as(usize, (n / 8)) in Zig.",274,284
+tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixesPart2.test_pointer_as_cast_lowering,(self),None,False,True,,Verify pointer as casts like ptr as *mut u8 lower to @ptrCast(p) in Zig.,286,295
