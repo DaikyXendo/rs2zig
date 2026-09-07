@@ -108,6 +108,33 @@ class MacroCallExpr(Expr):
 
 
 @dataclass
+class TryExpr(Expr):
+    """Try expression corresponding to Rust ? operator (e.g. expr?)."""
+    operand: Expr
+
+
+@dataclass
+class OptionalUnwrapExpr(Expr):
+    """Unwrap expression corresponding to expr.unwrap()."""
+    operand: Expr
+
+
+@dataclass
+class MatchArm(ASTNode):
+    """Single arm in a match or switch statement (pattern => body)."""
+    pattern: str
+    body: Expr
+    guard: Optional[Expr] = None
+
+
+@dataclass
+class MatchExpr(Expr):
+    """Match expression/statement (match target { pat => body, ... })."""
+    target: Expr
+    arms: List[MatchArm] = field(default_factory=list)
+
+
+@dataclass
 class ReturnExpr(Expr):
     """Return statement or expression."""
     value: Optional[Expr] = None
@@ -203,8 +230,30 @@ class StructDecl(ASTNode):
 
 
 @dataclass
+class EnumVariantField(ASTNode):
+    """Field inside an enum variant (e.g. V(i32) or V { val: i32 })."""
+    name: Optional[str]
+    field_type: TypeNode
+
+
+@dataclass
+class EnumVariant(ASTNode):
+    """Single variant inside an enum definition."""
+    name: str
+    fields: List[EnumVariantField] = field(default_factory=list)
+
+
+@dataclass
+class EnumDecl(ASTNode):
+    """Enum definition (simple enum or tagged union with payload)."""
+    name: str
+    variants: List[EnumVariant] = field(default_factory=list)
+    is_pub: bool = False
+
+
+@dataclass
 class ImplBlock(ASTNode):
-    """Impl block containing methods for a struct."""
+    """Impl block containing methods for a struct or enum."""
     struct_name: str
     methods: List[FnDecl] = field(default_factory=list)
 
@@ -213,5 +262,6 @@ class ImplBlock(ASTNode):
 class SourceFile(ASTNode):
     """Top-level source file module container."""
     structs: List[StructDecl] = field(default_factory=list)
+    enums: List[EnumDecl] = field(default_factory=list)
     functions: List[FnDecl] = field(default_factory=list)
     impls: List[ImplBlock] = field(default_factory=list)

@@ -9,6 +9,8 @@ from typing import List, Optional
 from rs2zig.ir.nodes import (
     SourceFile,
     StructDecl,
+    EnumDecl,
+    EnumVariant,
     ImplBlock,
     FnDecl,
     Param,
@@ -29,6 +31,10 @@ from rs2zig.ir.nodes import (
     ReturnExpr,
     IfExpr,
     LoopExpr,
+    MatchExpr,
+    MatchArm,
+    TryExpr,
+    OptionalUnwrapExpr,
 )
 from rs2zig.lowering.stdlib_map import map_type
 from rs2zig.lowering.control_flow import lower_println_macro
@@ -65,6 +71,10 @@ class ZigEmitter:
         # Combine impl blocks into their respective structs
         impl_map = {impl.struct_name: impl.methods for impl in sf.impls}
 
+        for enum_decl in sf.enums:
+            lines.append(self._emit_enum(enum_decl))
+            lines.append("")
+
         for struct in sf.structs:
             methods = impl_map.get(struct.name, [])
             lines.append(self._emit_struct(struct, methods))
@@ -79,6 +89,34 @@ class ZigEmitter:
     def _indent(self) -> str:
         """Get current indentation string."""
         return self.indent_str * self.current_indent
+
+    def _emit_enum(self, enum_decl: EnumDecl) -> str:
+        """Emit Zig enum or tagged union definition."""
+        vis = "pub " if enum_decl.is_pub else ""
+        has_payload = any(len(v.fields) > 0 for v in enum_decl.variants)
+        header = f"{vis}const {enum_decl.name} = union(enum) {{" if has_payload else f"{vis}const {enum_decl.name} = enum {{"
+
+        lines: List[str] = [header]
+        self.current_indent += 1
+
+        for v in enum_decl.variants:
+            if not has_payload or len(v.fields) == 0:
+                lines.append(f"{self._indent()}{v.name},")
+            else:
+                if len(v.fields) == 1 and v.fields[0].name is None:
+                    ftype = map_type(v.fields[0].field_type)
+                    lines.append(f"{self._indent()}{v.name}: {ftype},")
+                else:
+                    field_specs = []
+                    for f in v.fields:
+                        fname = f.name or "val"
+                        ftype = map_type(f.field_type)
+                        field_specs.append(f"{fname}: {ftype}")
+                    lines.append(f"{self._indent()}{v.name}: struct {{ {', '.join(field_specs)} }},")
+
+        self.current_indent -= 1
+        lines.append("};")
+        return "\n".join(lines)
 
     def _emit_struct(self, struct: StructDecl, methods: List[FnDecl]) -> str:
         """Emit Zig struct definition including any impl methods."""
@@ -168,7 +206,7 @@ class ZigEmitter:
 
         if isinstance(stmt, ExprStmt):
             expr_str = self._emit_expr(stmt.expr)
-            if isinstance(stmt.expr, (IfExpr, LoopExpr)):
+            if isinstance(stmt.expr, (IfExpr, LoopExpr, MatchExpr)):
                 return expr_str
             return f"{expr_str};"
 
@@ -182,7 +220,23 @@ class ZigEmitter:
             return expr.value
 
         if isinstance(expr, IdentifierExpr):
-            return expr.name
+            name = expr.name
+            if name.startswith("std."):
+                return name
+            if "::" in name:
+                parts = name.split("::")
+                if parts[0] in ("Some", "Ok"):
+                    return parts[1]
+                if parts[0] == "None":
+                    return "null"
+                if parts[0] == "Err":
+                    return f"error.{parts[1]}"
+                return f".{parts[-1]}"
+            if name == "Some":
+                return ""
+            if name == "None":
+                return "null"
+            return name
 
         if isinstance(expr, BinaryExpr):
             left_str = self._emit_expr(expr.left)
@@ -195,8 +249,21 @@ class ZigEmitter:
             operand_str = self._emit_expr(expr.operand)
             return f"({zop}{operand_str})" if zop != ".*" else f"({operand_str}.*)"
 
+        if isinstance(expr, TryExpr):
+            op_str = self._emit_expr(expr.operand)
+            return f"try {op_str}"
+
+        if isinstance(expr, OptionalUnwrapExpr):
+            op_str = self._emit_expr(expr.operand)
+            return f"({op_str} orelse unreachable)"
+
         if isinstance(expr, CallExpr):
             callee_str = self._emit_expr(expr.callee)
+            if callee_str in ("Some", "Ok"):
+                return self._emit_expr(expr.args[0]) if expr.args else "null"
+            if callee_str == "Err":
+                err_val = self._emit_expr(expr.args[0]) if expr.args else "UnknownError"
+                return f"error.{err_val.strip('\"')}"
             args_str = ", ".join(self._emit_expr(arg) for arg in expr.args)
             return f"{callee_str}({args_str})"
 
@@ -218,11 +285,32 @@ class ZigEmitter:
 
         if isinstance(expr, ReturnExpr):
             val_str = f" {self._emit_expr(expr.value)}" if expr.value else ""
+            if val_str.startswith(" (") and val_str.endswith(")"):
+                val_str = f" {val_str[2:-1]}"
             return f"return{val_str}"
+
+        if isinstance(expr, MatchExpr):
+            target_str = self._emit_expr(expr.target)
+            lines: List[str] = [f"switch ({target_str}) {{"]
+            self.current_indent += 1
+
+            for arm in expr.arms:
+                pat_str = arm.pattern.strip()
+                if pat_str == "_":
+                    pat_str = "else"
+                elif "::" in pat_str:
+                    pat_str = f".{pat_str.split('::')[-1]}"
+
+                body_str = self._emit_expr(arm.body)
+                lines.append(f"{self._indent()}{pat_str} => {body_str},")
+
+            self.current_indent -= 1
+            lines.append(f"{self._indent()}}}")
+            return "\n".join(lines)
 
         if isinstance(expr, IfExpr):
             cond_str = self._emit_expr(expr.condition)
-            lines: List[str] = [f"if ({cond_str}) {{"]
+            lines = [f"if ({cond_str}) {{"]
             self.current_indent += 1
             lines.extend(self._emit_block_lines(expr.then_block))
             self.current_indent -= 1

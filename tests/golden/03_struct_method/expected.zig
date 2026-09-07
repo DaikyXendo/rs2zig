@@ -5,7 +5,7 @@ const Point = struct {
     y: i32,
 
     fn area(self: *const Point) i32 {
-        return (self.x * self.y);
+        return self.x * self.y;
     }
 };
 

@@ -1,8 +1,8 @@
 file_path,module,class_name,base_classes,methods_count,decorators,docstring,start_line,end_line
 script/extract_data/find_classes.py,script.extract_data.find_classes,ClassVisitor,ast.NodeVisitor,2,,AST NodeVisitor to collect Python class definitions.,32,75
 script/extract_data/find_functions.py,script.extract_data.find_functions,FunctionVisitor,ast.NodeVisitor,5,,AST NodeVisitor to collect functions and class methods.,71,139
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter,,9,,Walks rs2zig IR nodes and emits formatted Zig source code.,39,260
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder,,12,,Walks tree-sitter syntax nodes and constructs IR AST objects.,54,413
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter,,10,,Walks rs2zig IR nodes and emits formatted Zig source code.,45,348
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder,,14,,Walks tree-sitter syntax nodes and constructs IR AST objects.,61,499
 src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser,,3,,Wrapper class around tree-sitter parser for Rust.,15,58
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ASTNode,,0,dataclass,Base dataclass for all AST and IR nodes.,12,14
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,TypeNode,ASTNode,1,dataclass,Represents a type in Rust or lowered Zig representation.,18,37
@@ -16,19 +16,28 @@ src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,FieldAccessExpr,Expr,0,dataclass,"Fie
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,StructFieldInit,ASTNode,0,dataclass,Single field initializer inside a struct initialization.,89,92
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,StructInitExpr,Expr,0,dataclass,"Struct initialization expression (e.g., Point { x: 10, y: 20 }).",96,99
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,MacroCallExpr,Expr,0,dataclass,"Macro invocation (e.g., println!(""hello {}""), format!(...)).",103,107
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ReturnExpr,Expr,0,dataclass,Return statement or expression.,111,113
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,Stmt,ASTNode,0,dataclass,Base dataclass for statements.,117,119
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ExprStmt,Stmt,0,dataclass,Statement consisting of an expression followed by semicolon.,123,125
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,LetStmt,Stmt,0,dataclass,Variable binding statement (let [mut] var: Type = expr).,129,134
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,AssignStmt,Stmt,0,dataclass,Assignment statement (lhs = rhs or lhs += rhs).,138,142
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,BlockExpr,Expr,0,dataclass,Block of statements with an optional trailing expression.,146,149
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,IfExpr,Expr,0,dataclass,If expression/statement (if cond { then_block } else { else_block }).,153,157
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,LoopExpr,Expr,0,dataclass,"Loop expression/statement (while, for, infinite loop).",161,167
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,Param,ASTNode,0,dataclass,Function parameter definition.,171,176
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,FieldDecl,ASTNode,0,dataclass,Struct field declaration.,180,184
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,FnDecl,ASTNode,0,dataclass,Function declaration.,188,194
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,StructDecl,ASTNode,0,dataclass,Struct definition.,198,202
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ImplBlock,ASTNode,0,dataclass,Impl block containing methods for a struct.,206,209
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,SourceFile,ASTNode,0,dataclass,Top-level source file module container.,213,217
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,TryExpr,Expr,0,dataclass,Try expression corresponding to Rust ? operator (e.g. expr?).,111,113
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,OptionalUnwrapExpr,Expr,0,dataclass,Unwrap expression corresponding to expr.unwrap().,117,119
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,MatchArm,ASTNode,0,dataclass,Single arm in a match or switch statement (pattern => body).,123,127
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,MatchExpr,Expr,0,dataclass,"Match expression/statement (match target { pat => body, ... }).",131,134
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ReturnExpr,Expr,0,dataclass,Return statement or expression.,138,140
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,Stmt,ASTNode,0,dataclass,Base dataclass for statements.,144,146
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ExprStmt,Stmt,0,dataclass,Statement consisting of an expression followed by semicolon.,150,152
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,LetStmt,Stmt,0,dataclass,Variable binding statement (let [mut] var: Type = expr).,156,161
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,AssignStmt,Stmt,0,dataclass,Assignment statement (lhs = rhs or lhs += rhs).,165,169
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,BlockExpr,Expr,0,dataclass,Block of statements with an optional trailing expression.,173,176
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,IfExpr,Expr,0,dataclass,If expression/statement (if cond { then_block } else { else_block }).,180,184
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,LoopExpr,Expr,0,dataclass,"Loop expression/statement (while, for, infinite loop).",188,194
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,Param,ASTNode,0,dataclass,Function parameter definition.,198,203
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,FieldDecl,ASTNode,0,dataclass,Struct field declaration.,207,211
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,FnDecl,ASTNode,0,dataclass,Function declaration.,215,221
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,StructDecl,ASTNode,0,dataclass,Struct definition.,225,229
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,EnumVariantField,ASTNode,0,dataclass,Field inside an enum variant (e.g. V(i32) or V { val: i32 }).,233,236
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,EnumVariant,ASTNode,0,dataclass,Single variant inside an enum definition.,240,243
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,EnumDecl,ASTNode,0,dataclass,Enum definition (simple enum or tagged union with payload).,247,251
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ImplBlock,ASTNode,0,dataclass,Impl block containing methods for a struct or enum.,255,258
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,SourceFile,ASTNode,0,dataclass,Top-level source file module container.,262,267
+src/rs2zig/lowering/enum_lowering.py,src.rs2zig.lowering.enum_lowering,EnumLoweringPass,,2,,Pass to process Rust enums and match pattern structures.,22,53
+src/rs2zig/lowering/ownership_pass.py,src.rs2zig.lowering.ownership_pass,OwnershipPass,,3,,"Pass to detect allocations, lower Vec/String operations, and inject allocator requirements.",24,104
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,ZigValidator,,3,,Invokes Zig toolchain to validate generated code syntax and semantics.,17,98
 tests/test_golden.py,tests.test_golden,TestGolden,unittest.TestCase,2,,Test suite executing golden tests in tests/golden/.,13,57

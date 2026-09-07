@@ -42,10 +42,13 @@ script/rs2zig_query.py,script.rs2zig_query,EXTRACT_SCRIPT,"os.path.join(PROJECT_
 script/rs2zig_query.py,script.rs2zig_query,CSV_FILES,"{'file': os.path.join(DATA_DIR, 'file.csv'), 'function': os.path.join(DATA_DIR, 'function.csv'), 'cl",21
 src/main.py,src.main,logger,logging.getLogger('rs2zig'),15
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,logger,logging.getLogger('rs2zig.backend.build_zig_gen'),9
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,logger,logging.getLogger('rs2zig.backend.zig_emitter'),36
-src/rs2zig/cli.py,src.rs2zig.cli,logger,logging.getLogger('rs2zig.cli'),20
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),39
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,logger,logging.getLogger('rs2zig.backend.zig_emitter'),42
+src/rs2zig/cli.py,src.rs2zig.cli,logger,logging.getLogger('rs2zig.cli'),21
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),46
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,logger,logging.getLogger('rs2zig.frontend.macro_expand'),12
 src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,logger,logging.getLogger('rs2zig.frontend.ts_parser'),12
+src/rs2zig/lowering/control_flow.py,src.rs2zig.lowering.control_flow,logger,logging.getLogger('rs2zig.lowering.control_flow'),13
+src/rs2zig/lowering/enum_lowering.py,src.rs2zig.lowering.enum_lowering,logger,logging.getLogger('rs2zig.lowering.enum_lowering'),19
+src/rs2zig/lowering/ownership_pass.py,src.rs2zig.lowering.ownership_pass,logger,logging.getLogger('rs2zig.lowering.ownership_pass'),21
 src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,RUST_TO_ZIG_TYPES,"{'i8': 'i8', 'i16': 'i16', 'i32': 'i32', 'i64': 'i64', 'i128': 'i128', 'isize': 'isize', 'u8': 'u8',",10
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,logger,logging.getLogger('rs2zig.validate.zig_fmt_check'),14

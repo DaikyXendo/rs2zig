@@ -5,8 +5,12 @@ Handles Rust control flow constructs (for range loops, println! macros) and form
 """
 
 import re
+import logging
 from typing import Tuple, List
-from rs2zig.ir.nodes import MacroCallExpr, Expr, LiteralExpr
+from rs2zig.ir.nodes import MacroCallExpr, Expr, LiteralExpr, IdentifierExpr
+from rs2zig.frontend.ts_parser import RustParser
+
+logger = logging.getLogger("rs2zig.lowering.control_flow")
 
 
 def split_macro_args(args_str: str) -> List[str]:
@@ -53,6 +57,8 @@ def lower_println_macro(macro_expr: MacroCallExpr) -> Tuple[str, List[Expr]]:
     Returns:
         Tuple containing Zig format string and list of argument expressions.
     """
+    from rs2zig.frontend.ast_builder import ASTBuilder
+
     raw_str = macro_expr.raw_args_str.strip()
     match = re.search(r'\((.*)\)', raw_str, re.DOTALL)
     if not match:
@@ -73,7 +79,22 @@ def lower_println_macro(macro_expr: MacroCallExpr) -> Tuple[str, List[Expr]]:
     # Replace Rust format specifiers {} with Zig format specifiers {d}
     fmt_str = fmt_str.replace("{}", "{d}")
 
-    # Build arg list (ignoring the format string argument itself)
-    arg_exprs: List[Expr] = [LiteralExpr(value=p, kind="identifier") for p in parts[1:]]
+    # Build arg list using RustParser and ASTBuilder
+    arg_exprs: List[Expr] = []
+    parser = RustParser()
+
+    for p in parts[1:]:
+        try:
+            wrapper_code = f"fn _wrap() {{ let _ = {p}; }}"
+            tree = parser.parse_code(wrapper_code)
+            builder = ASTBuilder(wrapper_code.encode("utf-8"))
+            fn_node = tree.root_node.children[0]
+            body_node = fn_node.child_by_field_name("body")
+            let_node = body_node.children[1]
+            val_node = let_node.child_by_field_name("value")
+            expr = builder._build_expr(val_node)
+            arg_exprs.append(expr)
+        except Exception:
+            arg_exprs.append(IdentifierExpr(name=p))
 
     return (fmt_str, arg_exprs)

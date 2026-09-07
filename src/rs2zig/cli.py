@@ -14,6 +14,7 @@ from rs2zig import __version__
 from rs2zig.frontend.ts_parser import RustParser
 from rs2zig.frontend.ast_builder import ASTBuilder
 from rs2zig.frontend.macro_expand import expand_macros
+from rs2zig.lowering.ownership_pass import OwnershipPass
 from rs2zig.backend.zig_emitter import ZigEmitter
 from rs2zig.validate.zig_fmt_check import ZigValidator
 
@@ -79,6 +80,9 @@ def run_transpile(input_path: str, output_path: Optional[str] = None, format_cod
 
     builder = ASTBuilder(rust_code.encode("utf-8"))
     ir_ast = builder.build_source_file(cst.root_node)
+
+    ownership_pass = OwnershipPass()
+    ownership_pass.lower_source_file(ir_ast)
 
     emitter = ZigEmitter()
     zig_code = emitter.emit_source_file(ir_ast)

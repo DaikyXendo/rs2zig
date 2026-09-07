@@ -33,6 +33,13 @@ from rs2zig.ir.nodes import (
     LoopExpr,
     StructDecl,
     FieldDecl,
+    EnumDecl,
+    EnumVariant,
+    EnumVariantField,
+    MatchExpr,
+    MatchArm,
+    TryExpr,
+    OptionalUnwrapExpr,
     ImplBlock,
 )
 
@@ -91,6 +98,8 @@ class ASTBuilder:
                 sf.functions.append(self._build_function(child))
             elif ntype == "struct_item":
                 sf.structs.append(self._build_struct(child))
+            elif ntype == "enum_item":
+                sf.enums.append(self._build_enum(child))
             elif ntype == "impl_item":
                 sf.impls.append(self._build_impl(child))
         return sf
@@ -119,6 +128,49 @@ class ASTBuilder:
                         )
 
         return StructDecl(name=struct_name, fields=fields, is_pub=is_pub)
+
+    def _build_enum(self, node: tree_sitter.Node) -> EnumDecl:
+        """Build EnumDecl from enum_item node."""
+        name_node = node.child_by_field_name("name")
+        enum_name = self.get_text(name_node) if name_node else "UnknownEnum"
+        is_pub = any(get_node_type(child) == "visibility_modifier" for child in node.children)
+
+        variants: List[EnumVariant] = []
+        body_node = node.child_by_field_name("body")
+        if body_node:
+            for child in body_node.children:
+                if get_node_type(child) == "enum_variant":
+                    variants.append(self._build_enum_variant(child))
+
+        return EnumDecl(name=enum_name, variants=variants, is_pub=is_pub)
+
+    def _build_enum_variant(self, node: tree_sitter.Node) -> EnumVariant:
+        """Build EnumVariant from enum_variant node."""
+        name_node = node.child_by_field_name("name")
+        vname = self.get_text(name_node) if name_node else self.get_text(node).split("{")[0].split("(")[0].strip()
+
+        variant_fields: List[EnumVariantField] = []
+        body_node = node.child_by_field_name("body")
+
+        if body_node:
+            for child in body_node.children:
+                if get_node_type(child) == "field_declaration":
+                    fn = child.child_by_field_name("name")
+                    ft = child.child_by_field_name("type")
+                    if ft:
+                        variant_fields.append(
+                            EnumVariantField(
+                                name=self.get_text(fn) if fn else None,
+                                field_type=self._build_type(ft)
+                            )
+                        )
+                elif get_node_type(child) == "tuple_field":
+                    ft = child.child_by_field_name("type") or child
+                    variant_fields.append(
+                        EnumVariantField(name=None, field_type=self._build_type(ft))
+                    )
+
+        return EnumVariant(name=vname, fields=variant_fields)
 
     def _build_impl(self, node: tree_sitter.Node) -> ImplBlock:
         """Build ImplBlock from impl_item node."""
@@ -293,14 +345,48 @@ class ASTBuilder:
                 operand=self._build_expr(arg_node) if arg_node else LiteralExpr("0", "int")
             )
 
+        if ntype == "try_expression":
+            operand_node = node.children[0] if node.children else None
+            return TryExpr(operand=self._build_expr(operand_node) if operand_node else IdentifierExpr("res"))
+
+        if ntype == "match_expression":
+            val_node = node.child_by_field_name("value")
+            body_node = node.child_by_field_name("body")
+            arms: List[MatchArm] = []
+
+            if body_node:
+                for child in body_node.children:
+                    if get_node_type(child) == "match_arm":
+                        pat_node = child.child_by_field_name("pattern")
+                        arm_val_node = child.child_by_field_name("value")
+                        if pat_node and arm_val_node:
+                            arms.append(
+                                MatchArm(
+                                    pattern=self.get_text(pat_node),
+                                    body=self._build_expr(arm_val_node)
+                                )
+                            )
+
+            return MatchExpr(
+                target=self._build_expr(val_node) if val_node else IdentifierExpr("val"),
+                arms=arms
+            )
+
         if ntype == "call_expression":
             fn_node = node.child_by_field_name("function")
             args_node = node.child_by_field_name("arguments")
+            callee_text = self.get_text(fn_node) if fn_node else ""
+
+            if callee_text.endswith(".unwrap"):
+                target_expr = self._build_expr(fn_node.child_by_field_name("value")) if fn_node and fn_node.type == "field_expression" else IdentifierExpr("opt")
+                return OptionalUnwrapExpr(operand=target_expr)
+
             args: List[Expr] = []
             if args_node:
                 for child in args_node.children:
                     if get_node_type(child) not in ("(", ")", ","):
                         args.append(self._build_expr(child))
+
             return CallExpr(
                 callee=self._build_expr(fn_node) if fn_node else IdentifierExpr("unknown_fn"),
                 args=args
