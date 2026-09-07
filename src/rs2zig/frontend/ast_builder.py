@@ -576,17 +576,20 @@ class ASTBuilder:
                         if c_type == "parameter":
                             pn = child.child_by_field_name("pattern")
                             pt = child.child_by_field_name("type")
+                            p_name = self.get_text(pn) if pn else "arg"
+                            p_name = p_name.replace("(", "").replace(")", "").replace(" ", "_").replace("&", "").strip()
                             closure_params.append(
                                 Param(
-                                    name=self.get_text(pn) if pn else "arg",
-                                    param_type=self._build_type(pt) if pt else TypeNode(name="i32")
+                                    name=p_name if p_name else "arg",
+                                    param_type=self._build_type(pt) if pt else TypeNode(name="anytype")
                                 )
                             )
-                        elif c_type in ("identifier", "pattern"):
+                        else:
+                            p_name = self.get_text(child).replace("(", "").replace(")", "").replace(" ", "_").replace("&", "").strip()
                             closure_params.append(
                                 Param(
-                                    name=self.get_text(child),
-                                    param_type=TypeNode(name="i32")
+                                    name=p_name if p_name else "arg",
+                                    param_type=TypeNode(name="anytype")
                                 )
                             )
 

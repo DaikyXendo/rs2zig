@@ -49,7 +49,7 @@ src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emi
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,252,265
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,267,279
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,281,343
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,345,642
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,345,646
 src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,36,69
 src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,72,138
 src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])","Tuple[str, str, bool, int, Optional[str]]",False,False,,Worker task function for parallel project transpilation.,141,151
@@ -70,8 +70,8 @@ src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._b
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_block,"(self, node: tree_sitter.Node)",BlockExpr,False,True,,Build BlockExpr from block node.,320,344
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_let_stmt,"(self, node: tree_sitter.Node)",LetStmt,False,True,,Build LetStmt from let_declaration node.,346,364
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_assign_stmt,"(self, node: tree_sitter.Node)",AssignStmt,False,True,,Build AssignStmt from assignment_expression node.,366,376
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,378,658
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,660,671
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,378,661
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,663,674
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,parse_cargo_toml,(cargo_path: str),Optional[CargoManifest],False,False,,Parse Cargo.toml file and return CargoManifest dataclass.,32,68
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,expand_macros,"(code_or_file: str, is_file_path: bool = False)",str,False,False,,Expand macros in Rust source code using cargo expand if available.,15,55
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,_read_or_return,"(code_or_file: str, is_file_path: bool)",str,False,False,,Helper to read file content or return code string.,58,67
@@ -176,4 +176,6 @@ tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_ref_k
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_function_type_mapping,(self),None,False,True,,Verify Rust function signature type fn(T) -> R lowers to Zig *const fn(T) R.,417,426
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_raw_string_literal_lowering,(self),None,False,True,,"Verify Rust raw string literals r""[0-9]"" and r#""hello""# lower to Zig string literals ""[0-9]"".",428,440
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_array_reference_lowering,(self),None,False,True,,"Verify Rust array reference &[""is_match"", ""find""] lowers to Zig &.{ ""is_match"", ""find"" }.",442,451
-tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_raw_pointer_type_lowering,(self),None,False,True,,"Verify Rust raw pointer types (*mut T, *const 'a T, *mut [u8]) map cleanly to Zig pointer types (*T, *const T, []u8).",453,468
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_raw_pointer_type_lowering,(self),None,False,True,,"Verify Rust raw pointer types (*mut T, *const 'a T, *mut [u8]) map cleanly to Zig pointer types (*T, *const T, []u8).",453,467
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_unit_return_expression_lowering,(self),None,False,True,,Verify Rust return () lowers to clean Zig return without invalid tuple syntax.,468,477
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_closure_pattern_parameter_lowering,(self),None,False,True,,"Verify closures with tuple pattern parameters |res, (x, y)| build clean struct wrappers in Zig.",479,488

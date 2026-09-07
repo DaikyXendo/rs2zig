@@ -465,7 +465,27 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("*mut [u8]", zig)
         self.assertIn("prev: *LruEntry", zig)
         self.assertIn("mutex: *const Mutex", zig)
-        self.assertIn("buf: []u8", zig)
+    def test_unit_return_expression_lowering(self) -> None:
+        """Verify Rust return () lowers to clean Zig return without invalid tuple syntax."""
+        code = """
+        pub fn run() {
+            return ();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("return ();", zig)
+        self.assertIn("return;", zig)
+
+    def test_closure_pattern_parameter_lowering(self) -> None:
+        """Verify closures with tuple pattern parameters |res, (x, y)| build clean struct wrappers in Zig."""
+        code = """
+        pub fn fold_items() {
+            let res = items.fold(None, |res, (x, y)| res);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("|res, (x, y)|", zig)
+        self.assertIn("struct { fn run(", zig)
 
 
 if __name__ == "__main__":

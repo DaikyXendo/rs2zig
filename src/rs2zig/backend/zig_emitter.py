@@ -493,10 +493,14 @@ class ZigEmitter:
                 return "true"
 
         if isinstance(expr, ReturnExpr):
-            val_str = f" {self._emit_expr(expr.value)}" if expr.value else ""
-            if val_str.startswith(" (") and val_str.endswith(")"):
-                val_str = f" {val_str[2:-1]}"
-            return f"return{val_str}"
+            if not expr.value:
+                return "return"
+            val_str = self._emit_expr(expr.value).strip()
+            if val_str in (".{}", "()", "void", "Ok()", "Ok({})"):
+                return "return"
+            if val_str.startswith("(") and val_str.endswith(")"):
+                val_str = val_str[1:-1].strip()
+            return f"return {val_str}" if val_str else "return"
 
         if isinstance(expr, MatchExpr):
             target_str = self._emit_expr(expr.target)
