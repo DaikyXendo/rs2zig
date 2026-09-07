@@ -41,4 +41,4 @@ src/rs2zig/validate/conversion_reporter.py,src.rs2zig.validate.conversion_report
 src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,98,3316
 tests/test_cargo_parser.py,tests.test_cargo_parser,54,1778
 tests/test_golden.py,tests.test_golden,61,2191
-tests/test_pattern_fixes.py,tests.test_pattern_fixes,175,6375
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,186,6781

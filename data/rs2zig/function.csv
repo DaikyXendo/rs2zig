@@ -149,3 +149,4 @@ tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_const
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_alloc_path_type_mapping,(self),None,False,True,,Verify alloc::string::String and alloc::vec::Vec lower to Zig types cleanly.,142,151
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_await_field_lowering,(self),None,False,True,,Verify Rust expr.await lowers cleanly without invalid .await syntax.,153,162
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_fn_generic_params_lowering,(self),None,False,True,,Verify Rust function generics fn foo<T: Send>() lower to (comptime T: type) in Zig.,164,171
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_lifetime_in_struct_field_type,(self),None,False,True,,"Verify struct field generic types with lifetimes like slice.Iter('a, T.Item) strip lifetime 'a.",173,182

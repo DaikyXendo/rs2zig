@@ -170,6 +170,17 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("<T", zig)
         self.assertIn("comptime T: type", zig)
 
+    def test_lifetime_in_struct_field_type(self) -> None:
+        """Verify struct field generic types with lifetimes like slice.Iter('a, T.Item) strip lifetime 'a."""
+        code = """
+        pub struct IntoIter<'a, T> {
+            iter: slice::Iter<'a, T>,
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("'a", zig)
+        self.assertIn("slice.Iter(T)", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
