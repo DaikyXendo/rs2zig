@@ -367,6 +367,19 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("|(color, reset_timer|", zig)
         self.assertIn("if (query.get_mut(entity))", zig)
 
+    def test_logical_operator_lowering(self) -> None:
+        """Verify Rust logical operators && and || lower to Zig and / or operators."""
+        code = """
+        pub fn check(a: bool, b: bool) -> bool {
+            (a && b) || !a
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("&&", zig)
+        self.assertNotIn("||", zig)
+        self.assertIn("and", zig)
+        self.assertIn("or", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

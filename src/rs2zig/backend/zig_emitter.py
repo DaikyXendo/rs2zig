@@ -406,7 +406,9 @@ class ZigEmitter:
             right_str = self._emit_expr(expr.right)
             if expr.op == "=":
                 return f"{left_str} = {right_str}"
-            return f"({left_str} {expr.op} {right_str})"
+            op_map = {"&&": "and", "||": "or"}
+            op = op_map.get(expr.op, expr.op)
+            return f"({left_str} {op} {right_str})"
 
         if isinstance(expr, UnaryExpr):
             op_map = {"!": "!", "-": "-", "*": ".*", "&": "&", "&mut": "&"}
