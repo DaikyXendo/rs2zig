@@ -541,7 +541,9 @@ class ZigEmitter:
                     target_part = parts[1].strip() if len(parts) > 1 else ""
                     cap_var = "item"
                     if "(" in pat_part and ")" in pat_part:
-                        cap_var = pat_part.split("(", 1)[1].rstrip(")").strip().replace("mut ", "")
+                        cap_var = pat_part.split("(", 1)[1].rstrip(")").lstrip("(").strip().replace("mut ", "")
+                        if "," in cap_var or not cap_var.isidentifier():
+                            cap_var = "item"
                     if pat_part.startswith("Err"):
                         lines = [f"_ = {target_part} catch |{cap_var}| {{", f"{self.indent_str * (self.current_indent + 1)}_ = {cap_var};"]
                     else:

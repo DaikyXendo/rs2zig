@@ -287,6 +287,8 @@ class ASTBuilder:
     def _build_type(self, node: tree_sitter.Node) -> TypeNode:
         """Build TypeNode from type syntax node."""
         text = self.get_text(node).strip()
+        if text.startswith("->"):
+            text = text[2:].strip()
         is_raw_ptr = text.startswith("*const ") or text.startswith("*mut ")
         if is_raw_ptr:
             is_ref = False

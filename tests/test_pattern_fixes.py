@@ -345,6 +345,28 @@ class TestPatternFixes(unittest.TestCase):
         zig = self._transpile_code(code)
         self.assertNotIn(";;", zig)
 
+    def test_impl_trait_return_type_lowering(self) -> None:
+        """Verify fn create_button() -> impl Bundle lowers to fn create_button() anytype."""
+        code = """
+        pub fn create_button() -> impl Bundle {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("impl Bundle", zig)
+        self.assertIn("fn create_button() anytype", zig)
+
+    def test_if_let_tuple_payload_capture(self) -> None:
+        """Verify if let Some((color, reset_timer)) lowers cleanly without broken payload syntax."""
+        code = """
+        pub fn update() {
+            if let Some((color, reset_timer)) = query.get_mut(entity) {
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("|(color, reset_timer|", zig)
+        self.assertIn("if (query.get_mut(entity))", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
