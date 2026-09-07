@@ -12,7 +12,7 @@ src/rs2zig/__init__.py,src.rs2zig,7,132
 src/rs2zig/backend/__init__.py,src.rs2zig.backend,5,101
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,70,1985
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,420,16160
-src/rs2zig/cli.py,src.rs2zig.cli,254,10053
+src/rs2zig/cli.py,src.rs2zig.cli,256,10150
 src/rs2zig/frontend/__init__.py,src.rs2zig.frontend,5,126
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,590,24254
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,68,1960
@@ -22,6 +22,7 @@ src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,58,1909
 src/rs2zig/ir/__init__.py,src.rs2zig.ir,3,60
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,304,7544
 src/rs2zig/lowering/__init__.py,src.rs2zig.lowering,5,142
+src/rs2zig/lowering/async_plugin.py,src.rs2zig.lowering.async_plugin,71,2160
 src/rs2zig/lowering/bevy_lowering.py,src.rs2zig.lowering.bevy_lowering,9,206
 src/rs2zig/lowering/bevy_plugin.py,src.rs2zig.lowering.bevy_plugin,158,5807
 src/rs2zig/lowering/cffi_plugin.py,src.rs2zig.lowering.cffi_plugin,62,1871

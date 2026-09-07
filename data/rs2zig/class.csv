@@ -44,6 +44,7 @@ src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,EnumDecl,ASTNode,0,dataclass,Enum def
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,TraitDecl,ASTNode,0,dataclass,Trait declaration definition.,282,286
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ImplBlock,ASTNode,0,dataclass,"Impl block containing methods for a struct or enum, optionally implementing a trait.",290,294
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,SourceFile,ASTNode,0,dataclass,Top-level source file module container.,298,304
+src/rs2zig/lowering/async_plugin.py,src.rs2zig.lowering.async_plugin,AsyncPlugin,LibraryLoweringPlugin,3,,Lowering plugin for Rust multithreading and async tasks.,23,71
 src/rs2zig/lowering/bevy_plugin.py,src.rs2zig.lowering.bevy_plugin,BevyPlugin,LibraryLoweringPlugin,6,,Lowering plugin for Bevy Engine ECS framework.,26,158
 src/rs2zig/lowering/cffi_plugin.py,src.rs2zig.lowering.cffi_plugin,CFFIPlugin,LibraryLoweringPlugin,3,,Lowering plugin for C-FFI and raw pointers.,15,62
 src/rs2zig/lowering/enum_lowering.py,src.rs2zig.lowering.enum_lowering,EnumLoweringPass,,2,,Pass to process Rust enums and match pattern structures.,22,53
