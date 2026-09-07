@@ -380,6 +380,28 @@ class TestPatternFixes(unittest.TestCase):
         self.assertIn("and", zig)
         self.assertIn("or", zig)
 
+    def test_while_let_loop_lowering(self) -> None:
+        """Verify while let Some(x) = iter.next() lowers to Zig while (iter.next()) |x|."""
+        code = """
+        pub fn process() {
+            while let Some(item) = stream.next() {
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("while (.Some", zig)
+        self.assertIn("while (stream.next()) |item|", zig)
+
+    def test_closure_unused_parameter_discarding(self) -> None:
+        """Verify unused closure parameters are auto-discarded with _ = param; in closure helper struct."""
+        code = """
+        pub fn run() {
+            let f = |x, y| x + 1;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("_ = y;", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

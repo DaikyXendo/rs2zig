@@ -574,7 +574,20 @@ class ZigEmitter:
         if isinstance(expr, LoopExpr):
             if expr.loop_kind == "while" and expr.condition:
                 cond_str = self._emit_expr(expr.condition)
-                capture_str = f" |{expr.var_name}|" if expr.var_name else ""
+                cap_var = expr.var_name
+                if "let " in cond_str and "=" in cond_str:
+                    clean_cond = cond_str
+                    if clean_cond.startswith("(") and clean_cond.endswith(")"):
+                        clean_cond = clean_cond[1:-1]
+                    if clean_cond.startswith("let "):
+                        parts = clean_cond[4:].split("=", 1)
+                        pat_part = parts[0].strip()
+                        cond_str = parts[1].strip() if len(parts) > 1 else cond_str
+                        if not cap_var and "(" in pat_part and ")" in pat_part:
+                            cap_var = pat_part.split("(", 1)[1].rstrip(")").lstrip("(").strip().replace("mut ", "")
+                            if "," in cap_var or not cap_var.isidentifier():
+                                cap_var = "item"
+                capture_str = f" |{cap_var}|" if cap_var else ""
                 lines = [f"while ({cond_str}){capture_str} {{"]
                 self.current_indent += 1
                 lines.extend(self._emit_block_lines(expr.body))
@@ -590,20 +603,37 @@ class ZigEmitter:
                 return "\n".join(lines)
 
         if isinstance(expr, ClosureExpr):
-            params_parts = [f"{p.name}: {map_type(p.param_type)}" for p in expr.params]
+            params_parts = []
+            for p in expr.params:
+                ptype = map_type(p.param_type) if (p.param_type and p.param_type.name != "anytype") else "anytype"
+                pname = p.name if (p.name and p.name != "_") else "arg"
+                params_parts.append(f"{pname}: {ptype}")
             params_str = ", ".join(params_parts)
             ret_type = map_type(expr.return_type) if expr.return_type else "i32"
 
             if isinstance(expr.body, BlockExpr):
+                body_lines = self._emit_block_lines(expr.body)
+                body_text = "\n".join(body_lines)
+                discard_lines = []
+                for p in expr.params:
+                    if p.name and p.name != "_" and not p.name.startswith("_"):
+                        if not re.search(r"\b" + re.escape(p.name) + r"\b", body_text):
+                            discard_lines.append(f"{self._indent()}_ = {p.name};")
                 lines = [f"(struct {{ fn run({params_str}) {ret_type} {{"]
                 self.current_indent += 1
-                lines.extend(self._emit_block_lines(expr.body))
+                lines.extend(discard_lines)
+                lines.extend(body_lines)
                 self.current_indent -= 1
                 lines.append(f"{self._indent()}}} }}.run)")
                 return "\n".join(lines)
             else:
                 body_str = self._emit_expr(expr.body)
-                return f"(struct {{ fn run({params_str}) {ret_type} {{ return {body_str}; }} }}.run)"
+                discard_prefix = ""
+                for p in expr.params:
+                    if p.name and p.name != "_" and not p.name.startswith("_"):
+                        if not re.search(r"\b" + re.escape(p.name) + r"\b", body_str):
+                            discard_prefix += f"_ = {p.name}; "
+                return f"(struct {{ fn run({params_str}) {ret_type} {{ {discard_prefix}return {body_str}; }} }}.run)"
 
         return "{}"
 
