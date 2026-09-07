@@ -129,9 +129,12 @@ class ZigEmitter:
                 header_lines.append('const create_app = aok_core.create_app;')
 
         out_dir = os.path.dirname(file_path) if file_path else ""
+        top_level_names = {c.name for c in sf.constants} | {s.name for s in sf.structs} | {e.name for e in sf.enums} | {t.name for t in sf.traits} | {f.name for f in sf.functions}
 
         for mod_name in sorted(self.imported_modules):
             if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app"):
+                if mod_name in top_level_names:
+                    continue
                 clean_mod_name = f'@"{mod_name}"' if mod_name in ZIG_RESERVED_KEYWORDS else mod_name
                 if mod_name == "aok":
                     header_lines.append('const aok = aok_core;')
@@ -197,7 +200,8 @@ class ZigEmitter:
         self.current_indent += 1
         for field in struct.fields:
             ftype = map_type(field.field_type)
-            lines.append(f"{self._indent()}{field.name}: {ftype},")
+            fname = f'@"{field.name}"' if (field.name in ZIG_RESERVED_KEYWORDS and not field.name.startswith("@")) else field.name
+            lines.append(f"{self._indent()}{fname}: {ftype},")
 
         if struct.fields and methods:
             lines.append("")
@@ -229,9 +233,9 @@ class ZigEmitter:
         params_str = self._emit_params(all_params, parent_struct_name)
 
         if fn_name == "main":
-            ret_str = "!void" if fn.return_type is None else map_type(fn.return_type)
+            ret_str = "!void" if fn.return_type is None else map_type(fn.return_type, is_return_type=True)
         else:
-            ret_str = map_type(fn.return_type) if fn.return_type else "void"
+            ret_str = map_type(fn.return_type, is_return_type=True) if fn.return_type else "void"
 
         lines: List[str] = [f"{vis}fn {fn_name}({params_str}) {ret_str} {{"]
 
@@ -287,6 +291,9 @@ class ZigEmitter:
 
     def _emit_stmt(self, stmt: Stmt) -> str:
         """Emit single statement string without leading indent."""
+        if isinstance(stmt, FnDecl):
+            return self._emit_function(stmt)
+
         if isinstance(stmt, LetStmt):
             if stmt.name == "_":
                 val_str = self._emit_expr(stmt.value) if stmt.value else "0"
@@ -326,10 +333,11 @@ class ZigEmitter:
                         lines.append(f"{kw} {clean_vname} = {tmp_var}.@\"{idx}\";")
                 return f"\n{self._indent()}".join(lines)
             kw = "var" if stmt.is_mutable else "const"
+            vname = f'@"{stmt.name}"' if (stmt.name in ZIG_RESERVED_KEYWORDS and not stmt.name.startswith("@")) else stmt.name
             type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
             val_expr_str = self._emit_expr(stmt.value).rstrip(";").strip() if stmt.value else ""
             val_part = f" = {val_expr_str}" if stmt.value else ""
-            res = f"{kw} {stmt.name}{type_part}{val_part};"
+            res = f"{kw} {vname}{type_part}{val_part};"
             if stmt.name == "ip":
                 res += f"\n{self._indent()}_ = ip;"
             return res

@@ -551,6 +551,115 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn(")?; ", zig)
         self.assertIn("pos += try pre.find(", zig)
 
+    def test_standalone_range_expression_lowering(self) -> None:
+        """Verify Rust standalone range expression 0..cap() lowers to Zig struct .{ .start = 0, .end = cap() } while slice ranges buf[0..10] preserve indexing syntax."""
+        code = """
+        pub fn run() {
+            let it = 0..self.capacity();
+            let slice = &buf[0..10];
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("0..self.capacity()", zig)
+        self.assertIn(".{ .start = 0, .end = self.capacity() }", zig)
+        self.assertIn("buf[0..10]", zig)
+
+    def test_array_type_with_generics_lowering(self) -> None:
+        """Verify Rust fixed-size array types with generic parameters [MaybeUninit<u8>; 40] lower to Zig [40]MaybeUninit(u8)."""
+        code = """
+        pub struct Buf {
+            bytes: [MaybeUninit<u8>; 40],
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("bytes: [MaybeUninit(u8),", zig)
+        self.assertIn("bytes: [40]MaybeUninit(u8)", zig)
+
+    def test_inner_block_const_decl_lowering(self) -> None:
+        """Verify const item inside function block BOM: &str = ... lowers to Zig const BOM: []const u8 = ... without double semicolon."""
+        code = """
+        pub fn parse_file() {
+            const BOM: &str = "\\u{feff}";
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn(";;", zig)
+        self.assertNotIn(": &str =", zig)
+        self.assertIn("const BOM: []const u8 =", zig)
+
+    def test_struct_and_enum_field_keyword_escaping(self) -> None:
+        """Verify struct fields and enum variants named after reserved keywords (error, test, const) are escaped as @\"error\"."""
+        code = """
+        pub struct ErrorInfo {
+            pub error: u32,
+            pub test: bool,
+        }
+        pub enum Mode {
+            Error,
+            Test(u32),
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("@\"error\": u32", zig)
+        self.assertIn("@\"test\": bool", zig)
+
+    def test_nested_function_in_block_lowering(self) -> None:
+        """Verify nested function item inside a block lowers to clean Zig function definition without raw -> arrow syntax."""
+        code = """
+        pub fn test_peek() {
+            fn assert(input: ParseStream) -> Result<()> {
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("->", zig)
+        self.assertIn("fn assert(input: ParseStream) Result(void)", zig)
+
+    def test_fn_pointer_void_return_type_mapping(self) -> None:
+        """Verify Rust function pointer types without return type fn(Cursor) map to Zig *const fn(Cursor) void."""
+        code = """
+        pub struct Marker {
+            marker: PhantomData<*const fn(Cursor)>,
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("fn(Cursor) )", zig)
+        self.assertIn("*const fn(Cursor) void", zig)
+
+    def test_impl_trait_return_type_lowering(self) -> None:
+        """Verify function returning impl Trait lowers return type to type instead of invalid anytype."""
+        code = """
+        pub fn naive_iter() -> impl Iterator {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("fn naive_iter() anytype", zig)
+        self.assertIn("fn naive_iter() type", zig)
+
+    def test_parenthesized_generic_type_lowering(self) -> None:
+        """Verify parenthesized return types like (Rc<Cell<Unexpected>>) lower cleanly to Rc(Cell(Unexpected)) without leading parens on base type."""
+        code = """
+        pub fn inner_unexpected() -> (Rc<Cell<Unexpected>>) {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("(Rc(", zig)
+        self.assertIn("fn inner_unexpected() Rc(Cell(Unexpected))", zig)
+
+    def test_shadow_import_name_collision_lowering(self) -> None:
+        """Verify module import 'parse' alongside function 'pub fn parse()' renames import to avoid duplicate struct member error."""
+        code = """
+        mod parse;
+        pub fn parse() {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("const parse = @import", zig)
+        self.assertIn("fn parse()", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
+
+
+

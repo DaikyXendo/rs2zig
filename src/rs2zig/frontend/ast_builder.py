@@ -289,24 +289,29 @@ class ASTBuilder:
         text = self.get_text(node).strip()
         if text.startswith("->"):
             text = text[2:].strip()
+        if text.startswith("(") and text.endswith(")") and "," not in text:
+            text = text[1:-1].strip()
         is_raw_ptr = text.startswith("*const ") or text.startswith("*mut ")
-        if is_raw_ptr:
+        is_array_type = text.startswith("[") and text.endswith("]")
+        if is_raw_ptr or is_array_type:
             is_ref = False
             is_mut = False
             clean_text = text
+            generic_args = []
         else:
             is_ref = text.startswith("&")
             is_mut = "&mut " in text
             clean_text = text.lstrip("&").replace("mut ", "").strip()
-        generic_args: List[TypeNode] = []
-
-        split_res = _split_angle_brackets(clean_text)
-        if split_res:
-            base_name, generic_str, _ = split_res
-            for arg_part in _split_top_level_commas(generic_str):
-                if arg_part.strip() and not arg_part.strip().startswith("'"):
-                    generic_args.append(TypeNode(name=arg_part.strip()))
-            clean_text = base_name.strip()
+            if clean_text.startswith("(") and clean_text.endswith(")") and "," not in clean_text:
+                clean_text = clean_text[1:-1].strip()
+            generic_args = []
+            split_res = _split_angle_brackets(clean_text)
+            if split_res:
+                base_name, generic_str, _ = split_res
+                for arg_part in _split_top_level_commas(generic_str):
+                    if arg_part.strip() and not arg_part.strip().startswith("'"):
+                        generic_args.append(TypeNode(name=arg_part.strip()))
+                clean_text = base_name.strip()
 
         return TypeNode(
             name=clean_text,
@@ -329,6 +334,18 @@ class ASTBuilder:
                 continue
             if ntype == "let_declaration":
                 stmts.append(self._build_let_stmt(child))
+            elif ntype in ("const_item", "static_item"):
+                const_decl = self._build_const(child)
+                stmts.append(
+                    LetStmt(
+                        name=const_decl.name,
+                        var_type=const_decl.const_type,
+                        value=const_decl.value,
+                        is_mutable=False
+                    )
+                )
+            elif ntype == "function_item":
+                stmts.append(self._build_function(child))  # type: ignore
             elif ntype == "expression_statement":
                 sub_expr = child.children[0] if child.children else None
                 if sub_expr:
@@ -466,6 +483,22 @@ class ASTBuilder:
         if ntype == "try_expression":
             operand_node = node.children[0] if node.children else None
             return TryExpr(operand=self._build_expr(operand_node) if operand_node else IdentifierExpr("res"))
+
+        if ntype == "range_expression":
+            left_node = node.child_by_field_name("left") or (node.children[0] if len(node.children) > 1 and get_node_type(node.children[0]) != ".." else None)
+            right_node = node.child_by_field_name("right") or (node.children[-1] if len(node.children) > 1 and get_node_type(node.children[-1]) != ".." else None)
+            left_expr = self._build_expr(left_node) if left_node else LiteralExpr("0", "int")
+            right_expr = self._build_expr(right_node) if right_node else IdentifierExpr("len")
+            parent_type = get_node_type(node.parent) if node.parent else ""
+            if parent_type in ("index_expression", "for_expression"):
+                return BinaryExpr(left=left_expr, op="..", right=right_expr)
+            return StructInitExpr(
+                struct_name=".",
+                fields=[
+                    StructFieldInit("start", left_expr),
+                    StructFieldInit("end", right_expr)
+                ]
+            )
 
         if ntype == "match_expression":
             val_node = node.child_by_field_name("value")

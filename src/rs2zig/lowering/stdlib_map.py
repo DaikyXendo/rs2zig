@@ -75,11 +75,12 @@ def _split_top_level_commas(s: str) -> List[str]:
     return parts
 
 
-def map_type(rust_type: Union[TypeNode, str]) -> str:
+def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> str:
     """Map a Rust TypeNode or type string into Zig target type string representation.
 
     Args:
         rust_type: Input Rust TypeNode or type string.
+        is_return_type: Whether this type is used as a function return type.
 
     Returns:
         Mapped Zig type string.
@@ -91,11 +92,12 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         if name.startswith("fn(") or name.startswith("fn ("):
             args_and_ret = name[name.find("(")+1:]
             args_part, _, ret_part = args_and_ret.partition(")")
-            ret_str = map_type(ret_part.strip().lstrip("->").strip()) if ret_part.strip() else "void"
+            clean_ret = ret_part.strip().lstrip("->").strip()
+            ret_str = map_type(clean_ret, is_return_type=True) if (clean_ret and clean_ret not in ("()", "void")) else "void"
             args_list = [map_type(a.strip()) for a in _split_top_level_commas(args_part) if a.strip()]
             return f"*const fn({', '.join(args_list)}) {ret_str}"
         if name.startswith("impl "):
-            return "anytype"
+            return "type" if is_return_type else "anytype"
         if name.startswith("(") and name.endswith(")"):
             inner = name[1:-1].strip()
             if not inner:
@@ -155,21 +157,7 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
     name = rust_type.name.strip()
     if "'" in name:
         name = re.sub(r"'[a-zA-Z0-9_]+\s*", "", name).strip()
-    if name.startswith("fn(") or name.startswith("fn ("):
-        args_and_ret = name[name.find("(")+1:]
-        args_part, _, ret_part = args_and_ret.partition(")")
-        ret_str = map_type(ret_part.strip().lstrip("->").strip()) if ret_part.strip() else "void"
-        args_list = [map_type(a.strip()) for a in _split_top_level_commas(args_part) if a.strip()]
-        return f"*const fn({', '.join(args_list)}) {ret_str}"
-    if name.startswith("impl "):
-        return "anytype"
-    if name.startswith("(") and name.endswith(")"):
-        inner = name[1:-1].strip()
-        if not inner:
-            return "void"
-        if "," in inner:
-            elems = [map_type(p.strip()) for p in _split_top_level_commas(inner) if p.strip()]
-            return f"struct {{ {', '.join(elems)} }}"
+
     if name.startswith("&mut [") and name.endswith("]"):
         inner = name[6:-1].strip()
         return f"[]{map_type(inner)}"
@@ -202,6 +190,23 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         rust_type.is_raw_pointer = True
         rust_type.is_mutable = False
         name = rust_type.name
+
+    if name.startswith("fn(") or name.startswith("fn ("):
+        args_and_ret = name[name.find("(")+1:]
+        args_part, _, ret_part = args_and_ret.partition(")")
+        clean_ret = ret_part.strip().lstrip("->").strip()
+        ret_str = map_type(clean_ret, is_return_type=True) if (clean_ret and clean_ret not in ("()", "void")) else "void"
+        args_list = [map_type(a.strip()) for a in _split_top_level_commas(args_part) if a.strip()]
+        return f"*const fn({', '.join(args_list)}) {ret_str}"
+    if name.startswith("impl "):
+        return "type" if is_return_type else "anytype"
+    if name.startswith("(") and name.endswith(")"):
+        inner = name[1:-1].strip()
+        if not inner:
+            return "void"
+        if "," in inner:
+            elems = [map_type(p.strip()) for p in _split_top_level_commas(inner) if p.strip()]
+            return f"struct {{ {', '.join(elems)} }}"
     if name.startswith("[") and name.endswith("]"):
         inner = name[1:-1].strip()
         if ";" in inner:
