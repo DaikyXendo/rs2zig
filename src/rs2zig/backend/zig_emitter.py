@@ -425,6 +425,8 @@ class ZigEmitter:
             fname = expr.field_name
             if fname == "await":
                 return target_str
+            if fname.isdigit():
+                fname = f'@"{fname}"'
             if "::<" in fname:
                 base, rest = fname.split("::<", 1)
                 gen_part, _, trailing = rest.partition(">")

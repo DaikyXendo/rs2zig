@@ -8,6 +8,7 @@ import logging
 from typing import List, Optional, Union
 import tree_sitter
 
+from rs2zig.lowering.stdlib_map import map_type
 from rs2zig.ir.nodes import (
     SourceFile,
     ConstDecl,
@@ -440,6 +441,13 @@ class ASTBuilder:
             elif isinstance(fn_expr, FieldAccessExpr):
                 return FieldAccessExpr(target=fn_expr.target, field_name=f"{fn_expr.field_name}{type_args_str}")
             return fn_expr
+
+        if ntype == "type_cast_expression":
+            val_node = node.child_by_field_name("value") or (node.children[0] if node.children else None)
+            type_node = node.child_by_field_name("type") or (node.children[2] if len(node.children) > 2 else None)
+            val_expr = self._build_expr(val_node) if val_node else IdentifierExpr("val")
+            target_type_str = map_type(self._build_type(type_node)) if type_node else "anytype"
+            return CallExpr(callee=IdentifierExpr("@as"), args=[IdentifierExpr(target_type_str), val_expr])
 
         if ntype == "await_expression":
             operand_node = node.children[0] if node.children else None

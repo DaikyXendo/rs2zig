@@ -49,29 +49,29 @@ src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emi
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,239,252
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,254,266
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,268,329
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,331,586
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,331,588
 src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,36,69
 src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,72,138
 src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])","Tuple[str, str, bool, int, Optional[str]]",False,False,,Worker task function for parallel project transpilation.,141,151
 src/rs2zig/cli.py,src.rs2zig.cli,run_transpile_project,"(project_dir: str, output_dir: str, jobs: int = 4, target_wasm: bool = False)",List[str],False,False,,Transpile a multi-module Rust project directory concurrently using multithreading.,154,229
 src/rs2zig/cli.py,src.rs2zig.cli,main,(),None,False,False,,CLI application main entry point.,232,278
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,get_node_type,(node: tree_sitter.Node),str,False,False,,Safely get string node type (handles differences between tree-sitter versions).,54,63
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.__init__,"(self, code_bytes: bytes)",None,False,True,,Initialize ASTBuilder with original source code bytes for exact text extraction.,69,75
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.get_text,"(self, node: tree_sitter.Node)",str,False,True,,Extract substring text corresponding to a tree-sitter node.,77,88
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.build_source_file,"(self, root_node: tree_sitter.Node)",SourceFile,False,True,,Build top-level SourceFile IR from tree-sitter source_file node.,90,114
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_const,"(self, node: tree_sitter.Node)",ConstDecl,False,True,,Build ConstDecl from const_item or static_item node.,116,128
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_struct,"(self, node: tree_sitter.Node)",StructDecl,False,True,,Build StructDecl from struct_item node.,130,153
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_enum,"(self, node: tree_sitter.Node)",EnumDecl,False,True,,Build EnumDecl from enum_item node.,155,168
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_trait,"(self, node: tree_sitter.Node)",TraitDecl,False,True,,Build TraitDecl from trait_item node.,170,183
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_enum_variant,"(self, node: tree_sitter.Node)",EnumVariant,False,True,,Build EnumVariant from enum_variant node.,185,211
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_impl,"(self, node: tree_sitter.Node)",ImplBlock,False,True,,Build ImplBlock from impl_item node.,213,228
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_function,"(self, node: tree_sitter.Node)",FnDecl,False,True,,Build FnDecl from function_item node.,230,284
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_type,"(self, node: tree_sitter.Node)",TypeNode,False,True,,Build TypeNode from type syntax node.,286,315
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_block,"(self, node: tree_sitter.Node)",BlockExpr,False,True,,Build BlockExpr from block node.,317,341
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_let_stmt,"(self, node: tree_sitter.Node)",LetStmt,False,True,,Build LetStmt from let_declaration node.,343,361
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_assign_stmt,"(self, node: tree_sitter.Node)",AssignStmt,False,True,,Build AssignStmt from assignment_expression node.,363,373
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,375,643
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,645,656
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,get_node_type,(node: tree_sitter.Node),str,False,False,,Safely get string node type (handles differences between tree-sitter versions).,55,64
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.__init__,"(self, code_bytes: bytes)",None,False,True,,Initialize ASTBuilder with original source code bytes for exact text extraction.,70,76
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.get_text,"(self, node: tree_sitter.Node)",str,False,True,,Extract substring text corresponding to a tree-sitter node.,78,89
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.build_source_file,"(self, root_node: tree_sitter.Node)",SourceFile,False,True,,Build top-level SourceFile IR from tree-sitter source_file node.,91,115
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_const,"(self, node: tree_sitter.Node)",ConstDecl,False,True,,Build ConstDecl from const_item or static_item node.,117,129
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_struct,"(self, node: tree_sitter.Node)",StructDecl,False,True,,Build StructDecl from struct_item node.,131,154
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_enum,"(self, node: tree_sitter.Node)",EnumDecl,False,True,,Build EnumDecl from enum_item node.,156,169
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_trait,"(self, node: tree_sitter.Node)",TraitDecl,False,True,,Build TraitDecl from trait_item node.,171,184
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_enum_variant,"(self, node: tree_sitter.Node)",EnumVariant,False,True,,Build EnumVariant from enum_variant node.,186,212
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_impl,"(self, node: tree_sitter.Node)",ImplBlock,False,True,,Build ImplBlock from impl_item node.,214,229
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_function,"(self, node: tree_sitter.Node)",FnDecl,False,True,,Build FnDecl from function_item node.,231,285
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_type,"(self, node: tree_sitter.Node)",TypeNode,False,True,,Build TypeNode from type syntax node.,287,316
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_block,"(self, node: tree_sitter.Node)",BlockExpr,False,True,,Build BlockExpr from block node.,318,342
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_let_stmt,"(self, node: tree_sitter.Node)",LetStmt,False,True,,Build LetStmt from let_declaration node.,344,362
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_assign_stmt,"(self, node: tree_sitter.Node)",AssignStmt,False,True,,Build AssignStmt from assignment_expression node.,364,374
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,376,651
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,653,664
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,parse_cargo_toml,(cargo_path: str),Optional[CargoManifest],False,False,,Parse Cargo.toml file and return CargoManifest dataclass.,32,68
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,expand_macros,"(code_or_file: str, is_file_path: bool = False)",str,False,False,,Expand macros in Rust source code using cargo expand if available.,15,55
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,_read_or_return,"(code_or_file: str, is_file_path: bool)",str,False,False,,Helper to read file content or return code string.,58,67
@@ -151,3 +151,5 @@ tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_await
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_fn_generic_params_lowering,(self),None,False,True,,Verify Rust function generics fn foo<T: Send>() lower to (comptime T: type) in Zig.,164,171
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_lifetime_in_struct_field_type,(self),None,False,True,,"Verify struct field generic types with lifetimes like slice.Iter('a, T.Item) strip lifetime 'a.",173,182
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_unsized_slice_type_mapping,(self),None,False,True,,Verify Rust unsized slice type [u8] lowers to Zig slice []u8.,184,192
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_as_cast_expression_lowering,(self),None,False,True,,"Verify Rust type cast expr as u64 lowers to Zig @as(u64, expr).",194,203
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_tuple_field_access_lowering,(self),None,False,True,,"Verify Rust tuple field access self.0 lowers to Zig self.@""0"".",205,214
