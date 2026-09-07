@@ -380,13 +380,47 @@ class ASTBuilder:
                 right=self._build_expr(right_node) if right_node else LiteralExpr("0", "int")
             )
 
-        if ntype == "unary_expression":
+        if ntype == "assignment_expression":
+            left_node = node.child_by_field_name("left")
             op_node = node.child_by_field_name("operator")
-            arg_node = node.child_by_field_name("argument")
+            right_node = node.child_by_field_name("right")
+            return BinaryExpr(
+                left=self._build_expr(left_node) if left_node else IdentifierExpr("lhs"),
+                op=self.get_text(op_node) if op_node else "=",
+                right=self._build_expr(right_node) if right_node else LiteralExpr("0", "int")
+            )
+
+        if ntype == "unary_expression":
+            op_node = node.child_by_field_name("operator") or (node.children[0] if len(node.children) > 0 else None)
+            arg_node = node.child_by_field_name("argument") or (node.children[1] if len(node.children) > 1 else None)
             return UnaryExpr(
                 op=self.get_text(op_node) if op_node else "-",
                 operand=self._build_expr(arg_node) if arg_node else LiteralExpr("0", "int")
             )
+
+        if ntype == "generic_function":
+            fn_node = node.child_by_field_name("function")
+            if not fn_node and node.children:
+                fn_node = node.children[0]
+            type_args_node = node.child_by_field_name("type_arguments")
+            if not type_args_node:
+                for c in node.children:
+                    if get_node_type(c) == "type_arguments":
+                        type_args_node = c
+                        break
+            fn_expr = self._build_expr(fn_node) if fn_node else IdentifierExpr("unknown_generic_fn")
+            type_args_str = self.get_text(type_args_node) if type_args_node else ""
+            if type_args_str:
+                if not type_args_str.startswith("::<"):
+                    if type_args_str.startswith("<"):
+                        type_args_str = "::" + type_args_str
+                    else:
+                        type_args_str = "::<" + type_args_str + ">"
+            if isinstance(fn_expr, IdentifierExpr):
+                return IdentifierExpr(name=f"{fn_expr.name}{type_args_str}")
+            elif isinstance(fn_expr, FieldAccessExpr):
+                return FieldAccessExpr(target=fn_expr.target, field_name=f"{fn_expr.field_name}{type_args_str}")
+            return fn_expr
 
         if ntype == "try_expression":
             operand_node = node.children[0] if node.children else None
@@ -434,6 +468,15 @@ class ASTBuilder:
                 callee=self._build_expr(fn_node) if fn_node else IdentifierExpr("unknown_fn"),
                 args=args
             )
+
+        if ntype == "array_expression":
+            text = self.get_text(node)
+            if ";" in text:
+                inner = text.strip("[]")
+                parts = inner.split(";", 1)
+                val_clean = parts[0].strip().replace("_u8", "").replace("u8", "")
+                count_clean = parts[1].strip()
+                return LiteralExpr(value=f"([_]u8{{{val_clean}}} ** {count_clean})", kind="array")
 
         if ntype == "field_expression":
             val_node = node.child_by_field_name("value")

@@ -95,6 +95,7 @@ src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.backend.zig_emitter,ZigEmitter,,28
 src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.backend.build_zig_gen,generate_build_zig,,29
 src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.validate.zig_fmt_check,ZigValidator,,30
 src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.validate.conversion_reporter,ConversionReporter,,31
+src/rs2zig/cli.py,src.rs2zig.cli,shutil,,,205
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logging,,,7
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,typing,List,,8
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,typing,Optional,,8
@@ -241,6 +242,7 @@ src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,rs2zig.ir.n
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,rs2zig.lowering.plugin_api,LibraryLoweringPlugin,,10
 src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,typing,Dict,,7
 src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,typing,Optional,,7
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,typing,Union,,7
 src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,rs2zig.ir.nodes,TypeNode,,8
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,logging,,,7
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,typing,Optional,,8

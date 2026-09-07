@@ -39,21 +39,21 @@ script/rs2zig_query.py,script.rs2zig_query,main,(),None,False,False,,Main CLI en
 src/main.py,src.main,main,(),None,False,False,,Main application entry point.,17,19
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,generate_build_zig,"(executable_name: str = 'app', main_src: str = 'main.zig', dependencies: Optional[List[str]] = None, target_wasm: bool = False)",str,False,False,,Generate content for a build.zig script targeting Zig 0.16.0.,13,70
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.__init__,"(self, indent_str: str = '    ')",None,False,True,,Initialize emitter with specified indentation.,51,60
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.emit_source_file,"(self, sf: SourceFile)",str,False,True,,Emit complete Zig source file string from SourceFile node.,62,109
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._indent,(self),str,False,True,,Get current indentation string.,111,113
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_trait,"(self, trait: TraitDecl)",str,False,True,,Emit Zig interface definition / comment for a trait.,115,120
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_enum,"(self, enum_decl: EnumDecl)",str,False,True,,Emit Zig enum or tagged union definition.,122,148
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_struct,"(self, struct: StructDecl, methods: List[FnDecl])",str,False,True,,Emit Zig struct definition including any impl methods.,150,171
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_function,"(self, fn: FnDecl, parent_struct_name: Optional[str] = None)",str,False,True,,Emit Zig function or method definition.,173,198
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,200,213
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,215,227
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,229,251
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,253,420
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.emit_source_file,"(self, sf: SourceFile, file_path: Optional[str] = None)",str,False,True,,Emit complete Zig source file string from SourceFile node.,62,125
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._indent,(self),str,False,True,,Get current indentation string.,127,129
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_trait,"(self, trait: TraitDecl)",str,False,True,,Emit Zig interface definition / comment for a trait.,131,136
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_enum,"(self, enum_decl: EnumDecl)",str,False,True,,Emit Zig enum or tagged union definition.,138,164
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_struct,"(self, struct: StructDecl, methods: List[FnDecl])",str,False,True,,Emit Zig struct definition including any impl methods.,166,187
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_function,"(self, fn: FnDecl, parent_struct_name: Optional[str] = None)",str,False,True,,Emit Zig function or method definition.,189,217
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,219,232
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,234,246
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,248,309
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,311,564
 src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,36,69
 src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,72,137
 src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])","Tuple[str, str, bool, int, Optional[str]]",False,False,,Worker task function for parallel project transpilation.,140,150
-src/rs2zig/cli.py,src.rs2zig.cli,run_transpile_project,"(project_dir: str, output_dir: str, jobs: int = 4, target_wasm: bool = False)",List[str],False,False,,Transpile a multi-module Rust project directory concurrently using multithreading.,153,219
-src/rs2zig/cli.py,src.rs2zig.cli,main,(),None,False,False,,CLI application main entry point.,222,268
+src/rs2zig/cli.py,src.rs2zig.cli,run_transpile_project,"(project_dir: str, output_dir: str, jobs: int = 4, target_wasm: bool = False)",List[str],False,False,,Transpile a multi-module Rust project directory concurrently using multithreading.,153,228
+src/rs2zig/cli.py,src.rs2zig.cli,main,(),None,False,False,,CLI application main entry point.,231,277
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,get_node_type,(node: tree_sitter.Node),str,False,False,,Safely get string node type (handles differences between tree-sitter versions).,53,62
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.__init__,"(self, code_bytes: bytes)",None,False,True,,Initialize ASTBuilder with original source code bytes for exact text extraction.,68,74
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.get_text,"(self, node: tree_sitter.Node)",str,False,True,,Extract substring text corresponding to a tree-sitter node.,76,87
@@ -68,8 +68,8 @@ src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._b
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_block,"(self, node: tree_sitter.Node)",BlockExpr,False,True,,Build BlockExpr from block node.,300,322
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_let_stmt,"(self, node: tree_sitter.Node)",LetStmt,False,True,,Build LetStmt from let_declaration node.,324,342
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_assign_stmt,"(self, node: tree_sitter.Node)",AssignStmt,False,True,,Build AssignStmt from assignment_expression node.,344,354
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,356,577
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,579,590
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,356,620
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,622,633
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,parse_cargo_toml,(cargo_path: str),Optional[CargoManifest],False,False,,Parse Cargo.toml file and return CargoManifest dataclass.,32,68
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,expand_macros,"(code_or_file: str, is_file_path: bool = False)",str,False,False,,Expand macros in Rust source code using cargo expand if available.,15,55
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,_read_or_return,"(code_or_file: str, is_file_path: bool)",str,False,False,,Helper to read file content or return code string.,58,67
@@ -108,7 +108,7 @@ src/rs2zig/lowering/plugin_registry.py,src.rs2zig.lowering.plugin_registry,Plugi
 src/rs2zig/lowering/plugin_registry.py,src.rs2zig.lowering.plugin_registry,PluginRegistry.run_lowering_passes,"(self, sf: SourceFile)",List[str],False,True,,Run all registered lowering plugins on SourceFile AST.,31,50
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,SerdePlugin.crate_name,(self),str,False,True,,Return crate name.,18,20
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,SerdePlugin.lower_source_file,"(self, sf: SourceFile)",bool,False,True,,Traverse SourceFile AST and lower Serde derives.,22,40
-src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,map_type,(rust_type: TypeNode),str,False,False,,Map a Rust TypeNode into Zig target type string representation.,33,64
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,map_type,"(rust_type: Union[TypeNode, str])",str,False,False,,Map a Rust TypeNode or type string into Zig target type string representation.,33,83
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.crate_name,(self),str,False,True,,Return crate name.,26,28
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.lower_type,"(self, type_node: TypeNode)",Optional[TypeNode],False,True,,Lower std collection and system types to Zig equivalents.,30,60
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.lower_call,"(self, expr: CallExpr)",Optional[Expr],False,True,,Lower std collection constructors and function calls.,62,76

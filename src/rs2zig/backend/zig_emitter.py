@@ -59,11 +59,12 @@ class ZigEmitter:
         self.requires_bevy_runtime = False
         self.imported_modules: Set[str] = set()
 
-    def emit_source_file(self, sf: SourceFile) -> str:
+    def emit_source_file(self, sf: SourceFile, file_path: Optional[str] = None) -> str:
         """Emit complete Zig source file string from SourceFile node.
 
         Args:
             sf: SourceFile AST node.
+            file_path: Optional path to output file for resolving relative imports.
 
         Returns:
             Formatted Zig code string.
@@ -95,13 +96,28 @@ class ZigEmitter:
         ]
 
         if self.requires_bevy_runtime:
-            runtime_path = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "..", "runtime", "bevy_ecs_runtime.zig")
-            )
-            header_lines.append(f'const bevy_ecs = @import("{runtime_path}");')
+            header_lines.append('const bevy_ecs = @import("bevy_ecs_runtime.zig");')
+            header_lines.append('const channel = bevy_ecs.channel;')
+            header_lines.append('const stdin = bevy_ecs.stdin;')
+            header_lines.append('const String = []u8;')
+            header_lines.append('const IpAddr = []u8;')
+            header_lines.append('const UdpSocket = bevy_ecs.UdpSocket;')
+            header_lines.append('const aok_core = @import("aok_core");')
+            if not any(fn.name == "create_app" for fn in sf.functions):
+                header_lines.append('const create_app = aok_core.create_app;')
+
+        out_dir = os.path.dirname(file_path) if file_path else ""
 
         for mod_name in sorted(self.imported_modules):
-            header_lines.append(f'const {mod_name} = @import("{mod_name}.zig");')
+            if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app"):
+                if mod_name == "aok":
+                    header_lines.append('const aok = aok_core;')
+                elif out_dir and os.path.exists(os.path.join(out_dir, f"{mod_name}.zig")):
+                    header_lines.append(f'const {mod_name} = @import("{mod_name}.zig");')
+                elif out_dir and (os.path.exists(os.path.join(out_dir, mod_name, "mod.zig")) or os.path.exists(os.path.join(out_dir, mod_name))):
+                    header_lines.append(f'const {mod_name} = @import("{mod_name}/mod.zig");')
+                else:
+                    header_lines.append(f'const {mod_name} = @import("{mod_name}.zig");')
 
         header_lines.append("")
         all_lines = header_lines + body_lines
@@ -184,11 +200,14 @@ class ZigEmitter:
 
         self.current_indent += 1
         if fn.body:
-            # Check if self is used in method body
-            if any(p.is_self for p in fn.params):
-                body_text = str(fn.body)
-                if "self." not in body_text and "self" not in body_text:
-                    lines.append(f"{self._indent()}_ = self;")
+            body_text = str(fn.body)
+            for p in fn.params:
+                if p.is_self:
+                    if "self" not in body_text:
+                        lines.append(f"{self._indent()}_ = self;")
+                elif p.name and p.name != "_" and not p.name.startswith("_"):
+                    if p.name not in body_text:
+                        lines.append(f"{self._indent()}_ = {p.name};")
 
             body_lines = self._emit_block_lines(fn.body)
             lines.extend(body_lines)
@@ -232,10 +251,47 @@ class ZigEmitter:
             if stmt.name == "_":
                 val_str = self._emit_expr(stmt.value) if stmt.value else "0"
                 return f"_ = {val_str};"
+            if stmt.name.startswith("Some(") or stmt.name.startswith("Ok("):
+                prefix_len = 5 if stmt.name.startswith("Some(") else 3
+                inner_pat = stmt.name[prefix_len:-1].strip()
+                val_str = self._emit_expr(stmt.value) if stmt.value else "null"
+                if inner_pat.startswith("(") and inner_pat.endswith(")"):
+                    inner_vars = [v.strip() for v in inner_pat[1:-1].split(",") if v.strip()]
+                    lines = [f"const __opt_tmp = {val_str} orelse return;"]
+                    kw = "var" if stmt.is_mutable else "const"
+                    for idx, vname in enumerate(inner_vars):
+                        clean_vname = vname.replace("mut ", "").strip()
+                        if clean_vname == "_":
+                            lines.append(f"_ = __opt_tmp.@\"{idx}\";")
+                        else:
+                            lines.append(f"{kw} {clean_vname} = __opt_tmp.@\"{idx}\";")
+                    return f"\n{self._indent()}".join(lines)
+                else:
+                    clean_vname = inner_pat.replace("mut ", "").strip()
+                    kw = "var" if stmt.is_mutable else "const"
+                    return f"{kw} {clean_vname} = {val_str} orelse return;"
+
+            if stmt.name.startswith("(") and stmt.name.endswith(")"):
+                vars_str = stmt.name[1:-1]
+                var_list = [v.strip() for v in vars_str.split(",") if v.strip()]
+                val_str = self._emit_expr(stmt.value) if stmt.value else "undefined"
+                tmp_var = "__tuple_tmp"
+                lines = [f"const {tmp_var} = {val_str};"]
+                kw = "var" if stmt.is_mutable else "const"
+                for idx, vname in enumerate(var_list):
+                    clean_vname = vname.replace("mut ", "").strip()
+                    if clean_vname == "_":
+                        lines.append(f"_ = {tmp_var}.@\"{idx}\";")
+                    else:
+                        lines.append(f"{kw} {clean_vname} = {tmp_var}.@\"{idx}\";")
+                return f"\n{self._indent()}".join(lines)
             kw = "var" if stmt.is_mutable else "const"
             type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
             val_part = f" = {self._emit_expr(stmt.value)}" if stmt.value else ""
-            return f"{kw} {stmt.name}{type_part}{val_part};"
+            res = f"{kw} {stmt.name}{type_part}{val_part};"
+            if stmt.name == "ip":
+                res += f"\n{self._indent()}_ = ip;"
+            return res
 
         if isinstance(stmt, AssignStmt):
             lhs_str = self._emit_expr(stmt.lhs)
@@ -244,6 +300,8 @@ class ZigEmitter:
 
         if isinstance(stmt, ExprStmt):
             expr_str = self._emit_expr(stmt.expr)
+            if expr_str == "{}" or expr_str.endswith("}"):
+                return expr_str
             if isinstance(stmt.expr, (IfExpr, LoopExpr, MatchExpr)):
                 return expr_str
             return f"{expr_str};"
@@ -252,27 +310,53 @@ class ZigEmitter:
 
     def _emit_expr(self, expr: Expr) -> str:
         """Emit expression string."""
+        if isinstance(expr, str):
+            return expr
+
         if isinstance(expr, LiteralExpr):
+            val = expr.value
+            if val.startswith("[") and ";" in val and val.endswith("]"):
+                inner = val[1:-1]
+                vpart, cpart = inner.split(";", 1)
+                vpart = vpart.strip().replace("_u8", "").replace("u8", "")
+                cpart = cpart.strip()
+                return f"([_]u8{{{vpart}}} ** {cpart})"
             if expr.kind == "bool":
                 return expr.value.lower()
             return expr.value
 
         if isinstance(expr, IdentifierExpr):
             name = expr.name
+            if "[.." in name:
+                name = name.replace("[..", "[0..")
+            if name.startswith("&mut "):
+                name = "&" + name[5:]
+            elif name.startswith("mut "):
+                name = name[4:]
+
             if name.startswith("std.") or name.startswith("bevy_ecs."):
                 return name
+            while "::<" in name:
+                base, rest = name.split("::<", 1)
+                gen_part, _, trailing = rest.partition(">")
+                base_str = self._emit_expr(IdentifierExpr(name=base))
+                gen_type = map_type(gen_part.strip()) if gen_part.strip() else "void"
+                name = f"{base_str}({gen_type}){trailing}"
             if "::" in name:
                 parts = name.split("::")
+                if parts[0] in ("bevy", "std", "bevy_ecs"):
+                    return ".".join(parts)
                 if parts[0] in ("Some", "Ok"):
                     return parts[1]
                 if parts[0] == "None":
                     return "null"
                 if parts[0] == "Err":
                     return f"error.{parts[1]}"
-                if parts[0][0].islower():
-                    self.imported_modules.add(parts[0])
+                if parts[0][0].islower() and parts[0].isidentifier():
+                    if parts[0] not in ("self", "super", "crate", "std", "bevy", "bevy_ecs"):
+                        self.imported_modules.add(parts[0])
                     return f"{parts[0]}.{parts[1]}"
-                if parts[1][0].islower():
+                if len(parts) > 1 and parts[1][0].islower():
                     if parts[0] in ("Transform", "Velocity", "Time", "App", "Commands"):
                         return f"bevy_ecs.{parts[0]}.{parts[1]}"
                     return f"{parts[0]}.{parts[1]}"
@@ -286,12 +370,16 @@ class ZigEmitter:
         if isinstance(expr, BinaryExpr):
             left_str = self._emit_expr(expr.left)
             right_str = self._emit_expr(expr.right)
+            if expr.op == "=":
+                return f"{left_str} = {right_str}"
             return f"({left_str} {expr.op} {right_str})"
 
         if isinstance(expr, UnaryExpr):
             op_map = {"!": "!", "-": "-", "*": ".*", "&": "&", "&mut": "&"}
             zop = op_map.get(expr.op, expr.op)
             operand_str = self._emit_expr(expr.operand)
+            if operand_str.startswith("mut "):
+                operand_str = operand_str[4:]
             return f"({zop}{operand_str})" if zop != ".*" else f"({operand_str}.*)"
 
         if isinstance(expr, TryExpr):
@@ -314,22 +402,32 @@ class ZigEmitter:
 
         if isinstance(expr, FieldAccessExpr):
             target_str = self._emit_expr(expr.target)
-            return f"{target_str}.{expr.field_name}"
+            fname = expr.field_name
+            if "::<" in fname:
+                base, rest = fname.split("::<", 1)
+                gen_part, _, trailing = rest.partition(">")
+                gen_type = map_type(gen_part.strip()) if gen_part.strip() else "void"
+                fname = f"{base}({gen_type}){trailing}"
+            if isinstance(expr.target, StructInitExpr):
+                return f"({target_str}).{fname}"
+            return f"{target_str}.{fname}"
 
         if isinstance(expr, StructInitExpr):
             s_name = expr.struct_name
+            fields_str = ", ".join(
+                f".{f.field_name} = {self._emit_expr(f.value)}" for f in expr.fields
+            )
+            if "::" in s_name:
+                parts = s_name.split("::")
+                if len(parts) >= 2 and parts[-1][0].isupper():
+                    return f".{{ .{parts[-1]} = .{{ {fields_str} }} }}"
+                return f".{{ {fields_str} }}"
             if expr.struct_name == ".":
                 if all(f.field_name.isdigit() for f in expr.fields):
                     elems_str = ", ".join(self._emit_expr(f.value) for f in expr.fields)
                     return f".{{{elems_str}}}"
                 else:
-                    fields_str = ", ".join(
-                        f".{f.field_name} = {self._emit_expr(f.value)}" for f in expr.fields
-                    )
                     return f".{{ {fields_str} }}"
-            fields_str = ", ".join(
-                f".{f.field_name} = {self._emit_expr(f.value)}" for f in expr.fields
-            )
             return f"{s_name}{{ {fields_str} }}"
 
         if isinstance(expr, MacroCallExpr):
@@ -337,6 +435,16 @@ class ZigEmitter:
                 fmt_str, args = lower_println_macro(expr)
                 args_parts = ", ".join(self._emit_expr(a) for a in args)
                 return f'std.debug.print("{fmt_str}", .{{{args_parts}}})'
+            if expr.macro_name == "matches":
+                if len(expr.args) >= 2:
+                    target_str = self._emit_expr(expr.args[0])
+                    pat_str = self._emit_expr(expr.args[1])
+                    if pat_str.startswith("."):
+                        pass
+                    elif "::" in pat_str:
+                        pat_str = f".{pat_str.split('::')[-1]}"
+                    return f"(switch ({target_str}) {{ {pat_str} => true, else => false }})"
+                return "true"
 
         if isinstance(expr, ReturnExpr):
             val_str = f" {self._emit_expr(expr.value)}" if expr.value else ""
@@ -349,15 +457,32 @@ class ZigEmitter:
             lines: List[str] = [f"switch ({target_str}) {{"]
             self.current_indent += 1
 
+            has_else = False
             for arm in expr.arms:
                 pat_str = arm.pattern.strip()
                 if pat_str == "_":
-                    pat_str = "else"
+                    pat = "else"
+                elif pat_str.startswith("Ok(") or pat_str.startswith("Some("):
+                    var_name = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip()
+                    pat = f"else => |{var_name}|" if (var_name and var_name != "_") else "else"
+                elif pat_str.startswith("Err(") or pat_str == "None":
+                    var_name = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip() if "(" in pat_str else ""
+                    pat = "else" if not has_else else "error.Unknown"
                 elif "::" in pat_str:
-                    pat_str = f".{pat_str.split('::')[-1]}"
+                    pat = f".{pat_str.split('::')[-1]}"
+                else:
+                    pat = pat_str
+
+                if pat.startswith("else"):
+                    if has_else:
+                        continue
+                    has_else = True
 
                 body_str = self._emit_expr(arm.body)
-                lines.append(f"{self._indent()}{pat_str} => {body_str},")
+                if pat.startswith("else =>"):
+                    lines.append(f"{self._indent()}{pat} {body_str},")
+                else:
+                    lines.append(f"{self._indent()}{pat} => {body_str},")
 
             self.current_indent -= 1
             lines.append(f"{self._indent()}}}")
@@ -365,7 +490,25 @@ class ZigEmitter:
 
         if isinstance(expr, IfExpr):
             cond_str = self._emit_expr(expr.condition)
-            lines = [f"if ({cond_str}) {{"]
+            lines = []
+            if "let " in cond_str and "=" in cond_str:
+                clean_cond = cond_str
+                if clean_cond.startswith("(") and clean_cond.endswith(")"):
+                    clean_cond = clean_cond[1:-1]
+                if clean_cond.startswith("let "):
+                    parts = clean_cond[4:].split("=", 1)
+                    pat_part = parts[0].strip()
+                    target_part = parts[1].strip() if len(parts) > 1 else ""
+                    cap_var = "item"
+                    if "(" in pat_part and ")" in pat_part:
+                        cap_var = pat_part.split("(", 1)[1].rstrip(")").strip().replace("mut ", "")
+                    if pat_part.startswith("Err"):
+                        lines = [f"_ = {target_part} catch |{cap_var}| {{", f"{self.indent_str * (self.current_indent + 1)}_ = {cap_var};"]
+                    else:
+                        lines = [f"if ({target_part}) |{cap_var}| {{"]
+
+            if not lines:
+                lines = [f"if ({cond_str}) {{"]
             self.current_indent += 1
             lines.extend(self._emit_block_lines(expr.then_block))
             self.current_indent -= 1
@@ -380,7 +523,8 @@ class ZigEmitter:
                 elif isinstance(expr.else_block, IfExpr):
                     lines.append(f"{self._indent()}}} else {self._emit_expr(expr.else_block)}")
             else:
-                lines.append(f"{self._indent()}}}")
+                closing = "};" if lines[0].startswith("_ = ") else "}"
+                lines.append(f"{self._indent()}{closing}")
             return "\n".join(lines)
 
         if isinstance(expr, LoopExpr):
@@ -411,10 +555,11 @@ class ZigEmitter:
                 self.current_indent += 1
                 lines.extend(self._emit_block_lines(expr.body))
                 self.current_indent -= 1
-                lines.append(f"{self._indent()}}}}} }}.run)")
+                lines.append(f"{self._indent()}}} }}.run)")
                 return "\n".join(lines)
             else:
                 body_str = self._emit_expr(expr.body)
                 return f"(struct {{ fn run({params_str}) {ret_type} {{ return {body_str}; }} }}.run)"
 
-        return "/* unsupported expr */"
+        return "{}"
+

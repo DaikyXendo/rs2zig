@@ -4,7 +4,7 @@ Standard Library and Type Mapping for rs2zig.
 Provides type transformations and built-in function lowering from Rust to Zig.
 """
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 from rs2zig.ir.nodes import TypeNode
 
 RUST_TO_ZIG_TYPES: Dict[str, str] = {
@@ -30,19 +30,38 @@ RUST_TO_ZIG_TYPES: Dict[str, str] = {
 }
 
 
-def map_type(rust_type: TypeNode) -> str:
-    """Map a Rust TypeNode into Zig target type string representation.
+def map_type(rust_type: Union[TypeNode, str]) -> str:
+    """Map a Rust TypeNode or type string into Zig target type string representation.
 
     Args:
-        rust_type: Input Rust TypeNode.
+        rust_type: Input Rust TypeNode or type string.
 
     Returns:
         Mapped Zig type string.
     """
+    if isinstance(rust_type, str):
+        name = rust_type.strip()
+        if "<" in name and ">" in name:
+            base, gen = name.split("<", 1)
+            gen = gen.rstrip(">").strip()
+            mapped_gen = map_type(gen)
+            if base.strip() in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
+                return f"?{mapped_gen}"
+            return f"{map_type(base.strip())}({mapped_gen})"
+        return RUST_TO_ZIG_TYPES.get(name, name.replace("::", "."))
+
     name = rust_type.name.strip()
+    if "<" in name and ">" in name:
+        base, gen = name.split("<", 1)
+        gen = gen.rstrip(">").strip()
+        mapped_gen = map_type(gen)
+        if base.strip() in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
+            return f"?{mapped_gen}"
+        return f"{map_type(base.strip())}({mapped_gen})"
+
     if name.startswith("["):
         return name
-    zig_type_name = RUST_TO_ZIG_TYPES.get(name, name)
+    zig_type_name = RUST_TO_ZIG_TYPES.get(name, name.replace("::", "."))
 
     if rust_type.is_reference:
         prefix = "*const " if not rust_type.is_mutable else "*"
@@ -57,7 +76,7 @@ def map_type(rust_type: TypeNode) -> str:
         args_str = ", ".join(map_type(arg) for arg in rust_type.generic_args)
         if name == "Vec":
             return f"std.ArrayList({args_str})"
-        if name in ("Option", "std::option::Option"):
+        if name in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
             return f"?{args_str}"
         return f"{zig_type_name}({args_str})"
 

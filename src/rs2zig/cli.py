@@ -115,7 +115,7 @@ def run_transpile(input_path: str, output_path: Optional[str] = None, format_cod
 
     emitter = ZigEmitter()
     emitter.requires_bevy_runtime = "bevy_ecs" in runtimes
-    zig_code = emitter.emit_source_file(ir_ast)
+    zig_code = emitter.emit_source_file(ir_ast, file_path=output_path)
 
     validator = ZigValidator()
     if format_code:
@@ -198,6 +198,15 @@ def run_transpile_project(project_dir: str, output_dir: str, jobs: int = 4, targ
     if manifest:
         app_name = manifest.package.name
         dependencies = list(manifest.dependencies.keys())
+
+    # Copy runtime files if required
+    runtime_src = os.path.abspath(os.path.join(os.path.dirname(__file__), "runtime", "bevy_ecs_runtime.zig"))
+    if os.path.exists(runtime_src):
+        import shutil
+        shutil.copy(runtime_src, os.path.join(output_dir, "bevy_ecs_runtime.zig"))
+        src_dir = os.path.join(output_dir, "src")
+        if os.path.exists(src_dir):
+            shutil.copy(runtime_src, os.path.join(src_dir, "bevy_ecs_runtime.zig"))
 
     # Generate build.zig
     build_zig_content = generate_build_zig(

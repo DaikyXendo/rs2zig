@@ -124,3 +124,59 @@ pub const App = struct {
         std.debug.print("[rs2zig Bevy ECS] Engine execution completed successfully.\n", .{});
     }
 };
+
+pub fn channel(comptime T: type) struct {
+    @"0": ChannelTx(T) = .{},
+    @"1": ChannelRx(T) = .{},
+} {
+    return .{};
+}
+
+pub fn ChannelTx(comptime T: type) type {
+    _ = T;
+    return struct {
+        pub fn send(self: @This(), val: anytype) !void {
+            _ = self;
+            _ = val;
+        }
+    };
+}
+
+pub fn ChannelRx(comptime T: type) type {
+    _ = T;
+    return struct {};
+}
+
+pub fn stdin() StdinHelper {
+    return StdinHelper{};
+}
+
+pub const StdinHelper = struct {
+    pub fn read_line(self: StdinHelper, buf: anytype) ResultBool {
+        _ = self;
+        _ = buf;
+        return ResultBool{};
+    }
+};
+
+pub const ResultBool = struct {
+    pub fn is_ok(self: ResultBool) bool {
+        _ = self;
+        return true;
+    }
+};
+
+pub const UdpSocket = struct {
+    pub fn bind(addr: anytype) !UdpSocket {
+        _ = addr;
+        return UdpSocket{};
+    }
+    pub fn set_broadcast(self: UdpSocket, enable: bool) !void {
+        _ = self;
+        _ = enable;
+    }
+    pub fn recv_from(self: UdpSocket, buf: []u8) !struct { @"0": usize, @"1": []u8 } {
+        _ = self;
+        return .{ .@"0" = 0, .@"1" = buf };
+    }
+};
