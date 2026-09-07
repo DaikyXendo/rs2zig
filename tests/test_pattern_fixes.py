@@ -277,6 +277,39 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("'static", zig)
         self.assertNotIn("'a", zig)
 
+    def test_tuple_return_type_lowering(self) -> None:
+        """Verify Rust tuple return type (usize, usize) lowers to Zig struct { usize, usize }."""
+        code = """
+        pub fn process() -> (usize, usize) {
+            (0, 0)
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("-> (usize, usize)", zig)
+        self.assertIn("struct { usize, usize }", zig)
+
+    def test_keyword_call_escaping(self) -> None:
+        """Verify calls to functions named after Zig keywords like test(...) are escaped with @""."""
+        code = """
+        pub fn run() {
+            let meta = test("#[foo]");
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("test(\"#[foo]\")", zig)
+        self.assertIn("@\"test\"(\"#[foo]\")", zig)
+
+    def test_impl_trait_parameter_lowering(self) -> None:
+        """Verify Rust impl Trait parameter type impl Iterator lowers to Zig anytype."""
+        code = """
+        pub fn doc(trees: impl Iterator) -> bool {
+            true
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("impl Iterator", zig)
+        self.assertIn("trees: anytype", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

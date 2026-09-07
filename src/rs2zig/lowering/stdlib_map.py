@@ -88,6 +88,15 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         name = rust_type.strip()
         if "'" in name:
             name = re.sub(r"'[a-zA-Z0-9_]+\s*", "", name).strip()
+        if name.startswith("impl "):
+            return "anytype"
+        if name.startswith("(") and name.endswith(")"):
+            inner = name[1:-1].strip()
+            if not inner:
+                return "void"
+            if "," in inner:
+                elems = [map_type(p.strip()) for p in _split_top_level_commas(inner) if p.strip()]
+                return f"struct {{ {', '.join(elems)} }}"
         if name in RUST_TO_ZIG_TYPES:
             return RUST_TO_ZIG_TYPES[name]
         if name.startswith("&mut "):
@@ -124,6 +133,15 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
     name = rust_type.name.strip()
     if "'" in name:
         name = re.sub(r"'[a-zA-Z0-9_]+\s*", "", name).strip()
+    if name.startswith("impl "):
+        return "anytype"
+    if name.startswith("(") and name.endswith(")"):
+        inner = name[1:-1].strip()
+        if not inner:
+            return "void"
+        if "," in inner:
+            elems = [map_type(p.strip()) for p in _split_top_level_commas(inner) if p.strip()]
+            return f"struct {{ {', '.join(elems)} }}"
     if name.startswith("&mut "):
         rust_type.name = name[5:].strip()
         rust_type.is_reference = True

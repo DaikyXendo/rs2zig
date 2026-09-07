@@ -430,6 +430,8 @@ class ZigEmitter:
             if callee_str == "Err":
                 err_val = self._emit_expr(expr.args[0]) if expr.args else "UnknownError"
                 return f"error.{err_val.strip('\"')}"
+            if callee_str in ZIG_KEYWORDS_AND_PRIMITIVES:
+                callee_str = f'@"{callee_str}"'
             args_str = ", ".join(self._emit_expr(arg) for arg in expr.args)
             return f"{callee_str}({args_str})"
 
