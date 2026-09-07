@@ -425,6 +425,48 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("callback: fn(T)", zig)
         self.assertIn("*const fn(T) bool", zig)
 
+    def test_raw_string_literal_lowering(self) -> None:
+        """Verify Rust raw string literals r"[0-9]" and r#"hello"# lower to Zig string literals "[0-9]"."""
+        code = """
+        pub fn run() {
+            let pat = r"[0-9]";
+            let msg = r#"hello"#;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("r\"[0-9]\"", zig)
+        self.assertNotIn("r#\"hello\"#", zig)
+        self.assertIn("\"[0-9]\"", zig)
+        self.assertIn("\"hello\"", zig)
+
+    def test_array_reference_lowering(self) -> None:
+        """Verify Rust array reference &["is_match", "find"] lowers to Zig &.{ "is_match", "find" }."""
+        code = """
+        pub fn run() {
+            let args = &["is_match", "find"];
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("&[\"is_match\"", zig)
+        self.assertIn("&.{\"is_match\", \"find\"}", zig)
+
+    def test_raw_pointer_type_lowering(self) -> None:
+        """Verify Rust raw pointer types (*mut T, *const 'a T, *mut [u8]) map cleanly to Zig pointer types (*T, *const T, []u8)."""
+        code = """
+        pub struct LruEntry {
+            prev: *mut LruEntry,
+            mutex: *const 'a Mutex,
+            buf: *mut [u8],
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("*mut LruEntry", zig)
+        self.assertNotIn("*const 'a Mutex", zig)
+        self.assertNotIn("*mut [u8]", zig)
+        self.assertIn("prev: *LruEntry", zig)
+        self.assertIn("mutex: *const Mutex", zig)
+        self.assertIn("buf: []u8", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -379,11 +379,12 @@ class ASTBuilder:
         """Recursively build Expr node from tree-sitter node."""
         ntype = get_node_type(node)
 
-        if ntype in ("integer_literal", "float_literal", "string_literal", "boolean_literal", "char_literal"):
+        if ntype in ("integer_literal", "float_literal", "string_literal", "raw_string_literal", "boolean_literal", "char_literal"):
             k_map = {
                 "integer_literal": "int",
                 "float_literal": "float",
                 "string_literal": "string",
+                "raw_string_literal": "string",
                 "boolean_literal": "bool",
                 "char_literal": "char"
             }

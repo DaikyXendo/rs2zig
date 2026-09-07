@@ -349,6 +349,8 @@ class ZigEmitter:
 
         if isinstance(expr, LiteralExpr):
             val = expr.value
+            if val.startswith("r") and '"' in val:
+                val = re.sub(r'^r#*"(.*)"#*$', r'"\1"', val)
             if val.startswith("[") and ";" in val and val.endswith("]"):
                 inner = val[1:-1]
                 vpart, cpart = inner.split(";", 1)
@@ -389,7 +391,7 @@ class ZigEmitter:
                 if parts[0][0].islower() and parts[0].isidentifier():
                     if parts[0] not in ("self", "super", "crate", "std", "bevy", "bevy_ecs"):
                         self.imported_modules.add(parts[0])
-                    return f"{parts[0]}.{parts[1]}"
+                    return ".".join(parts)
                 if len(parts) > 1 and parts[1][0].islower():
                     if parts[0] in ("Transform", "Velocity", "Time", "App", "Commands"):
                         return f"bevy_ecs.{parts[0]}.{parts[1]}"
@@ -416,6 +418,8 @@ class ZigEmitter:
             operand_str = self._emit_expr(expr.operand)
             if operand_str.startswith("mut "):
                 operand_str = operand_str[4:]
+            if zop == "&" and operand_str.startswith("[") and operand_str.endswith("]"):
+                return f"&.{{{operand_str[1:-1]}}}"
             return f"({zop}{operand_str})" if zop != ".*" else f"({operand_str}.*)"
 
         if isinstance(expr, TryExpr):

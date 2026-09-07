@@ -115,6 +115,16 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
             return f"*{map_type(name[5:].strip())}"
         if name.startswith("&"):
             return f"*const {map_type(name[1:].strip())}"
+        if name.startswith("*mut [") and name.endswith("]"):
+            inner = name[6:-1].strip()
+            return f"[]{map_type(inner)}"
+        if name.startswith("*const [") and name.endswith("]"):
+            inner = name[8:-1].strip()
+            return f"[]const {map_type(inner)}"
+        if name.startswith("*mut "):
+            return f"*{map_type(name[5:].strip())}"
+        if name.startswith("*const "):
+            return f"*const {map_type(name[7:].strip())}"
         if name.startswith("[") and name.endswith("]"):
             inner = name[1:-1].strip()
             if ";" in inner:
@@ -176,6 +186,22 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         rust_type.is_reference = True
         rust_type.is_mutable = False
         name = rust_type.name
+    elif name.startswith("*mut [") and name.endswith("]"):
+        inner = name[6:-1].strip()
+        return f"[]{map_type(inner)}"
+    elif name.startswith("*const [") and name.endswith("]"):
+        inner = name[8:-1].strip()
+        return f"[]const {map_type(inner)}"
+    elif name.startswith("*mut "):
+        rust_type.name = name[5:].strip()
+        rust_type.is_raw_pointer = True
+        rust_type.is_mutable = True
+        name = rust_type.name
+    elif name.startswith("*const "):
+        rust_type.name = name[7:].strip()
+        rust_type.is_raw_pointer = True
+        rust_type.is_mutable = False
+        name = rust_type.name
     if name.startswith("[") and name.endswith("]"):
         inner = name[1:-1].strip()
         if ";" in inner:
@@ -208,7 +234,7 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         return f"[]{map_type(inner)}"
     zig_type_name = RUST_TO_ZIG_TYPES.get(name, name.replace("::", "."))
 
-    if rust_type.is_reference:
+    if rust_type.is_reference or rust_type.is_raw_pointer:
         prefix = "*const " if not rust_type.is_mutable else "*"
         if name in ("str", "alloc::string::String", "std::string::String"):
             return "[]const u8"
