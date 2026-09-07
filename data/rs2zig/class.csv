@@ -1,8 +1,9 @@
 file_path,module,class_name,base_classes,methods_count,decorators,docstring,start_line,end_line
 script/extract_data/find_classes.py,script.extract_data.find_classes,ClassVisitor,ast.NodeVisitor,2,,AST NodeVisitor to collect Python class definitions.,32,75
 script/extract_data/find_functions.py,script.extract_data.find_functions,FunctionVisitor,ast.NodeVisitor,5,,AST NodeVisitor to collect functions and class methods.,71,139
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter,,11,,Walks rs2zig IR nodes and emits formatted Zig source code.,47,375
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter,,11,,Walks rs2zig IR nodes and emits formatted Zig source code.,47,385
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder,,15,,Walks tree-sitter syntax nodes and constructs IR AST objects.,64,532
+src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,ModuleResolver,,2,,Discovers and resolves sub-modules in multi-file Rust projects.,14,42
 src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser,,3,,Wrapper class around tree-sitter parser for Rust.,15,58
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ASTNode,,0,dataclass,Base dataclass for all AST and IR nodes.,12,14
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,GenericParam,ASTNode,0,dataclass,Generic parameter definition (e.g. <T: Display>).,18,21

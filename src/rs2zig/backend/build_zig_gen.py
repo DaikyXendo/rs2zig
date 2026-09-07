@@ -1,7 +1,7 @@
 """
 build.zig File Generator for rs2zig.
 
-Generates Zig build scripts for converted projects.
+Generates Zig build scripts for converted projects targeting Zig 0.16.0.
 """
 
 import logging
@@ -9,8 +9,8 @@ import logging
 logger = logging.getLogger("rs2zig.backend.build_zig_gen")
 
 
-def generate_build_zig(executable_name: str = "app", main_src: str = "src/main.zig") -> str:
-    """Generate content for a build.zig script targeting Zig 0.13/0.14/0.16.
+def generate_build_zig(executable_name: str = "app", main_src: str = "main.zig") -> str:
+    """Generate content for a build.zig script targeting Zig 0.16.0.
 
     Args:
         executable_name: Name of target binary executable.
@@ -27,9 +27,11 @@ pub fn build(b: *std.Build) void {{
 
     const exe = b.addExecutable(.{{
         .name = "{executable_name}",
-        .root_source_file = b.path("{main_src}"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{{
+            .root_source_file = b.path("{main_src}"),
+            .target = target,
+            .optimize = optimize,
+        }}),
     }});
 
     b.installArtifact(exe);

@@ -6,7 +6,7 @@ Renders IR nodes into standard Zig source code (.zig).
 
 import os
 import logging
-from typing import List, Optional
+from typing import List, Optional, Set
 from rs2zig.ir.nodes import (
     SourceFile,
     StructDecl,
@@ -56,6 +56,7 @@ class ZigEmitter:
         self.indent_str = indent_str
         self.current_indent = 0
         self.requires_bevy_runtime = False
+        self.imported_modules: Set[str] = set()
 
     def emit_source_file(self, sf: SourceFile) -> str:
         """Emit complete Zig source file string from SourceFile node.
@@ -66,7 +67,29 @@ class ZigEmitter:
         Returns:
             Formatted Zig code string.
         """
-        lines: List[str] = [
+        self.imported_modules.clear()
+        impl_map = {impl.struct_name: impl.methods for impl in sf.impls}
+
+        body_lines: List[str] = []
+
+        for trait in sf.traits:
+            body_lines.append(self._emit_trait(trait))
+            body_lines.append("")
+
+        for enum_decl in sf.enums:
+            body_lines.append(self._emit_enum(enum_decl))
+            body_lines.append("")
+
+        for struct in sf.structs:
+            methods = impl_map.get(struct.name, [])
+            body_lines.append(self._emit_struct(struct, methods))
+            body_lines.append("")
+
+        for fn in sf.functions:
+            body_lines.append(self._emit_function(fn))
+            body_lines.append("")
+
+        header_lines: List[str] = [
             'const std = @import("std");',
         ]
 
@@ -74,31 +97,15 @@ class ZigEmitter:
             runtime_path = os.path.abspath(
                 os.path.join(os.path.dirname(__file__), "..", "runtime", "bevy_ecs_runtime.zig")
             )
-            lines.append(f'const bevy_ecs = @import("{runtime_path}");')
+            header_lines.append(f'const bevy_ecs = @import("{runtime_path}");')
 
-        lines.append("")
+        for mod_name in sorted(self.imported_modules):
+            header_lines.append(f'const {mod_name} = @import("{mod_name}.zig");')
 
-        # Combine impl blocks into their respective structs
-        impl_map = {impl.struct_name: impl.methods for impl in sf.impls}
+        header_lines.append("")
+        all_lines = header_lines + body_lines
 
-        for trait in sf.traits:
-            lines.append(self._emit_trait(trait))
-            lines.append("")
-
-        for enum_decl in sf.enums:
-            lines.append(self._emit_enum(enum_decl))
-            lines.append("")
-
-        for struct in sf.structs:
-            methods = impl_map.get(struct.name, [])
-            lines.append(self._emit_struct(struct, methods))
-            lines.append("")
-
-        for fn in sf.functions:
-            lines.append(self._emit_function(fn))
-            lines.append("")
-
-        return "\n".join(lines).strip() + "\n"
+        return "\n".join(all_lines).strip() + "\n"
 
     def _indent(self) -> str:
         """Get current indentation string."""
@@ -258,6 +265,9 @@ class ZigEmitter:
                     return "null"
                 if parts[0] == "Err":
                     return f"error.{parts[1]}"
+                if parts[0][0].islower():
+                    self.imported_modules.add(parts[0])
+                    return f"{parts[0]}.{parts[1]}"
                 return f".{parts[-1]}"
             if name == "Some":
                 return ""

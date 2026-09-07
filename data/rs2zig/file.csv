@@ -10,12 +10,13 @@ script/rs2zig_query.py,script.rs2zig_query,279,12364
 src/main.py,src.main,22,431
 src/rs2zig/__init__.py,src.rs2zig,7,132
 src/rs2zig/backend/__init__.py,src.rs2zig.backend,5,101
-src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,43,1128
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,375,13876
-src/rs2zig/cli.py,src.rs2zig.cli,160,5603
+src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,45,1204
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,385,14342
+src/rs2zig/cli.py,src.rs2zig.cli,209,7793
 src/rs2zig/frontend/__init__.py,src.rs2zig.frontend,5,126
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,532,21758
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,67,2380
+src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,42,1195
 src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,58,1909
 src/rs2zig/ir/__init__.py,src.rs2zig.ir,3,60
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,295,7263

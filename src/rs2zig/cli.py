@@ -1,23 +1,25 @@
 """
 Command Line Interface (CLI) for rs2zig.
 
-Provides commands to convert Rust files to Zig, view ASTs, and validate outputs.
+Provides commands to convert Rust files and multi-module projects to Zig, view ASTs, and validate outputs.
 """
 
 import sys
 import os
 import argparse
 import logging
-from typing import Optional
+from typing import Optional, List
 
 from rs2zig import __version__
 from rs2zig.frontend.ts_parser import RustParser
 from rs2zig.frontend.ast_builder import ASTBuilder
 from rs2zig.frontend.macro_expand import expand_macros
+from rs2zig.frontend.mod_resolver import ModuleResolver
 from rs2zig.lowering.ownership_pass import OwnershipPass
 from rs2zig.lowering.trait_lowering import TraitLoweringPass
 from rs2zig.lowering.bevy_lowering import BevyLoweringPass
 from rs2zig.backend.zig_emitter import ZigEmitter
+from rs2zig.backend.build_zig_gen import generate_build_zig
 from rs2zig.validate.zig_fmt_check import ZigValidator
 
 logger = logging.getLogger("rs2zig.cli")
@@ -38,13 +40,18 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
 
-    # Convert subcommand
-    convert_parser = subparsers.add_parser("convert", help="Convert Rust source file to Zig")
+    # Convert single file subcommand
+    convert_parser = subparsers.add_parser("convert", help="Convert single Rust source file to Zig")
     convert_parser.add_argument("input", help="Path to input Rust (.rs) file")
     convert_parser.add_argument("-o", "--output", help="Path to output Zig (.zig) file")
     convert_parser.add_argument("--no-format", action="store_true", help="Skip running zig fmt on generated output")
     convert_parser.add_argument("--validate", action="store_true", help="Run zig ast-check / build-obj validation")
     convert_parser.add_argument("--no-expand", action="store_true", help="Skip macro expansion pass")
+
+    # Convert multi-file project subcommand
+    project_parser = subparsers.add_parser("convert-project", help="Convert multi-module Rust project directory to Zig")
+    project_parser.add_argument("project_dir", help="Path to input Rust project directory")
+    project_parser.add_argument("-o", "--output-dir", required=True, help="Path to output directory for Zig files & build.zig")
 
     # AST subcommand
     ast_parser = subparsers.add_parser("ast", help="Parse Rust source and dump internal IR AST")
@@ -108,11 +115,47 @@ def run_transpile(input_path: str, output_path: Optional[str] = None, format_cod
             logger.warning("Validation failed: %s", msg)
 
     if output_path:
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
         with open(output_path, "w", encoding="utf-8") as out_file:
             out_file.write(zig_code)
         logger.info("Wrote generated Zig code to %s", output_path)
 
     return zig_code
+
+
+def run_transpile_project(project_dir: str, output_dir: str) -> List[str]:
+    """Transpile a multi-module Rust project directory to a Zig project with build.zig.
+
+    Args:
+        project_dir: Input Rust project directory path.
+        output_dir: Target output directory path.
+
+    Returns:
+        List of generated Zig file paths.
+    """
+    resolver = ModuleResolver()
+    rs_files = resolver.discover_project_files(project_dir)
+    generated_files: List[str] = []
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    for rs_file in rs_files:
+        rel_path = os.path.relpath(rs_file, project_dir)
+        zig_rel_path = os.path.splitext(rel_path)[0] + ".zig"
+        target_out = os.path.join(output_dir, zig_rel_path)
+
+        run_transpile(input_path=rs_file, output_path=target_out, format_code=True, validate=True, expand=False)
+        generated_files.append(target_out)
+
+    # Generate build.zig
+    build_zig_content = generate_build_zig("app", "main.zig")
+    build_zig_path = os.path.join(output_dir, "build.zig")
+    with open(build_zig_path, "w", encoding="utf-8") as f:
+        f.write(build_zig_content)
+    generated_files.append(build_zig_path)
+
+    logger.info("Project transpilation complete. Generated %d files in %s", len(generated_files), output_dir)
+    return generated_files
 
 
 def main() -> None:
@@ -139,6 +182,12 @@ def main() -> None:
                 print(zig_code)
         except Exception as err:
             logger.error("Transpilation failed: %s", err)
+            sys.exit(1)
+    elif args.command == "convert-project":
+        try:
+            run_transpile_project(args.project_dir, args.output_dir)
+        except Exception as err:
+            logger.error("Project transpilation failed: %s", err)
             sys.exit(1)
     elif args.command == "ast":
         try:
