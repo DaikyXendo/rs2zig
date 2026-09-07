@@ -44,7 +44,15 @@ from rs2zig.ir.nodes import (
 from rs2zig.lowering.stdlib_map import map_type
 from rs2zig.lowering.control_flow import lower_println_macro
 
-logger = logging.getLogger("rs2zig.backend.zig_emitter")
+ZIG_KEYWORDS_AND_PRIMITIVES = {
+    "u8", "u16", "u32", "u64", "u128", "i8", "i16", "i32", "i64", "i128",
+    "usize", "isize", "f32", "f64", "bool", "void", "type", "anytype",
+    "error", "test", "usingnamespace", "async", "await", "nosuspend",
+    "resume", "suspend", "export", "extern", "inline", "noinline", "pub",
+    "align", "const", "var", "struct", "enum", "union", "opaque", "comptime",
+    "try", "catch", "if", "else", "switch", "while", "for", "break", "continue",
+    "return", "defer", "errdefer", "unreachable", "asm", "threadlocal"
+}
 
 
 class ZigEmitter:
@@ -140,15 +148,17 @@ class ZigEmitter:
     def _emit_trait(self, trait: TraitDecl) -> str:
         """Emit Zig interface definition / comment for a trait."""
         vis = "pub " if trait.is_pub else ""
+        tname = trait.name.split("<")[0].strip() if "<" in trait.name else trait.name
         lines: List[str] = [f"// Trait: {trait.name}"]
-        lines.append(f"{vis}const {trait.name} = struct {{}};")
+        lines.append(f"{vis}const {tname} = struct {{}};")
         return "\n".join(lines)
 
     def _emit_enum(self, enum_decl: EnumDecl) -> str:
         """Emit Zig enum or tagged union definition."""
         vis = "pub " if enum_decl.is_pub else ""
+        ename = enum_decl.name.split("<")[0].strip() if "<" in enum_decl.name else enum_decl.name
         has_payload = any(len(v.fields) > 0 for v in enum_decl.variants)
-        header = f"{vis}const {enum_decl.name} = union(enum) {{" if has_payload else f"{vis}const {enum_decl.name} = enum {{"
+        header = f"{vis}const {ename} = union(enum) {{" if has_payload else f"{vis}const {ename} = enum {{"
 
         lines: List[str] = [header]
         self.current_indent += 1
@@ -175,7 +185,8 @@ class ZigEmitter:
     def _emit_struct(self, struct: StructDecl, methods: List[FnDecl]) -> str:
         """Emit Zig struct definition including any impl methods."""
         vis = "pub " if struct.is_pub else ""
-        lines: List[str] = [f"{vis}const {struct.name} = struct {{"]
+        sname = struct.name.split("<")[0].strip() if "<" in struct.name else struct.name
+        lines: List[str] = [f"{vis}const {sname} = struct {{"]
 
         self.current_indent += 1
         for field in struct.fields:
@@ -186,7 +197,7 @@ class ZigEmitter:
             lines.append("")
 
         for method in methods:
-            method_str = self._emit_function(method, parent_struct_name=struct.name)
+            method_str = self._emit_function(method, parent_struct_name=sname)
             for mline in method_str.splitlines():
                 lines.append(f"{self._indent()}{mline}")
             lines.append("")
@@ -199,6 +210,8 @@ class ZigEmitter:
         """Emit Zig function or method definition."""
         vis = "pub " if fn.is_pub or fn.name == "main" else ""
         fn_name = fn.name.split("<")[0].strip() if "<" in fn.name else fn.name
+        if fn_name in ZIG_KEYWORDS_AND_PRIMITIVES:
+            fn_name = f'@"{fn_name}"'
 
         gp_params: List[Param] = []
         if fn.generic_params:

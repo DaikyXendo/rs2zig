@@ -115,6 +115,8 @@ src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,typing,Option
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,typing,Union,,8
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,tree_sitter,,,9
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,rs2zig.lowering.stdlib_map,map_type,,11
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,rs2zig.lowering.stdlib_map,_split_angle_brackets,,11
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,rs2zig.lowering.stdlib_map,_split_top_level_commas,,11
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,rs2zig.ir.nodes,SourceFile,,12
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,rs2zig.ir.nodes,ConstDecl,,12
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,rs2zig.ir.nodes,FnDecl,,12
@@ -255,10 +257,13 @@ src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,typing,Opti
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,rs2zig.ir.nodes,SourceFile,,9
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,rs2zig.ir.nodes,StructDecl,,9
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,rs2zig.lowering.plugin_api,LibraryLoweringPlugin,,10
-src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,typing,Dict,,7
-src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,typing,Optional,,7
-src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,typing,Union,,7
-src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,rs2zig.ir.nodes,TypeNode,,8
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,re,,,7
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,typing,Dict,,8
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,typing,List,,8
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,typing,Optional,,8
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,typing,Tuple,,8
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,typing,Union,,8
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,rs2zig.ir.nodes,TypeNode,,9
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,logging,,,7
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,typing,Optional,,8
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,rs2zig.ir.nodes,SourceFile,,9

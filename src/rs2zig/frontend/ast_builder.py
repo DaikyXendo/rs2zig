@@ -8,7 +8,7 @@ import logging
 from typing import List, Optional, Union
 import tree_sitter
 
-from rs2zig.lowering.stdlib_map import map_type
+from rs2zig.lowering.stdlib_map import map_type, _split_angle_brackets, _split_top_level_commas
 from rs2zig.ir.nodes import (
     SourceFile,
     ConstDecl,
@@ -298,11 +298,11 @@ class ASTBuilder:
             clean_text = text.lstrip("&").replace("mut ", "").strip()
         generic_args: List[TypeNode] = []
 
-        if "<" in clean_text and clean_text.endswith(">"):
-            base_name, generic_str = clean_text.split("<", 1)
-            generic_str = generic_str[:-1]
-            for arg_part in generic_str.split(","):
-                if arg_part.strip():
+        split_res = _split_angle_brackets(clean_text)
+        if split_res:
+            base_name, generic_str, _ = split_res
+            for arg_part in _split_top_level_commas(generic_str):
+                if arg_part.strip() and not arg_part.strip().startswith("'"):
                     generic_args.append(TypeNode(name=arg_part.strip()))
             clean_text = base_name.strip()
 

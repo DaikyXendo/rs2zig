@@ -224,6 +224,59 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("&(a, b)", zig)
         self.assertIn("&.{a, b}", zig)
 
+    def test_fn_param_unsized_slice(self) -> None:
+        """Verify fn parameter with unsized slice type [u8] lowers to []u8."""
+        code = """
+        pub fn parse(data: [u8]) {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("data: [u8]", zig)
+        self.assertIn("data: []u8", zig)
+
+    def test_nested_generics_bracket_matching(self) -> None:
+        """Verify deeply nested generic types like Box<[CachePadded<RwLock<HashMap<K, V>>>]> lower cleanly."""
+        code = """
+        pub struct Shards<K, V> {
+            shards: Box<[CachePadded<RwLock<HashMap<K, V>>>]>,
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("<", zig)
+        self.assertIn("CachePadded(RwLock(HashMap(K, V)))", zig)
+
+    def test_fixed_size_array_type(self) -> None:
+        """Verify Rust fixed-size array type [u8; 16] lowers to Zig [16]u8 array type."""
+        code = """
+        pub fn format(src: [u8; 16]) -> [u8; 32] {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("[u8; 16]", zig)
+        self.assertNotIn("[u8; 32]", zig)
+        self.assertIn("[16]u8", zig)
+        self.assertIn("[32]u8", zig)
+
+    def test_fn_name_primitive_shadowing(self) -> None:
+        """Verify function names that shadow Zig primitives/keywords are escaped with @""."""
+        code = """
+        pub fn u128() -> u128 {
+            0
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("pub fn @\"u128\"() u128", zig)
+
+    def test_lifetime_in_pointer_type(self) -> None:
+        """Verify lifetime parameters like 'a, 'static, '_ in types are stripped."""
+        code = """
+        pub fn parse(s: &'static str, url: &'a Url) {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("'static", zig)
+        self.assertNotIn("'a", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
