@@ -229,6 +229,9 @@ class ZigEmitter:
     def _emit_stmt(self, stmt: Stmt) -> str:
         """Emit single statement string without leading indent."""
         if isinstance(stmt, LetStmt):
+            if stmt.name == "_":
+                val_str = self._emit_expr(stmt.value) if stmt.value else "0"
+                return f"_ = {val_str};"
             kw = "var" if stmt.is_mutable else "const"
             type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
             val_part = f" = {self._emit_expr(stmt.value)}" if stmt.value else ""
@@ -314,7 +317,7 @@ class ZigEmitter:
             return f"{target_str}.{expr.field_name}"
 
         if isinstance(expr, StructInitExpr):
-            s_name = f"bevy_ecs.{expr.struct_name}" if expr.struct_name in ("Transform", "Velocity", "Time", "Commands") else expr.struct_name
+            s_name = expr.struct_name
             if expr.struct_name == ".":
                 if all(f.field_name.isdigit() for f in expr.fields):
                     elems_str = ", ".join(self._emit_expr(f.value) for f in expr.fields)

@@ -278,7 +278,9 @@ class ASTBuilder:
         if "<" in clean_text and clean_text.endswith(">"):
             base_name, generic_str = clean_text.split("<", 1)
             generic_str = generic_str[:-1]
-            generic_args.append(TypeNode(name=generic_str.strip()))
+            for arg_part in generic_str.split(","):
+                if arg_part.strip():
+                    generic_args.append(TypeNode(name=arg_part.strip()))
             clean_text = base_name.strip()
 
         return TypeNode(

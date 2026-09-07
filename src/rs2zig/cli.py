@@ -18,7 +18,9 @@ from rs2zig.frontend.macro_expand import expand_macros
 from rs2zig.frontend.mod_resolver import ModuleResolver
 from rs2zig.lowering.ownership_pass import OwnershipPass
 from rs2zig.lowering.trait_lowering import TraitLoweringPass
-from rs2zig.lowering.bevy_lowering import BevyLoweringPass
+from rs2zig.lowering.plugin_registry import PluginRegistry
+from rs2zig.lowering.bevy_plugin import BevyPlugin
+from rs2zig.lowering.stdlib_plugin import StdlibPlugin
 from rs2zig.frontend.cargo_parser import parse_cargo_toml
 from rs2zig.backend.zig_emitter import ZigEmitter
 from rs2zig.backend.build_zig_gen import generate_build_zig
@@ -99,11 +101,13 @@ def run_transpile(input_path: str, output_path: Optional[str] = None, format_cod
     trait_pass = TraitLoweringPass()
     trait_pass.lower_source_file(ir_ast)
 
-    bevy_pass = BevyLoweringPass()
-    requires_bevy = bevy_pass.lower_source_file(ir_ast)
+    registry = PluginRegistry()
+    registry.register_plugin(BevyPlugin())
+    registry.register_plugin(StdlibPlugin())
+    runtimes = registry.run_lowering_passes(ir_ast)
 
     emitter = ZigEmitter()
-    emitter.requires_bevy_runtime = requires_bevy
+    emitter.requires_bevy_runtime = "bevy_ecs" in runtimes
     zig_code = emitter.emit_source_file(ir_ast)
 
     validator = ZigValidator()
