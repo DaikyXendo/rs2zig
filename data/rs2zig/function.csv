@@ -49,11 +49,11 @@ src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emi
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,215,227
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,229,251
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,253,420
-src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,32,65
-src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,68,130
-src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])",str,False,False,,Worker task function for parallel project transpilation.,133,136
-src/rs2zig/cli.py,src.rs2zig.cli,run_transpile_project,"(project_dir: str, output_dir: str, jobs: int = 4, target_wasm: bool = False)",List[str],False,False,,Transpile a multi-module Rust project directory concurrently using multithreading.,139,197
-src/rs2zig/cli.py,src.rs2zig.cli,main,(),None,False,False,,CLI application main entry point.,200,246
+src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,34,67
+src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,70,134
+src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])",str,False,False,,Worker task function for parallel project transpilation.,137,140
+src/rs2zig/cli.py,src.rs2zig.cli,run_transpile_project,"(project_dir: str, output_dir: str, jobs: int = 4, target_wasm: bool = False)",List[str],False,False,,Transpile a multi-module Rust project directory concurrently using multithreading.,143,201
+src/rs2zig/cli.py,src.rs2zig.cli,main,(),None,False,False,,CLI application main entry point.,204,250
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,get_node_type,(node: tree_sitter.Node),str,False,False,,Safely get string node type (handles differences between tree-sitter versions).,53,62
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.__init__,"(self, code_bytes: bytes)",None,False,True,,Initialize ASTBuilder with original source code bytes for exact text extraction.,68,74
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.get_text,"(self, node: tree_sitter.Node)",str,False,True,,Extract substring text corresponding to a tree-sitter node.,76,87
@@ -64,12 +64,12 @@ src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._b
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_enum_variant,"(self, node: tree_sitter.Node)",EnumVariant,False,True,,Build EnumVariant from enum_variant node.,168,194
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_impl,"(self, node: tree_sitter.Node)",ImplBlock,False,True,,Build ImplBlock from impl_item node.,196,211
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_function,"(self, node: tree_sitter.Node)",FnDecl,False,True,,Build FnDecl from function_item node.,213,267
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_type,"(self, node: tree_sitter.Node)",TypeNode,False,True,,Build TypeNode from type syntax node.,269,291
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_block,"(self, node: tree_sitter.Node)",BlockExpr,False,True,,Build BlockExpr from block node.,293,315
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_let_stmt,"(self, node: tree_sitter.Node)",LetStmt,False,True,,Build LetStmt from let_declaration node.,317,335
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_assign_stmt,"(self, node: tree_sitter.Node)",AssignStmt,False,True,,Build AssignStmt from assignment_expression node.,337,347
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,349,570
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,572,583
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_type,"(self, node: tree_sitter.Node)",TypeNode,False,True,,Build TypeNode from type syntax node.,269,298
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_block,"(self, node: tree_sitter.Node)",BlockExpr,False,True,,Build BlockExpr from block node.,300,322
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_let_stmt,"(self, node: tree_sitter.Node)",LetStmt,False,True,,Build LetStmt from let_declaration node.,324,342
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_assign_stmt,"(self, node: tree_sitter.Node)",AssignStmt,False,True,,Build AssignStmt from assignment_expression node.,344,354
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._build_expr,"(self, node: tree_sitter.Node)",Expr,False,True,,Recursively build Expr node from tree-sitter node.,356,577
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder._is_expr_node,"(self, node: tree_sitter.Node)",bool,False,True,,Check if node represents an expression rather than statement.,579,590
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,parse_cargo_toml,(cargo_path: str),Optional[CargoManifest],False,False,,Parse Cargo.toml file and return CargoManifest dataclass.,32,68
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,expand_macros,"(code_or_file: str, is_file_path: bool = False)",str,False,False,,Expand macros in Rust source code using cargo expand if available.,15,55
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,_read_or_return,"(code_or_file: str, is_file_path: bool)",str,False,False,,Helper to read file content or return code string.,58,67
@@ -78,13 +78,16 @@ src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,ModuleResol
 src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.__init__,(self),None,False,True,,Initialize tree-sitter Rust parser and language binding.,18,26
 src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.parse_code,"(self, code: str)",tree_sitter.Tree,False,True,,Parse Rust source code string into tree-sitter Tree.,28,41
 src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.parse_file,"(self, file_path: str)",tree_sitter.Tree,False,True,,Parse Rust file into tree-sitter Tree.,43,58
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,TypeNode.__str__,(self),str,False,True,,String representation of type.,40,51
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,TypeNode.__str__,(self),str,False,True,,String representation of type.,41,52
 src/rs2zig/lowering/bevy_plugin.py,src.rs2zig.lowering.bevy_plugin,BevyPlugin.crate_name,(self),str,False,True,,Return crate name.,29,31
 src/rs2zig/lowering/bevy_plugin.py,src.rs2zig.lowering.bevy_plugin,BevyPlugin.lower_struct_init,"(self, expr: StructInitExpr)",Optional[StructInitExpr],False,True,,Prefix Bevy component struct initializers with bevy_ecs namespace.,33,45
 src/rs2zig/lowering/bevy_plugin.py,src.rs2zig.lowering.bevy_plugin,BevyPlugin.lower_source_file,"(self, sf: SourceFile)",bool,False,True,,Run Bevy ECS lowering pass on SourceFile.,47,88
 src/rs2zig/lowering/bevy_plugin.py,src.rs2zig.lowering.bevy_plugin,BevyPlugin._lower_expr,"(self, expr: Expr)",None,False,True,,Recursively lower StructInitExpr nodes inside expressions.,90,98
 src/rs2zig/lowering/bevy_plugin.py,src.rs2zig.lowering.bevy_plugin,BevyPlugin._lower_block,"(self, block: BlockExpr)",None,False,True,,Recursively lower statements inside block.,100,125
 src/rs2zig/lowering/bevy_plugin.py,src.rs2zig.lowering.bevy_plugin,BevyPlugin._lower_call_chain,"(self, expr: CallExpr)",bool,False,True,,Recursively lower method chain calls (e.g. App::new().add_systems(...).run()).,127,158
+src/rs2zig/lowering/cffi_plugin.py,src.rs2zig.lowering.cffi_plugin,CFFIPlugin.crate_name,(self),str,False,True,,Return crate name.,18,20
+src/rs2zig/lowering/cffi_plugin.py,src.rs2zig.lowering.cffi_plugin,CFFIPlugin.lower_type,"(self, type_node: TypeNode)",Optional[TypeNode],False,True,,Lower raw pointer types to Zig C-interop types.,22,40
+src/rs2zig/lowering/cffi_plugin.py,src.rs2zig.lowering.cffi_plugin,CFFIPlugin.lower_source_file,"(self, sf: SourceFile)",bool,False,True,,Traverse SourceFile AST and lower C-FFI pointer types.,42,62
 src/rs2zig/lowering/control_flow.py,src.rs2zig.lowering.control_flow,split_macro_args,(args_str: str),List[str],False,False,,Split macro arguments respecting string literal boundaries.,16,48
 src/rs2zig/lowering/control_flow.py,src.rs2zig.lowering.control_flow,lower_println_macro,(macro_expr: MacroCallExpr),"Tuple[str, List[Expr]]",False,False,,Lower Rust println! / print! macro call into Zig std.debug.print format and args.,51,100
 src/rs2zig/lowering/enum_lowering.py,src.rs2zig.lowering.enum_lowering,EnumLoweringPass.is_tagged_union,"(self, enum_decl: EnumDecl)",bool,False,True,,Check if enum decl contains any payload fields requiring a Zig tagged union.,25,34
@@ -100,7 +103,9 @@ src/rs2zig/lowering/plugin_api.py,src.rs2zig.lowering.plugin_api,LibraryLowering
 src/rs2zig/lowering/plugin_registry.py,src.rs2zig.lowering.plugin_registry,PluginRegistry.__init__,(self),None,False,True,,Initialize empty plugin registry.,18,20
 src/rs2zig/lowering/plugin_registry.py,src.rs2zig.lowering.plugin_registry,PluginRegistry.register_plugin,"(self, plugin: LibraryLoweringPlugin)",None,False,True,,Register a new library lowering plugin.,22,29
 src/rs2zig/lowering/plugin_registry.py,src.rs2zig.lowering.plugin_registry,PluginRegistry.run_lowering_passes,"(self, sf: SourceFile)",List[str],False,True,,Run all registered lowering plugins on SourceFile AST.,31,50
-src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,map_type,(rust_type: TypeNode),str,False,False,,Map a Rust TypeNode into Zig target type string representation.,33,62
+src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,SerdePlugin.crate_name,(self),str,False,True,,Return crate name.,18,20
+src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,SerdePlugin.lower_source_file,"(self, sf: SourceFile)",bool,False,True,,Traverse SourceFile AST and lower Serde derives.,22,40
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,map_type,(rust_type: TypeNode),str,False,False,,Map a Rust TypeNode into Zig target type string representation.,33,64
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.crate_name,(self),str,False,True,,Return crate name.,26,28
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.lower_type,"(self, type_node: TypeNode)",Optional[TypeNode],False,True,,Lower std collection and system types to Zig equivalents.,30,60
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,StdlibPlugin.lower_call,"(self, expr: CallExpr)",Optional[Expr],False,True,,Lower std collection constructors and function calls.,62,76

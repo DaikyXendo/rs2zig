@@ -269,10 +269,15 @@ class ASTBuilder:
     def _build_type(self, node: tree_sitter.Node) -> TypeNode:
         """Build TypeNode from type syntax node."""
         text = self.get_text(node).strip()
-        is_ref = text.startswith("&")
-        is_mut = "&mut " in text or "mut " in text
-
-        clean_text = text.lstrip("&").replace("mut ", "").strip()
+        is_raw_ptr = text.startswith("*const ") or text.startswith("*mut ")
+        if is_raw_ptr:
+            is_ref = False
+            is_mut = False
+            clean_text = text
+        else:
+            is_ref = text.startswith("&")
+            is_mut = "&mut " in text
+            clean_text = text.lstrip("&").replace("mut ", "").strip()
         generic_args: List[TypeNode] = []
 
         if "<" in clean_text and clean_text.endswith(">"):
@@ -287,6 +292,8 @@ class ASTBuilder:
             name=clean_text,
             is_reference=is_ref,
             is_mutable=is_mut,
+            is_slice=False,
+            is_raw_pointer=is_raw_ptr,
             generic_args=generic_args
         )
 

@@ -35,6 +35,7 @@ class TypeNode(ASTNode):
     is_mutable: bool = False
     is_reference: bool = False
     is_slice: bool = False
+    is_raw_pointer: bool = False
     generic_args: List['TypeNode'] = field(default_factory=list)
 
     def __str__(self) -> str:

@@ -40,6 +40,8 @@ def map_type(rust_type: TypeNode) -> str:
         Mapped Zig type string.
     """
     name = rust_type.name.strip()
+    if name.startswith("["):
+        return name
     zig_type_name = RUST_TO_ZIG_TYPES.get(name, name)
 
     if rust_type.is_reference:

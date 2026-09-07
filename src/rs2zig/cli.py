@@ -21,6 +21,8 @@ from rs2zig.lowering.trait_lowering import TraitLoweringPass
 from rs2zig.lowering.plugin_registry import PluginRegistry
 from rs2zig.lowering.bevy_plugin import BevyPlugin
 from rs2zig.lowering.stdlib_plugin import StdlibPlugin
+from rs2zig.lowering.serde_plugin import SerdePlugin
+from rs2zig.lowering.cffi_plugin import CFFIPlugin
 from rs2zig.frontend.cargo_parser import parse_cargo_toml
 from rs2zig.backend.zig_emitter import ZigEmitter
 from rs2zig.backend.build_zig_gen import generate_build_zig
@@ -104,6 +106,8 @@ def run_transpile(input_path: str, output_path: Optional[str] = None, format_cod
     registry = PluginRegistry()
     registry.register_plugin(BevyPlugin())
     registry.register_plugin(StdlibPlugin())
+    registry.register_plugin(SerdePlugin())
+    registry.register_plugin(CFFIPlugin())
     runtimes = registry.run_lowering_passes(ir_ast)
 
     emitter = ZigEmitter()
