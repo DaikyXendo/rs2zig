@@ -4,6 +4,7 @@ Zig Source Code Emitter for rs2zig.
 Renders IR nodes into standard Zig source code (.zig).
 """
 
+import os
 import logging
 from typing import List, Optional
 from rs2zig.ir.nodes import (
@@ -11,6 +12,7 @@ from rs2zig.ir.nodes import (
     StructDecl,
     EnumDecl,
     EnumVariant,
+    TraitDecl,
     ImplBlock,
     FnDecl,
     Param,
@@ -53,6 +55,7 @@ class ZigEmitter:
         """
         self.indent_str = indent_str
         self.current_indent = 0
+        self.requires_bevy_runtime = False
 
     def emit_source_file(self, sf: SourceFile) -> str:
         """Emit complete Zig source file string from SourceFile node.
@@ -65,11 +68,22 @@ class ZigEmitter:
         """
         lines: List[str] = [
             'const std = @import("std");',
-            ""
         ]
+
+        if self.requires_bevy_runtime:
+            runtime_path = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "..", "runtime", "bevy_ecs_runtime.zig")
+            )
+            lines.append(f'const bevy_ecs = @import("{runtime_path}");')
+
+        lines.append("")
 
         # Combine impl blocks into their respective structs
         impl_map = {impl.struct_name: impl.methods for impl in sf.impls}
+
+        for trait in sf.traits:
+            lines.append(self._emit_trait(trait))
+            lines.append("")
 
         for enum_decl in sf.enums:
             lines.append(self._emit_enum(enum_decl))
@@ -89,6 +103,13 @@ class ZigEmitter:
     def _indent(self) -> str:
         """Get current indentation string."""
         return self.indent_str * self.current_indent
+
+    def _emit_trait(self, trait: TraitDecl) -> str:
+        """Emit Zig interface definition / comment for a trait."""
+        vis = "pub " if trait.is_pub else ""
+        lines: List[str] = [f"// Trait: {trait.name}"]
+        lines.append(f"{vis}const {trait.name} = struct {{}};")
+        return "\n".join(lines)
 
     def _emit_enum(self, enum_decl: EnumDecl) -> str:
         """Emit Zig enum or tagged union definition."""
@@ -155,6 +176,12 @@ class ZigEmitter:
 
         self.current_indent += 1
         if fn.body:
+            # Check if self is used in method body
+            if any(p.is_self for p in fn.params):
+                body_text = str(fn.body)
+                if "self." not in body_text and "self" not in body_text:
+                    lines.append(f"{self._indent()}_ = self;")
+
             body_lines = self._emit_block_lines(fn.body)
             lines.extend(body_lines)
         self.current_indent -= 1
@@ -221,7 +248,7 @@ class ZigEmitter:
 
         if isinstance(expr, IdentifierExpr):
             name = expr.name
-            if name.startswith("std."):
+            if name.startswith("std.") or name.startswith("bevy_ecs."):
                 return name
             if "::" in name:
                 parts = name.split("::")

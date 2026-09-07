@@ -36,6 +36,9 @@ from rs2zig.ir.nodes import (
     EnumDecl,
     EnumVariant,
     EnumVariantField,
+    TraitDecl,
+    GenericParam,
+    Attribute,
     MatchExpr,
     MatchArm,
     TryExpr,
@@ -100,6 +103,8 @@ class ASTBuilder:
                 sf.structs.append(self._build_struct(child))
             elif ntype == "enum_item":
                 sf.enums.append(self._build_enum(child))
+            elif ntype == "trait_item":
+                sf.traits.append(self._build_trait(child))
             elif ntype == "impl_item":
                 sf.impls.append(self._build_impl(child))
         return sf
@@ -144,6 +149,21 @@ class ASTBuilder:
 
         return EnumDecl(name=enum_name, variants=variants, is_pub=is_pub)
 
+    def _build_trait(self, node: tree_sitter.Node) -> TraitDecl:
+        """Build TraitDecl from trait_item node."""
+        name_node = node.child_by_field_name("name")
+        trait_name = self.get_text(name_node) if name_node else "UnknownTrait"
+        is_pub = any(get_node_type(child) == "visibility_modifier" for child in node.children)
+        methods: List[FnDecl] = []
+
+        body_node = node.child_by_field_name("body")
+        if body_node:
+            for child in body_node.children:
+                if get_node_type(child) in ("function_item", "function_signature_item"):
+                    methods.append(self._build_function(child))
+
+        return TraitDecl(name=trait_name, methods=methods, is_pub=is_pub)
+
     def _build_enum_variant(self, node: tree_sitter.Node) -> EnumVariant:
         """Build EnumVariant from enum_variant node."""
         name_node = node.child_by_field_name("name")
@@ -175,22 +195,34 @@ class ASTBuilder:
     def _build_impl(self, node: tree_sitter.Node) -> ImplBlock:
         """Build ImplBlock from impl_item node."""
         type_node = node.child_by_field_name("type")
+        trait_node = node.child_by_field_name("trait")
+
         struct_name = self.get_text(type_node) if type_node else "UnknownType"
+        trait_name = self.get_text(trait_node) if trait_node else None
         methods: List[FnDecl] = []
 
         body = node.child_by_field_name("body")
         if body:
             for child in body.children:
-                if get_node_type(child) == "function_item":
+                if get_node_type(child) in ("function_item", "function_signature_item"):
                     methods.append(self._build_function(child))
 
-        return ImplBlock(struct_name=struct_name, methods=methods)
+        return ImplBlock(struct_name=struct_name, trait_name=trait_name, methods=methods)
 
     def _build_function(self, node: tree_sitter.Node) -> FnDecl:
         """Build FnDecl from function_item node."""
         name_node = node.child_by_field_name("name")
         func_name = self.get_text(name_node) if name_node else "unnamed_fn"
         is_pub = any(get_node_type(child) == "visibility_modifier" for child in node.children)
+
+        generic_params: List[GenericParam] = []
+        type_params = node.child_by_field_name("type_parameters")
+        if type_params:
+            for child in type_params.children:
+                if get_node_type(child) in ("type_parameter", "constrained_type_parameter", "type_identifier"):
+                    gname = self.get_text(child).split(":")[0].strip()
+                    if gname not in ("<", ">", ","):
+                        generic_params.append(GenericParam(name=gname))
 
         params: List[Param] = []
         params_node = node.child_by_field_name("parameters")
@@ -229,7 +261,8 @@ class ASTBuilder:
             params=params,
             return_type=return_type,
             body=body,
-            is_pub=is_pub
+            is_pub=is_pub,
+            generic_params=generic_params
         )
 
     def _build_type(self, node: tree_sitter.Node) -> TypeNode:

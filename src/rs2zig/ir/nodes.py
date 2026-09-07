@@ -15,6 +15,20 @@ class ASTNode:
 
 
 @dataclass
+class GenericParam(ASTNode):
+    """Generic parameter definition (e.g. <T: Display>)."""
+    name: str
+    bounds: List[str] = field(default_factory=list)
+
+
+@dataclass
+class Attribute(ASTNode):
+    """Attribute definition (e.g. #[derive(Component)])."""
+    name: str
+    args: List[str] = field(default_factory=list)
+
+
+@dataclass
 class TypeNode(ASTNode):
     """Represents a type in Rust or lowered Zig representation."""
     name: str
@@ -219,6 +233,7 @@ class FnDecl(ASTNode):
     return_type: Optional[TypeNode] = None
     body: Optional[BlockExpr] = None
     is_pub: bool = False
+    generic_params: List[GenericParam] = field(default_factory=list)
 
 
 @dataclass
@@ -227,6 +242,8 @@ class StructDecl(ASTNode):
     name: str
     fields: List[FieldDecl] = field(default_factory=list)
     is_pub: bool = False
+    attributes: List[Attribute] = field(default_factory=list)
+    generic_params: List[GenericParam] = field(default_factory=list)
 
 
 @dataclass
@@ -249,12 +266,22 @@ class EnumDecl(ASTNode):
     name: str
     variants: List[EnumVariant] = field(default_factory=list)
     is_pub: bool = False
+    attributes: List[Attribute] = field(default_factory=list)
+
+
+@dataclass
+class TraitDecl(ASTNode):
+    """Trait declaration definition."""
+    name: str
+    methods: List[FnDecl] = field(default_factory=list)
+    is_pub: bool = False
 
 
 @dataclass
 class ImplBlock(ASTNode):
-    """Impl block containing methods for a struct or enum."""
+    """Impl block containing methods for a struct or enum, optionally implementing a trait."""
     struct_name: str
+    trait_name: Optional[str] = None
     methods: List[FnDecl] = field(default_factory=list)
 
 
@@ -263,5 +290,6 @@ class SourceFile(ASTNode):
     """Top-level source file module container."""
     structs: List[StructDecl] = field(default_factory=list)
     enums: List[EnumDecl] = field(default_factory=list)
+    traits: List[TraitDecl] = field(default_factory=list)
     functions: List[FnDecl] = field(default_factory=list)
     impls: List[ImplBlock] = field(default_factory=list)
