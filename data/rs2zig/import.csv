@@ -114,6 +114,7 @@ src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,typing,Option
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,typing,Union,,8
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,tree_sitter,,,9
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,rs2zig.ir.nodes,SourceFile,,11
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,rs2zig.ir.nodes,ConstDecl,,11
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,rs2zig.ir.nodes,FnDecl,,11
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,rs2zig.ir.nodes,Param,,11
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,rs2zig.ir.nodes,TypeNode,,11

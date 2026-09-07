@@ -10,6 +10,7 @@ import tree_sitter
 
 from rs2zig.ir.nodes import (
     SourceFile,
+    ConstDecl,
     FnDecl,
     Param,
     TypeNode,
@@ -98,7 +99,9 @@ class ASTBuilder:
         sf = SourceFile()
         for child in root_node.children:
             ntype = get_node_type(child)
-            if ntype == "function_item":
+            if ntype in ("const_item", "static_item"):
+                sf.constants.append(self._build_const(child))
+            elif ntype == "function_item":
                 sf.functions.append(self._build_function(child))
             elif ntype == "struct_item":
                 sf.structs.append(self._build_struct(child))
@@ -109,6 +112,20 @@ class ASTBuilder:
             elif ntype == "impl_item":
                 sf.impls.append(self._build_impl(child))
         return sf
+
+    def _build_const(self, node: tree_sitter.Node) -> ConstDecl:
+        """Build ConstDecl from const_item or static_item node."""
+        is_pub = any(get_node_type(c) == "visibility_modifier" for c in node.children)
+        is_static = get_node_type(node) == "static_item"
+        name_node = node.child_by_field_name("name")
+        type_node = node.child_by_field_name("type")
+        val_node = node.child_by_field_name("value")
+
+        name = self.get_text(name_node) if name_node else "CONST_VAL"
+        ctype = self._build_type(type_node) if type_node else TypeNode(name="anytype")
+        val = self._build_expr(val_node) if val_node else LiteralExpr(value="0", kind="int")
+
+        return ConstDecl(name=name, const_type=ctype, value=val, is_pub=is_pub, is_static=is_static)
 
     def _build_struct(self, node: tree_sitter.Node) -> StructDecl:
         """Build StructDecl from struct_item node."""

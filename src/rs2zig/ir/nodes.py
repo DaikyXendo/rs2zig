@@ -295,8 +295,19 @@ class ImplBlock(ASTNode):
 
 
 @dataclass
+class ConstDecl(ASTNode):
+    """Constant or static variable declaration (e.g. const BOM: &str = "...")."""
+    name: str
+    const_type: TypeNode
+    value: Expr
+    is_pub: bool = False
+    is_static: bool = False
+
+
+@dataclass
 class SourceFile(ASTNode):
     """Top-level source file module container."""
+    constants: List[ConstDecl] = field(default_factory=list)
     structs: List[StructDecl] = field(default_factory=list)
     enums: List[EnumDecl] = field(default_factory=list)
     traits: List[TraitDecl] = field(default_factory=list)

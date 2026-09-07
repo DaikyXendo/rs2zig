@@ -75,6 +75,13 @@ class ZigEmitter:
 
         body_lines: List[str] = []
 
+        for c in sf.constants:
+            vis = "pub " if c.is_pub else ""
+            type_str = map_type(c.const_type)
+            val_str = self._emit_expr(c.value)
+            body_lines.append(f"{vis}const {c.name}: {type_str} = {val_str};")
+            body_lines.append("")
+
         for trait in sf.traits:
             body_lines.append(self._emit_trait(trait))
             body_lines.append("")

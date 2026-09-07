@@ -110,6 +110,35 @@ class TestPatternFixes(unittest.TestCase):
         zig = self._transpile_code(code)
         self.assertNotIn("??", zig)
 
+    def test_reference_in_generic_type_mapping(self) -> None:
+        """Verify Option<&T> lowers to ?*const T and Option<&mut T> lowers to ?*T."""
+        code = """
+        pub fn process(opt: Option<&MapEditorTestPlay>, opt_mut: Option<&mut MapEditorTestPlay>) {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("&", zig)
+
+    def test_rust_lifetime_stripping(self) -> None:
+        """Verify Rust lifetime annotations 'a, 'static are stripped from Zig type generic args."""
+        code = """
+        pub fn process(state: ChainState<'a, u32>) {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("'a", zig)
+        self.assertIn("ChainState(u32)", zig)
+
+    def test_const_decl_type_and_semicolon(self) -> None:
+        """Verify const BOM: &str lowers to const BOM: []const u8 with single semicolon."""
+        code = r"""
+        pub const BOM: &str = "\u{feff}";
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("&str", zig)
+        self.assertNotIn(";;", zig)
+        self.assertIn("pub const BOM: []const u8 =", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

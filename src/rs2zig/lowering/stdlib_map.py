@@ -41,10 +41,17 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
     """
     if isinstance(rust_type, str):
         name = rust_type.strip()
+        if name.startswith("&mut "):
+            return f"*{map_type(name[5:].strip())}"
+        if name.startswith("&"):
+            return f"*const {map_type(name[1:].strip())}"
         if "<" in name and ">" in name:
             base, gen = name.split("<", 1)
             gen = gen.rstrip(">").strip()
-            mapped_gen = map_type(gen)
+            gen_parts = [p.strip() for p in gen.split(",") if not p.strip().startswith("'")]
+            if not gen_parts:
+                return map_type(base.strip())
+            mapped_gen = ", ".join(map_type(p) for p in gen_parts)
             if base.strip() in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
                 res = f"?{mapped_gen}"
                 while res.startswith("??"):
@@ -54,10 +61,23 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         return RUST_TO_ZIG_TYPES.get(name, name.replace("::", "."))
 
     name = rust_type.name.strip()
+    if name.startswith("&mut "):
+        rust_type.name = name[5:].strip()
+        rust_type.is_reference = True
+        rust_type.is_mutable = True
+        name = rust_type.name
+    elif name.startswith("&"):
+        rust_type.name = name[1:].strip()
+        rust_type.is_reference = True
+        rust_type.is_mutable = False
+        name = rust_type.name
     if "<" in name and ">" in name:
         base, gen = name.split("<", 1)
         gen = gen.rstrip(">").strip()
-        mapped_gen = map_type(gen)
+        gen_parts = [p.strip() for p in gen.split(",") if not p.strip().startswith("'")]
+        if not gen_parts:
+            return map_type(base.strip())
+        mapped_gen = ", ".join(map_type(p) for p in gen_parts)
         if base.strip() in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
             res = f"?{mapped_gen}"
             while res.startswith("??"):
@@ -79,7 +99,10 @@ def map_type(rust_type: Union[TypeNode, str]) -> str:
         return f"[]{zig_type_name}"
 
     if rust_type.generic_args:
-        args_str = ", ".join(map_type(arg) for arg in rust_type.generic_args)
+        non_lifetime_args = [arg for arg in rust_type.generic_args if not str(arg).strip().startswith("'")]
+        if not non_lifetime_args:
+            return zig_type_name
+        args_str = ", ".join(map_type(arg) for arg in non_lifetime_args)
         if name == "Vec":
             return f"std.ArrayList({args_str})"
         if name in ("Option", "std::option::Option", "Receiver", "std::sync::mpsc::Receiver"):
