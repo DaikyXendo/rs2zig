@@ -16,8 +16,8 @@ pub fn movement_system(query: *bevy_ecs.QueryTransformVelocity, time: *const bev
     while (query.next()) |item| {
         const transform = item.transform;
         const velocity = item.velocity;
-        transform.x += velocity.x * time.delta_seconds();
-        transform.y += velocity.y * time.delta_seconds();
+        transform.x += (velocity.x * time.delta_seconds());
+        transform.y += (velocity.y * time.delta_seconds());
     }
 }
 

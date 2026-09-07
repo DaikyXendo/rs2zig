@@ -539,6 +539,18 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("const error =", zig)
         self.assertIn("const @\"error\" =", zig)
 
+    def test_compound_assignment_try_expression_lowering(self) -> None:
+        """Verify Rust pos += func()?; lowers to Zig pos += try func(); without trailing ? or parentheses around assignment."""
+        code = """
+        pub fn run() {
+            pos += pre.find(&haystack[pos..])?;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("pos += pre.find", zig)
+        self.assertNotIn(")?; ", zig)
+        self.assertIn("pos += try pre.find(", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

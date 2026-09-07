@@ -403,10 +403,10 @@ class ASTBuilder:
                 right=self._build_expr(right_node) if right_node else LiteralExpr("0", "int")
             )
 
-        if ntype == "assignment_expression":
-            left_node = node.child_by_field_name("left")
-            op_node = node.child_by_field_name("operator")
-            right_node = node.child_by_field_name("right")
+        if ntype in ("assignment_expression", "compound_assignment_expr"):
+            left_node = node.child_by_field_name("left") or (node.children[0] if len(node.children) > 2 else None)
+            op_node = node.child_by_field_name("operator") or (node.children[1] if len(node.children) > 2 else None)
+            right_node = node.child_by_field_name("right") or (node.children[2] if len(node.children) > 2 else None)
             return BinaryExpr(
                 left=self._build_expr(left_node) if left_node else IdentifierExpr("lhs"),
                 op=self.get_text(op_node) if op_node else "=",
