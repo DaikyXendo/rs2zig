@@ -131,16 +131,31 @@ class ConversionReporter:
         logger.info("  • Duration         : %.2fs", self.report.duration_seconds)
         logger.info("=" * 60)
 
-    def save_reports(self, output_dir: str) -> None:
-        """Save json and markdown reports into target output directory.
+    def save_reports(self, output_dir_or_json: str, md_path: str | None = None) -> None:
+        """Save json and markdown reports into target output directory or explicit paths.
 
         Args:
-            output_dir: Directory path to write reports into.
+            output_dir_or_json: Directory path or explicit JSON report file path.
+            md_path: Optional explicit Markdown report file path if first arg is JSON path.
         """
-        abs_out = os.path.abspath(output_dir)
-        os.makedirs(abs_out, exist_ok=True)
-        json_path = os.path.join(abs_out, "conversion_report.json")
-        md_path = os.path.join(abs_out, "conversion_report.md")
+        if md_path is not None:
+            json_path = output_dir_or_json
+        elif output_dir_or_json.endswith(".json"):
+            json_path = output_dir_or_json
+            md_path = output_dir_or_json[:-5] + ".md"
+        else:
+            abs_out = os.path.abspath(output_dir_or_json)
+            os.makedirs(abs_out, exist_ok=True)
+            json_path = os.path.join(abs_out, "conversion_report.json")
+            md_path = os.path.join(abs_out, "conversion_report.md")
+
+        json_dir = os.path.dirname(os.path.abspath(json_path))
+        if json_dir:
+            os.makedirs(json_dir, exist_ok=True)
+
+        md_dir = os.path.dirname(os.path.abspath(md_path))
+        if md_dir:
+            os.makedirs(md_dir, exist_ok=True)
 
         with open(json_path, "w", encoding="utf-8") as f:
             f.write(self.generate_json_report())
@@ -149,3 +164,4 @@ class ConversionReporter:
             f.write(self.generate_markdown_report())
 
         logger.info("Saved conversion reports to %s and %s", json_path, md_path)
+

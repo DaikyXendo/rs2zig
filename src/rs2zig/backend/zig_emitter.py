@@ -382,10 +382,15 @@ class ZigEmitter:
                 return f"([_]u8{{{vpart}}} ** {cpart})"
             if expr.kind == "bool":
                 return expr.value.lower()
-            return re.sub(r"_?(u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64)$", "", val)
+            res = re.sub(r"_?(u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64)$", "", val)
+            if res.endswith(".") and res[:-1].lstrip("-").isdigit():
+                res += "0"
+            return res
 
         if isinstance(expr, IdentifierExpr):
             name = expr.name
+            if name.endswith(".") and name[:-1].lstrip("-").isdigit():
+                name += "0"
             if "[.." in name:
                 name = name.replace("[..", "[0..")
             if name.startswith("&mut "):
@@ -464,7 +469,13 @@ class ZigEmitter:
                 return f"error.{err_val.strip('\"')}"
             if callee_str in ZIG_KEYWORDS_AND_PRIMITIVES:
                 callee_str = f'@"{callee_str}"'
-            args_str = ", ".join(self._emit_expr(arg) for arg in expr.args)
+            args_list = []
+            for arg in expr.args:
+                arg_str = self._emit_expr(arg)
+                if arg_str == "()":
+                    arg_str = "{}"
+                args_list.append(arg_str)
+            args_str = ", ".join(args_list)
             return f"{callee_str}({args_str})"
 
         if isinstance(expr, FieldAccessExpr):

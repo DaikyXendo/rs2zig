@@ -746,6 +746,44 @@ class TestPatternFixes(unittest.TestCase):
         self.assertNotIn("const usize =", zig)
         self.assertIn("const @\"usize\" =", zig)
 
+    def test_trailing_dot_float_literal_lowering(self) -> None:
+        """Verify float literals ending with a dot like 0. or 1. lower to 0.0 or 1.0 in Zig."""
+        code = """
+        pub fn get_val() -> f64 {
+            let x = 0.;
+            let y = 1.;
+            return 0.0;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("0.;", zig)
+        self.assertNotIn("1.;", zig)
+        self.assertIn("0.0;", zig)
+        self.assertIn("1.0;", zig)
+
+    def test_multiple_discard_statement_lowering(self) -> None:
+        """Verify multiple variable discards like _ = a, b; split into separate _ = a; _ = b; statements in Zig."""
+        code = """
+        pub fn process(a: i32, b: i32) {
+            _ = a, b;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("_ = a, b;", zig)
+        self.assertIn("_ = a;", zig)
+        self.assertIn("_ = b;", zig)
+
+    def test_unit_expression_call_arg_lowering(self) -> None:
+        """Verify unit expression () passed as function argument lowers to {} in Zig."""
+        code = """
+        pub fn send_signal(tx: Sender) {
+            tx.send(());
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("send(())", zig)
+        self.assertIn("send({})", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
