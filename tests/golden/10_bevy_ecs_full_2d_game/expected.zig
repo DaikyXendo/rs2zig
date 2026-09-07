@@ -1,5 +1,12 @@
 const std = @import("std");
-const bevy_ecs = @import("/Users/levanthanh/Documents/code/python/rs2zig/src/rs2zig/runtime/bevy_ecs_runtime.zig");
+const bevy_ecs = @import("bevy_ecs_runtime.zig");
+const channel = bevy_ecs.channel;
+const stdin = bevy_ecs.stdin;
+const String = []u8;
+const IpAddr = []u8;
+const UdpSocket = bevy_ecs.UdpSocket;
+const aok_core = @import("aok_core");
+const create_app = aok_core.create_app;
 
 pub fn setup(commands: *bevy_ecs.Commands) void {
     commands.spawn(.{ bevy_ecs.Transform.from_xyz(0.0, 0.0, 0.0), bevy_ecs.Velocity{ .x = 10.0, .y = 5.0 } });

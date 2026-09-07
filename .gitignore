@@ -59,6 +59,8 @@ env.bak/
 venv.bak/
 
 aok_converted/
+vendor/
+deps/
 *.zig.out
 conversion_report.json
 conversion_report.md

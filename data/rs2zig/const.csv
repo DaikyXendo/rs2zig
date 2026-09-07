@@ -1,4 +1,7 @@
 file_path,module,const_name,value_repr,line_number
+script/convert_all_vendor.py,script.convert_all_vendor,logger,logging.getLogger('convert_all_vendor'),22
+script/convert_all_vendor.py,script.convert_all_vendor,VENDOR_DIR,'/Users/levanthanh/Documents/code/rust/aok/vendor',24
+script/convert_all_vendor.py,script.convert_all_vendor,OUTPUT_VENDOR_DIR,'/Users/levanthanh/Documents/code/python/rs2zig/aok_converted/vendor',25
 script/extract_data/find_classes.py,script.extract_data.find_classes,SCRIPT_DIR,os.path.dirname(os.path.abspath(__file__)),11
 script/extract_data/find_classes.py,script.extract_data.find_classes,PROJECT_ROOT,os.path.dirname(os.path.dirname(SCRIPT_DIR)),12
 script/extract_data/find_classes.py,script.extract_data.find_classes,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",13
@@ -49,6 +52,7 @@ src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,logger,logg
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,logger,logging.getLogger('rs2zig.frontend.macro_expand'),12
 src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,logger,logging.getLogger('rs2zig.frontend.mod_resolver'),11
 src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,logger,logging.getLogger('rs2zig.frontend.ts_parser'),12
+src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,_PROCESS_PARSER,None,15
 src/rs2zig/lowering/async_plugin.py,src.rs2zig.lowering.async_plugin,logger,logging.getLogger('rs2zig.lowering.async_plugin'),20
 src/rs2zig/lowering/bevy_plugin.py,src.rs2zig.lowering.bevy_plugin,logger,logging.getLogger('rs2zig.lowering.bevy_plugin'),23
 src/rs2zig/lowering/cffi_plugin.py,src.rs2zig.lowering.cffi_plugin,logger,logging.getLogger('rs2zig.lowering.cffi_plugin'),12

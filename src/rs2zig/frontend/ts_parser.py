@@ -12,6 +12,17 @@ import tree_sitter_rust
 logger = logging.getLogger("rs2zig.frontend.ts_parser")
 
 
+_PROCESS_PARSER: Optional["RustParser"] = None
+
+
+def get_process_parser() -> "RustParser":
+    """Return process-global cached RustParser instance to avoid re-creation overhead."""
+    global _PROCESS_PARSER
+    if _PROCESS_PARSER is None:
+        _PROCESS_PARSER = RustParser()
+    return _PROCESS_PARSER
+
+
 class RustParser:
     """Wrapper class around tree-sitter parser for Rust."""
 

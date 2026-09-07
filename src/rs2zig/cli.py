@@ -9,7 +9,7 @@ import os
 import argparse
 import logging
 from typing import Optional, List, Tuple
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 
 from rs2zig import __version__
 from rs2zig.frontend.ts_parser import RustParser
@@ -93,7 +93,8 @@ def run_transpile(input_path: str, output_path: Optional[str] = None, format_cod
         with open(input_path, "r", encoding="utf-8") as file_handle:
             rust_code = file_handle.read()
 
-    parser = RustParser()
+    from rs2zig.frontend.ts_parser import get_process_parser
+    parser = get_process_parser()
     cst = parser.parse_code(rust_code)
 
     builder = ASTBuilder(rust_code.encode("utf-8"))
@@ -176,8 +177,8 @@ def run_transpile_project(project_dir: str, output_dir: str, jobs: int = 4, targ
         target_out = os.path.join(output_dir, zig_rel_path)
         tasks.append((rs_file, target_out))
 
-    logger.info("Starting multithreaded project transpilation across %d worker threads...", jobs)
-    with ThreadPoolExecutor(max_workers=jobs) as executor:
+    logger.info("Starting multiprocess project transpilation across %d worker processes...", jobs)
+    with ProcessPoolExecutor(max_workers=jobs) as executor:
         futures = {executor.submit(_transpile_worker, t): t for t in tasks}
         for future in as_completed(futures):
             try:

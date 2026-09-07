@@ -1,4 +1,13 @@
 file_path,module,imported_module,imported_symbol,alias,line_number
+script/convert_all_vendor.py,script.convert_all_vendor,os,,,8
+script/convert_all_vendor.py,script.convert_all_vendor,sys,,,9
+script/convert_all_vendor.py,script.convert_all_vendor,time,,,10
+script/convert_all_vendor.py,script.convert_all_vendor,logging,,,11
+script/convert_all_vendor.py,script.convert_all_vendor,concurrent.futures,ThreadPoolExecutor,,12
+script/convert_all_vendor.py,script.convert_all_vendor,concurrent.futures,as_completed,,12
+script/convert_all_vendor.py,script.convert_all_vendor,rs2zig.frontend.mod_resolver,ModuleResolver,,17
+script/convert_all_vendor.py,script.convert_all_vendor,rs2zig.validate.conversion_reporter,ConversionReporter,,18
+script/convert_all_vendor.py,script.convert_all_vendor,rs2zig.cli,_transpile_worker,,19
 script/extract_data/find_classes.py,script.extract_data.find_classes,os,,,7
 script/extract_data/find_classes.py,script.extract_data.find_classes,csv,,,8
 script/extract_data/find_classes.py,script.extract_data.find_classes,ast,,,9
@@ -75,6 +84,7 @@ src/rs2zig/cli.py,src.rs2zig.cli,logging,,,10
 src/rs2zig/cli.py,src.rs2zig.cli,typing,Optional,,11
 src/rs2zig/cli.py,src.rs2zig.cli,typing,List,,11
 src/rs2zig/cli.py,src.rs2zig.cli,typing,Tuple,,11
+src/rs2zig/cli.py,src.rs2zig.cli,concurrent.futures,ProcessPoolExecutor,,12
 src/rs2zig/cli.py,src.rs2zig.cli,concurrent.futures,ThreadPoolExecutor,,12
 src/rs2zig/cli.py,src.rs2zig.cli,concurrent.futures,as_completed,,12
 src/rs2zig/cli.py,src.rs2zig.cli,rs2zig,__version__,,14
@@ -95,7 +105,8 @@ src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.backend.zig_emitter,ZigEmitter,,28
 src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.backend.build_zig_gen,generate_build_zig,,29
 src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.validate.zig_fmt_check,ZigValidator,,30
 src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.validate.conversion_reporter,ConversionReporter,,31
-src/rs2zig/cli.py,src.rs2zig.cli,shutil,,,205
+src/rs2zig/cli.py,src.rs2zig.cli,rs2zig.frontend.ts_parser,get_process_parser,,96
+src/rs2zig/cli.py,src.rs2zig.cli,shutil,,,206
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logging,,,7
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,typing,List,,8
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,typing,Optional,,8
@@ -292,3 +303,7 @@ tests/test_golden.py,tests.test_golden,os,,,7
 tests/test_golden.py,tests.test_golden,unittest,,,8
 tests/test_golden.py,tests.test_golden,rs2zig.cli,run_transpile,,9
 tests/test_golden.py,tests.test_golden,rs2zig.validate.zig_fmt_check,ZigValidator,,10
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,unittest,,,7
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,rs2zig.frontend.ts_parser,RustParser,,8
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,rs2zig.frontend.ast_builder,ASTBuilder,,9
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,rs2zig.backend.zig_emitter,ZigEmitter,,10

@@ -1,4 +1,5 @@
 file_path,module,function_name,args,return_type,is_async,is_method,decorators,docstring,start_line,end_line
+script/convert_all_vendor.py,script.convert_all_vendor,main,(),None,False,False,,Execute multithreaded batch transpilation across all vendored dependency crates.,27,85
 script/extract_data/find_classes.py,script.extract_data.find_classes,get_module_path,(rel_path: str),str,False,False,,Convert relative file path into a Python module dot-notation path.,21,30
 script/extract_data/find_classes.py,script.extract_data.find_classes,ClassVisitor.__init__,"(self, rel_path: str, module: str)",,False,True,,,34,37
 script/extract_data/find_classes.py,script.extract_data.find_classes,ClassVisitor.visit_ClassDef,"(self, node: ast.ClassDef)",None,False,True,,Extract metadata from class definition node.,39,75
@@ -50,10 +51,10 @@ src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emi
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,248,309
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,311,564
 src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,36,69
-src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,72,137
-src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])","Tuple[str, str, bool, int, Optional[str]]",False,False,,Worker task function for parallel project transpilation.,140,150
-src/rs2zig/cli.py,src.rs2zig.cli,run_transpile_project,"(project_dir: str, output_dir: str, jobs: int = 4, target_wasm: bool = False)",List[str],False,False,,Transpile a multi-module Rust project directory concurrently using multithreading.,153,228
-src/rs2zig/cli.py,src.rs2zig.cli,main,(),None,False,False,,CLI application main entry point.,231,277
+src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,72,138
+src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])","Tuple[str, str, bool, int, Optional[str]]",False,False,,Worker task function for parallel project transpilation.,141,151
+src/rs2zig/cli.py,src.rs2zig.cli,run_transpile_project,"(project_dir: str, output_dir: str, jobs: int = 4, target_wasm: bool = False)",List[str],False,False,,Transpile a multi-module Rust project directory concurrently using multithreading.,154,229
+src/rs2zig/cli.py,src.rs2zig.cli,main,(),None,False,False,,CLI application main entry point.,232,278
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,get_node_type,(node: tree_sitter.Node),str,False,False,,Safely get string node type (handles differences between tree-sitter versions).,53,62
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.__init__,"(self, code_bytes: bytes)",None,False,True,,Initialize ASTBuilder with original source code bytes for exact text extraction.,68,74
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder.get_text,"(self, node: tree_sitter.Node)",str,False,True,,Extract substring text corresponding to a tree-sitter node.,76,87
@@ -75,9 +76,10 @@ src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,expand_macr
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,_read_or_return,"(code_or_file: str, is_file_path: bool)",str,False,False,,Helper to read file content or return code string.,58,67
 src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,ModuleResolver.discover_project_files,"(self, project_dir: str)",List[str],False,True,,Discover all Rust source files in a project directory.,17,31
 src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,ModuleResolver.map_rust_mod_to_zig_import,"(self, mod_name: str)",str,False,True,,Map Rust module name to Zig @import statement string.,33,42
-src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.__init__,(self),None,False,True,,Initialize tree-sitter Rust parser and language binding.,18,26
-src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.parse_code,"(self, code: str)",tree_sitter.Tree,False,True,,Parse Rust source code string into tree-sitter Tree.,28,41
-src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.parse_file,"(self, file_path: str)",tree_sitter.Tree,False,True,,Parse Rust file into tree-sitter Tree.,43,58
+src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,get_process_parser,(),'RustParser',False,False,,Return process-global cached RustParser instance to avoid re-creation overhead.,18,23
+src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.__init__,(self),None,False,True,,Initialize tree-sitter Rust parser and language binding.,29,37
+src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.parse_code,"(self, code: str)",tree_sitter.Tree,False,True,,Parse Rust source code string into tree-sitter Tree.,39,52
+src/rs2zig/frontend/ts_parser.py,src.rs2zig.frontend.ts_parser,RustParser.parse_file,"(self, file_path: str)",tree_sitter.Tree,False,True,,Parse Rust file into tree-sitter Tree.,54,69
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,TypeNode.__str__,(self),str,False,True,,String representation of type.,41,52
 src/rs2zig/lowering/async_plugin.py,src.rs2zig.lowering.async_plugin,AsyncPlugin.crate_name,(self),str,False,True,,Return crate name.,26,28
 src/rs2zig/lowering/async_plugin.py,src.rs2zig.lowering.async_plugin,AsyncPlugin.lower_call,"(self, expr: CallExpr)",Optional[Expr],False,True,,Lower thread spawning calls to Zig std.Thread.spawn.,30,50
@@ -130,3 +132,10 @@ tests/test_cargo_parser.py,tests.test_cargo_parser,TestCargoParserAndBuildGen.te
 tests/test_cargo_parser.py,tests.test_cargo_parser,TestCargoParserAndBuildGen.test_generate_build_zig_wasm,(self),None,False,True,,Test generating build.zig targeting WASM freestanding.,40,50
 tests/test_golden.py,tests.test_golden,TestGolden.setUp,(self),None,False,True,,Locate golden tests directory.,16,19
 tests/test_golden.py,tests.test_golden,TestGolden.test_golden_cases,(self),None,False,True,,Run transpilation for each golden test case directory.,21,57
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.setUp,(self),None,False,True,,Initialize parser and emitter.,16,19
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes._transpile_code,"(self, code: str)",str,False,True,,Helper to transpile Rust snippet string into Zig.,21,26
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_chained_generic_method_calls,(self),None,False,True,,Verify long method chains with turbofish generics transform cleanly.,28,38
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_unused_parameter_discarding,(self),None,False,True,,Verify unused function parameters are auto-discarded with _ = param;.,40,48
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_comptime_type_param_no_discard,(self),None,False,True,,Verify comptime type parameters are not mistakenly discarded with _ = comptime T;.,50,59
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_channel_generic_lowering,(self),None,False,True,,Verify channel::<T>() lowers to channel(T)().,61,69
+tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes.test_closure_expression_lowering,(self),None,False,True,,Verify closure expression inside argument list lowers cleanly.,71,79

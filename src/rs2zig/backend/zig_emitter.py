@@ -205,7 +205,7 @@ class ZigEmitter:
                 if p.is_self:
                     if "self" not in body_text:
                         lines.append(f"{self._indent()}_ = self;")
-                elif p.name and p.name != "_" and not p.name.startswith("_"):
+                elif p.name and p.name != "_" and not p.name.startswith("_") and p.param_type.name != "type" and "comptime" not in p.name:
                     if p.name not in body_text:
                         lines.append(f"{self._indent()}_ = {p.name};")
 
