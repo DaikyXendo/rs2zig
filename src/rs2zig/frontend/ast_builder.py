@@ -43,6 +43,7 @@ from rs2zig.ir.nodes import (
     MatchArm,
     TryExpr,
     OptionalUnwrapExpr,
+    ClosureExpr,
     ImplBlock,
 )
 
@@ -470,6 +471,37 @@ class ASTBuilder:
                 struct_name=".",
                 fields=tuple_inits
             )
+
+        if ntype == "closure_expression":
+            params_node = node.child_by_field_name("parameters")
+            body_node = node.child_by_field_name("body")
+            if not body_node and len(node.children) > 1:
+                body_node = node.children[-1]
+
+            closure_params: List[Param] = []
+            if params_node:
+                for child in params_node.children:
+                    c_type = get_node_type(child)
+                    if c_type not in ("|", ","):
+                        if c_type == "parameter":
+                            pn = child.child_by_field_name("pattern")
+                            pt = child.child_by_field_name("type")
+                            closure_params.append(
+                                Param(
+                                    name=self.get_text(pn) if pn else "arg",
+                                    param_type=self._build_type(pt) if pt else TypeNode(name="i32")
+                                )
+                            )
+                        elif c_type in ("identifier", "pattern"):
+                            closure_params.append(
+                                Param(
+                                    name=self.get_text(child),
+                                    param_type=TypeNode(name="i32")
+                                )
+                            )
+
+            body_expr = self._build_expr(body_node) if body_node else BlockExpr()
+            return ClosureExpr(params=closure_params, body=body_expr)
 
         if ntype == "macro_invocation":
             macro_node = node.children[0] if node.children else None

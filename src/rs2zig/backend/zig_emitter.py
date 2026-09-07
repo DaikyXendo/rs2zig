@@ -37,6 +37,7 @@ from rs2zig.ir.nodes import (
     MatchArm,
     TryExpr,
     OptionalUnwrapExpr,
+    ClosureExpr,
 )
 from rs2zig.lowering.stdlib_map import map_type
 from rs2zig.lowering.control_flow import lower_println_macro
@@ -396,5 +397,21 @@ class ZigEmitter:
                 self.current_indent -= 1
                 lines.append(f"{self._indent()}}}")
                 return "\n".join(lines)
+
+        if isinstance(expr, ClosureExpr):
+            params_parts = [f"{p.name}: {map_type(p.param_type)}" for p in expr.params]
+            params_str = ", ".join(params_parts)
+            ret_type = map_type(expr.return_type) if expr.return_type else "i32"
+
+            if isinstance(expr.body, BlockExpr):
+                lines = [f"(struct {{ fn run({params_str}) {ret_type} {{"]
+                self.current_indent += 1
+                lines.extend(self._emit_block_lines(expr.body))
+                self.current_indent -= 1
+                lines.append(f"{self._indent()}}}}} }}.run)")
+                return "\n".join(lines)
+            else:
+                body_str = self._emit_expr(expr.body)
+                return f"(struct {{ fn run({params_str}) {ret_type} {{ return {body_str}; }} }}.run)"
 
         return "/* unsupported expr */"

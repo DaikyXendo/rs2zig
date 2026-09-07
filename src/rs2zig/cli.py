@@ -19,6 +19,7 @@ from rs2zig.frontend.mod_resolver import ModuleResolver
 from rs2zig.lowering.ownership_pass import OwnershipPass
 from rs2zig.lowering.trait_lowering import TraitLoweringPass
 from rs2zig.lowering.bevy_lowering import BevyLoweringPass
+from rs2zig.frontend.cargo_parser import parse_cargo_toml
 from rs2zig.backend.zig_emitter import ZigEmitter
 from rs2zig.backend.build_zig_gen import generate_build_zig
 from rs2zig.validate.zig_fmt_check import ZigValidator
@@ -49,11 +50,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
     convert_parser.add_argument("--validate", action="store_true", help="Run zig ast-check / build-obj validation")
     convert_parser.add_argument("--no-expand", action="store_true", help="Skip macro expansion pass")
 
-    # Convert multi-file project subcommand
     project_parser = subparsers.add_parser("convert-project", help="Convert multi-module Rust project directory to Zig in parallel")
     project_parser.add_argument("project_dir", help="Path to input Rust project directory")
     project_parser.add_argument("-o", "--output-dir", required=True, help="Path to output directory for Zig files & build.zig")
     project_parser.add_argument("-j", "--jobs", type=int, default=os.cpu_count() or 4, help="Number of parallel worker threads (default CPU count)")
+    project_parser.add_argument("--wasm", action="store_true", help="Generate build target for WASM32 freestanding")
 
     # AST subcommand
     ast_parser = subparsers.add_parser("ast", help="Parse Rust source and dump internal IR AST")
@@ -131,13 +132,14 @@ def _transpile_worker(task_tuple: Tuple[str, str]) -> str:
     return run_transpile(input_path=rs_file, output_path=target_out, format_code=True, validate=True, expand=False)
 
 
-def run_transpile_project(project_dir: str, output_dir: str, jobs: int = 4) -> List[str]:
+def run_transpile_project(project_dir: str, output_dir: str, jobs: int = 4, target_wasm: bool = False) -> List[str]:
     """Transpile a multi-module Rust project directory concurrently using multithreading.
 
     Args:
         project_dir: Input Rust project directory path.
         output_dir: Target output directory path.
         jobs: Number of parallel worker threads.
+        target_wasm: Whether to target WASM32 freestanding in build.zig.
 
     Returns:
         List of generated Zig file paths.
@@ -166,8 +168,22 @@ def run_transpile_project(project_dir: str, output_dir: str, jobs: int = 4) -> L
             except Exception as err:
                 logger.error("Failed to transpile file %s: %s", target_out, err)
 
+    # Parse Cargo.toml if available
+    app_name = "app"
+    dependencies: List[str] = []
+    cargo_file = os.path.join(project_dir, "Cargo.toml")
+    manifest = parse_cargo_toml(cargo_file)
+    if manifest:
+        app_name = manifest.package.name
+        dependencies = list(manifest.dependencies.keys())
+
     # Generate build.zig
-    build_zig_content = generate_build_zig("app", "main.zig")
+    build_zig_content = generate_build_zig(
+        executable_name=app_name,
+        main_src="main.zig",
+        dependencies=dependencies,
+        target_wasm=target_wasm
+    )
     build_zig_path = os.path.join(output_dir, "build.zig")
     with open(build_zig_path, "w", encoding="utf-8") as f:
         f.write(build_zig_content)
@@ -205,7 +221,8 @@ def main() -> None:
     elif args.command == "convert-project":
         try:
             jobs_cnt = getattr(args, "jobs", os.cpu_count() or 4)
-            run_transpile_project(args.project_dir, args.output_dir, jobs=jobs_cnt)
+            wasm_flag = getattr(args, "wasm", False)
+            run_transpile_project(args.project_dir, args.output_dir, jobs=jobs_cnt, target_wasm=wasm_flag)
         except Exception as err:
             logger.error("Project transpilation failed: %s", err)
             sys.exit(1)

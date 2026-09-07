@@ -209,6 +209,14 @@ class LoopExpr(Expr):
 
 
 @dataclass
+class ClosureExpr(Expr):
+    """Closure / lambda expression (e.g. |x: i32| x + 1)."""
+    params: List['Param'] = field(default_factory=list)
+    body: Expr = field(default_factory=BlockExpr)
+    return_type: Optional[TypeNode] = None
+
+
+@dataclass
 class Param(ASTNode):
     """Function parameter definition."""
     name: str
