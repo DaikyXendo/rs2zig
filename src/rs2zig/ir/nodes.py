@@ -313,3 +313,4 @@ class SourceFile(ASTNode):
     traits: List[TraitDecl] = field(default_factory=list)
     functions: List[FnDecl] = field(default_factory=list)
     impls: List[ImplBlock] = field(default_factory=list)
+    imports: List[str] = field(default_factory=list)

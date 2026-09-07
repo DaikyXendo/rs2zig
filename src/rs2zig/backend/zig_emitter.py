@@ -9,29 +9,14 @@ import re
 import logging
 from typing import List, Optional, Set
 from rs2zig.ir.nodes import (
-    SourceFile, StructDecl, EnumDecl, EnumVariant, TraitDecl, ImplBlock, FnDecl,
-    Param, TypeNode, BlockExpr, Stmt, LetStmt, AssignStmt, ExprStmt, Expr,
-    LiteralExpr, IdentifierExpr, BinaryExpr, UnaryExpr, CallExpr, FieldAccessExpr,
-    StructInitExpr, MacroCallExpr, ReturnExpr, IfExpr, LoopExpr, MatchExpr, MatchArm,
-    TryExpr, OptionalUnwrapExpr, ClosureExpr
+    SourceFile, StructDecl, EnumDecl, EnumVariant, TraitDecl, ImplBlock, FnDecl, Param, TypeNode,
+    BlockExpr, Stmt, LetStmt, AssignStmt, ExprStmt, Expr, LiteralExpr, IdentifierExpr, BinaryExpr,
+    UnaryExpr, CallExpr, FieldAccessExpr, StructInitExpr, MacroCallExpr, ReturnExpr, IfExpr, LoopExpr,
+    MatchExpr, MatchArm, TryExpr, OptionalUnwrapExpr, ClosureExpr
 )
 from rs2zig.lowering.stdlib_map import map_type
-from rs2zig.lowering.control_flow import lower_println_macro
-
-ZIG_PRIMITIVE_TYPES = {
-    "u8", "u16", "u32", "u64", "u128", "i8", "i16", "i32", "i64", "i128",
-    "usize", "isize", "f32", "f64", "bool", "void", "type", "anytype"
-}
-
-ZIG_RESERVED_KEYWORDS = {
-    "error", "test", "usingnamespace", "async", "await", "nosuspend",
-    "resume", "suspend", "export", "extern", "inline", "noinline", "pub",
-    "align", "const", "var", "struct", "enum", "union", "opaque", "comptime",
-    "try", "catch", "if", "else", "switch", "while", "for", "break", "continue",
-    "return", "defer", "errdefer", "unreachable", "asm", "threadlocal"
-}
-
-ZIG_KEYWORDS_AND_PRIMITIVES = ZIG_PRIMITIVE_TYPES | ZIG_RESERVED_KEYWORDS
+from rs2zig.backend.emitter_constants import ZIG_PRIMITIVE_TYPES, ZIG_RESERVED_KEYWORDS, ZIG_KEYWORDS_AND_PRIMITIVES
+from rs2zig.backend.decl_emitter import emit_trait_decl, emit_enum_decl
 
 
 class ZigEmitter:
@@ -47,17 +32,10 @@ class ZigEmitter:
         self.current_indent = 0
         self.requires_bevy_runtime = False
         self.imported_modules: Set[str] = set()
+        self.tmp_var_counter = 0
 
     def emit_source_file(self, sf: SourceFile, file_path: Optional[str] = None) -> str:
-        """Emit complete Zig source file string from SourceFile node.
-
-        Args:
-            sf: SourceFile AST node.
-            file_path: Optional path to output file for resolving relative imports.
-
-        Returns:
-            Formatted Zig code string.
-        """
+        """Emit complete Zig source file string from SourceFile node."""
         self.imported_modules.clear()
         impl_map = {impl.struct_name: impl.methods for impl in sf.impls}
 
@@ -105,8 +83,8 @@ class ZigEmitter:
         out_dir = os.path.dirname(file_path) if file_path else ""
         top_level_names = {c.name for c in sf.constants} | {s.name for s in sf.structs} | {e.name for e in sf.enums} | {t.name for t in sf.traits} | {f.name for f in sf.functions}
 
-        for mod_name in sorted(self.imported_modules):
-            if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app"):
+        for mod_name in sorted(set(self.imported_modules) | set(getattr(sf, "imports", []))):
+            if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app", "serde"):
                 if mod_name in top_level_names:
                     continue
                 clean_mod_name = f'@"{mod_name}"' if mod_name in ZIG_KEYWORDS_AND_PRIMITIVES else mod_name
@@ -114,15 +92,29 @@ class ZigEmitter:
                     header_lines.append('const aok = aok_core;')
                 elif out_dir and os.path.exists(os.path.join(out_dir, f"{mod_name}.zig")):
                     header_lines.append(f'const {clean_mod_name} = @import("{mod_name}.zig");')
-                elif out_dir and (os.path.exists(os.path.join(out_dir, mod_name, "mod.zig")) or os.path.exists(os.path.join(out_dir, mod_name))):
-                    header_lines.append(f'const {clean_mod_name} = @import("{mod_name}/mod.zig");')
                 else:
-                    header_lines.append(f'const {clean_mod_name} = @import("{mod_name}.zig");')
+                    header_lines.append(f'pub const {clean_mod_name} = *anyopaque;')
+
+        body_text = "\n".join(body_lines)
+        clean_body = re.sub(r'"[^"]*"', '""', body_text)
+        clean_body = re.sub(r'//.*', '', clean_body)
+
+        found_types = set(re.findall(r"(?::|->|!|\*const|\?)\s*([A-Z][a-zA-Z0-9_]*)\b", clean_body))
+        std_types = {
+            "std", "anytype", "void", "bool", "usize", "isize", "i8", "i16", "i32", "i64", "i128",
+            "u8", "u16", "u32", "u64", "u128", "f32", "f64", "anyerror", "type", "String", "IpAddr",
+            "UdpSocket", "Token", "Self", "c_void", "f16", "f80", "f128"
+        }
+        for ext_type in sorted(found_types):
+            if len(ext_type) > 1 and ext_type not in top_level_names and ext_type not in std_types and ext_type not in self.imported_modules:
+                if not re.search(r"\.\s*" + re.escape(ext_type) + r"\b", clean_body):
+                    header_lines.append(f"pub const {ext_type} = type;")
 
         header_lines.append("")
         all_lines = header_lines + body_lines
 
         return "\n".join(all_lines).strip() + "\n"
+
 
     def _indent(self) -> str:
         """Get current indentation string."""
@@ -130,40 +122,17 @@ class ZigEmitter:
 
     def _emit_trait(self, trait: TraitDecl) -> str:
         """Emit Zig interface definition / comment for a trait."""
-        vis = "pub " if trait.is_pub else ""
-        tname = trait.name.split("<")[0].strip() if "<" in trait.name else trait.name
-        lines: List[str] = [f"// Trait: {trait.name}"]
-        lines.append(f"{vis}const {tname} = struct {{}};")
-        return "\n".join(lines)
+        return emit_trait_decl(trait)
 
     def _emit_enum(self, enum_decl: EnumDecl) -> str:
         """Emit Zig enum or tagged union definition."""
-        vis = "pub " if enum_decl.is_pub else ""
-        ename = enum_decl.name.split("<")[0].strip() if "<" in enum_decl.name else enum_decl.name
-        has_payload = any(len(v.fields) > 0 for v in enum_decl.variants)
-        header = f"{vis}const {ename} = union(enum) {{" if has_payload else f"{vis}const {ename} = enum {{"
-
-        lines: List[str] = [header]
-        self.current_indent += 1
-
-        for v in enum_decl.variants:
-            if not has_payload or len(v.fields) == 0:
-                lines.append(f"{self._indent()}{v.name},")
-            else:
-                if len(v.fields) == 1 and v.fields[0].name is None:
-                    ftype = map_type(v.fields[0].field_type)
-                    lines.append(f"{self._indent()}{v.name}: {ftype},")
-                else:
-                    field_specs = []
-                    for f in v.fields:
-                        fname = f.name or "val"
-                        ftype = map_type(f.field_type)
-                        field_specs.append(f"{fname}: {ftype}")
-                    lines.append(f"{self._indent()}{v.name}: struct {{ {', '.join(field_specs)} }},")
-
-        self.current_indent -= 1
-        lines.append("};")
-        return "\n".join(lines)
+        def _inc() -> None:
+            """Increment indent."""
+            self.current_indent += 1
+        def _dec() -> None:
+            """Decrement indent."""
+            self.current_indent -= 1
+        return emit_enum_decl(enum_decl, self._indent, _inc, _dec)
 
     def _emit_struct(self, struct: StructDecl, methods: List[FnDecl]) -> str:
         """Emit Zig struct definition including any impl methods."""
@@ -258,13 +227,28 @@ class ZigEmitter:
             body_lines = self._emit_block_lines(fn.body)
             body_text = "\n".join(body_lines)
             discard_lines: List[str] = []
-            for p in fn.params:
+            for p_idx, p in enumerate(fn.params):
                 if p.is_self:
                     if not re.search(r"\bself\b", body_text):
                         discard_lines.append(f"{self._indent()}_ = self;")
-                elif p.name and p.name != "_" and not p.name.startswith("_") and p.param_type.name != "type" and "comptime" not in p.name:
-                    if not re.search(r"\b" + re.escape(p.name) + r"\b", body_text):
-                        discard_lines.append(f"{self._indent()}_ = {p.name};")
+                else:
+                    raw_name = p.name or ""
+                    if raw_name.startswith("mut "):
+                        real_name = raw_name[4:].strip()
+                        discard_lines.append(f"{self._indent()}var {real_name}_var = p{p_idx}; _ = {real_name}_var;")
+                    elif raw_name.startswith("[") and raw_name.endswith("]"):
+                        elems = [e.strip() for e in raw_name[1:-1].split(",") if e.strip()]
+                        for e_idx, e in enumerate(elems):
+                            discard_lines.append(f"{self._indent()}const {e} = p{p_idx}[{e_idx}];")
+                    elif raw_name.startswith("(") and raw_name.endswith(")"):
+                        elems = [e.strip() for e in raw_name[1:-1].split(",") if e.strip()]
+                        for e_idx, e in enumerate(elems):
+                            discard_lines.append(f'{self._indent()}const {e} = p{p_idx}.@"{e_idx}";')
+                    elif raw_name and not raw_name.isidentifier() and not raw_name.startswith("comptime"):
+                        discard_lines.append(f"{self._indent()}_ = p{p_idx};")
+                    elif raw_name and raw_name != "_" and not raw_name.startswith("_") and p.param_type.name != "type" and "comptime" not in raw_name:
+                        if not re.search(r"\b" + re.escape(raw_name) + r"\b", body_text):
+                            discard_lines.append(f"{self._indent()}_ = {raw_name};")
 
             lines.extend(discard_lines)
             lines.extend(body_lines)
@@ -277,7 +261,7 @@ class ZigEmitter:
         """Emit comma-separated parameters list string."""
         parts: List[str] = []
         stype = parent_struct_name or "@This()"
-        for p in params:
+        for p_idx, p in enumerate(params):
             if p.is_self:
                 ptype = f"*const {stype}" if p.param_type.is_reference and not p.param_type.is_mutable else (
                     f"*{stype}" if p.param_type.is_reference and p.param_type.is_mutable else stype
@@ -289,7 +273,18 @@ class ZigEmitter:
                     ptype = stype
                 elif "Self" in ptype:
                     ptype = re.sub(r"\bSelf\b", stype, ptype)
-                pname = f'@"{p.name}"' if (p.name in ZIG_RESERVED_KEYWORDS and not p.name.startswith("@")) else p.name
+                clean_name = p.name or ""
+                if clean_name.startswith("comptime "):
+                    real_ident = clean_name[9:].strip()
+                    if real_ident in ZIG_RESERVED_KEYWORDS and not real_ident.startswith("@"):
+                        real_ident = f'@"{real_ident}"'
+                    pname = f"comptime {real_ident}"
+                else:
+                    if clean_name.startswith("mut "):
+                        clean_name = clean_name[4:].strip()
+                    if not clean_name or not clean_name.isidentifier() or any(c in clean_name for c in "[](){}, "):
+                        clean_name = f"p{p_idx}"
+                    pname = f'@"{clean_name}"' if (clean_name in ZIG_RESERVED_KEYWORDS and not clean_name.startswith("@")) else clean_name
                 parts.append(f"{pname}: {ptype}")
         return ", ".join(parts)
 
@@ -340,7 +335,8 @@ class ZigEmitter:
                 vars_str = stmt.name[1:-1]
                 var_list = [v.strip() for v in vars_str.split(",") if v.strip()]
                 val_str = self._emit_expr(stmt.value) if stmt.value else "undefined"
-                tmp_var = "__tuple_tmp"
+                self.tmp_var_counter += 1
+                tmp_var = f"__tuple_tmp_{self.tmp_var_counter}"
                 lines = [f"const {tmp_var} = {val_str};"]
                 kw = "var" if stmt.is_mutable else "const"
                 for idx, vname in enumerate(var_list):
@@ -355,7 +351,8 @@ class ZigEmitter:
                 body = stmt.name[stmt.name.find("{") + 1 : stmt.name.rfind("}")].strip()
                 fields = [f.strip() for f in body.split(",") if f.strip()]
                 val_str = self._emit_expr(stmt.value) if stmt.value else "undefined"
-                tmp_var = "__struct_tmp"
+                self.tmp_var_counter += 1
+                tmp_var = f"__struct_tmp_{self.tmp_var_counter}"
                 lines = [f"const {tmp_var} = {val_str};"]
                 kw = "var" if stmt.is_mutable else "const"
                 for fitem in fields:
@@ -501,6 +498,8 @@ class ZigEmitter:
                 return "@This()"
             if name in ZIG_RESERVED_KEYWORDS and not name.startswith("@") and not name.startswith("std.") and not name.startswith("*"):
                 return f'@"{name}"'
+            if re.search(r'(?<!\.)\.\d+\b', name):
+                name = re.sub(r'(?<!\.)\.(\d+)\b', r'.@"\1"', name)
             return name
 
         if isinstance(expr, BinaryExpr):

@@ -4,6 +4,7 @@ import unittest
 from rs2zig.frontend.ts_parser import RustParser
 from rs2zig.frontend.ast_builder import ASTBuilder
 from rs2zig.backend.zig_emitter import ZigEmitter
+from rs2zig.ir.nodes import SourceFile
 
 
 class TestPatternFixesPart2(unittest.TestCase):
@@ -418,9 +419,9 @@ class TestPatternFixesPart2(unittest.TestCase):
         """
         zig = self._transpile_code(code)
         self.assertNotIn("const Rect { min, max }", zig)
-        self.assertIn("const __struct_tmp = bounds;", zig)
-        self.assertIn("const min = __struct_tmp.min;", zig)
-        self.assertIn("const max = __struct_tmp.max;", zig)
+        self.assertIn("const __struct_tmp_1 = bounds;", zig)
+        self.assertIn("const min = __struct_tmp_1.min;", zig)
+        self.assertIn("const max = __struct_tmp_1.max;", zig)
 
     def test_arc_type_lowering(self) -> None:
         """Verify Arc<T> and bare Arc lower to *T and *anyopaque in Zig."""
@@ -614,7 +615,87 @@ class TestPatternFixesPart2(unittest.TestCase):
         self.assertNotIn("comptime S = RandomState: type", zig)
         self.assertIn("comptime S: type", zig)
 
+    def test_tuple_type_with_generics_lowering(self) -> None:
+        """Verify tuple type containing generics like (Vec<usize>, Position) lowers cleanly without truncation."""
+        code = """
+        pub struct WeakRange {
+            start_comparable: (Vec<usize>, Position),
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("(Vec(usize),", zig)
+        self.assertIn('struct { @"0": std.ArrayList(usize), @"1": Position }', zig)
+
+    def test_wildcard_type_parameter_lowering(self) -> None:
+        """Verify wildcard _ type parameter in generic type HashMap<NodeId, _> lowers to anytype in Zig."""
+        code = """
+        pub fn process() {
+            let map: HashMap<NodeId, _> = HashMap::new();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("HashMap(NodeId, _)", zig)
+        self.assertIn("HashMap(NodeId, anytype)", zig)
+
+    def test_param_array_pattern_destructuring(self) -> None:
+        """Verify parameter pattern [x, y] in fn from([x, y]: [f32; 2]) is lowered to clean parameter p0 in Zig signature."""
+        code = """
+        pub fn from([x, y]: [f32; 2]) -> Point {
+            return point(x, y);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("fn from([x, y]", zig)
+        self.assertIn("fn from(p0: [2]f32)", zig)
+
+    def test_numeric_tuple_field_indexing_in_index_expr(self) -> None:
+        """Verify self.0[id] numeric tuple index expression is lowered to self.@"0"[id] in Zig."""
+        code = """
+        pub fn get(self: &PropertyIndices, id: usize) -> u8 {
+            return self.0[id];
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("self.0[", zig)
+        self.assertIn('self.@"0"[', zig)
+
+    def test_missing_import_file_fallback(self) -> None:
+        """Verify import of non-existent module non_existent_mod falls back to const non_existent_mod = *anyopaque; instead of crashing ast-check."""
+        code = """
+        use non_existent_mod;
+
+        pub fn test_fn() {
+            non_existent_mod.foo();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn('@import("non_existent_mod.zig")', zig)
+        self.assertIn('pub const non_existent_mod = *anyopaque;', zig)
+
+    def test_standalone_undeclared_type_fallback(self) -> None:
+        """Verify standalone undeclared type CustomType in signature gets fallback pub const CustomType = type; declaration."""
+        code = """
+        pub fn move_pt(p: CustomType) -> CustomType {
+            return p;
+        }
+        """
+        zig = self._transpile_code(code)
+    def test_multiple_tuple_destructure_let_statements(self) -> None:
+        """Verify multiple tuple destructure let statements emit unique temporary variable names in Zig."""
+        code = """
+        pub fn test_multi_destruct() {
+            let (a, b) = (1, 2);
+            let (c, d) = (3, 4);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("const __tuple_tmp_1 =", zig)
+        self.assertIn("const __tuple_tmp_2 =", zig)
+        self.assertNotIn("const __tuple_tmp =", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
+
+
 

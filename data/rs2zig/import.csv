@@ -52,6 +52,11 @@ src/main.py,src.main,rs2zig.cli,main,cli_main,9
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,logging,,,7
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,typing,List,,8
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,typing,Optional,,8
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,typing,List,,5
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,typing,Callable,,5
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,rs2zig.ir.nodes,TraitDecl,,6
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,rs2zig.ir.nodes,EnumDecl,,6
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,rs2zig.lowering.stdlib_map,map_type,,7
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,os,,,7
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,re,,,8
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,logging,,,9
@@ -89,8 +94,12 @@ src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.ir.nodes
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.ir.nodes,TryExpr,,11
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.ir.nodes,OptionalUnwrapExpr,,11
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.ir.nodes,ClosureExpr,,11
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.lowering.stdlib_map,map_type,,18
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.lowering.control_flow,lower_println_macro,,19
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.lowering.stdlib_map,map_type,,17
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.backend.emitter_constants,ZIG_PRIMITIVE_TYPES,,18
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.backend.emitter_constants,ZIG_RESERVED_KEYWORDS,,18
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.backend.emitter_constants,ZIG_KEYWORDS_AND_PRIMITIVES,,18
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.backend.decl_emitter,emit_trait_decl,,19
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.backend.decl_emitter,emit_enum_decl,,19
 src/rs2zig/cli.py,src.rs2zig.cli,sys,,,7
 src/rs2zig/cli.py,src.rs2zig.cli,os,,,8
 src/rs2zig/cli.py,src.rs2zig.cli,argparse,,,9
@@ -332,3 +341,4 @@ tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,unittest,,,3
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,rs2zig.frontend.ts_parser,RustParser,,4
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,rs2zig.frontend.ast_builder,ASTBuilder,,5
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,rs2zig.backend.zig_emitter,ZigEmitter,,6
+tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,rs2zig.ir.nodes,SourceFile,,7

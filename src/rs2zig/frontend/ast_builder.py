@@ -112,6 +112,11 @@ class ASTBuilder:
                 sf.traits.append(self._build_trait(child))
             elif ntype == "impl_item":
                 sf.impls.append(self._build_impl(child))
+            elif ntype == "use_declaration":
+                text = self.get_text(child).replace("use ", "").replace(";", "").strip()
+                mod_name = text.split("::")[0].strip()
+                if mod_name:
+                    sf.imports.append(mod_name)
         return sf
 
     def _build_const(self, node: tree_sitter.Node) -> ConstDecl:
@@ -314,7 +319,7 @@ class ASTBuilder:
             if clean_text.startswith("(") and clean_text.endswith(")") and "," not in clean_text:
                 clean_text = clean_text[1:-1].strip()
             generic_args = []
-            split_res = _split_angle_brackets(clean_text)
+            split_res = _split_angle_brackets(clean_text) if not (clean_text.startswith("(") and clean_text.endswith(")")) else None
             if split_res:
                 base_name, generic_str, _ = split_res
                 for arg_part in _split_top_level_commas(generic_str):

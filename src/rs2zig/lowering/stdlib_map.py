@@ -191,7 +191,7 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
         if split_res:
             base, gen, suffix = split_res
             gen_parts = [p.strip() for p in _split_top_level_commas(gen) if not p.strip().startswith("'")]
-            mapped_gen = ", ".join(map_type(p) for p in gen_parts) if gen_parts else ""
+            mapped_gen = ", ".join("anytype" if p == "_" else map_type(p) for p in gen_parts) if gen_parts else ""
             base_clean = base.strip()
             suffix_mapped = map_type(suffix) if suffix else ""
             if base_clean in ("PhantomData", "std::marker::PhantomData", "core::marker::PhantomData"):
