@@ -214,7 +214,11 @@ class ZigEmitter:
         if struct.fields and methods:
             lines.append("")
 
+        field_names = {field.name.replace("r#", "") for field in struct.fields}
+
         for method in methods:
+            if method.name in field_names:
+                method.name = f"get_{method.name}"
             method_str = self._emit_function(method, parent_struct_name=sname)
             for mline in method_str.splitlines():
                 lines.append(f"{self._indent()}{mline}")
@@ -363,10 +367,19 @@ class ZigEmitter:
         if isinstance(stmt, AssignStmt):
             lhs_str = self._emit_expr(stmt.lhs)
             rhs_str = self._emit_expr(stmt.rhs)
+            if lhs_str == "_" and "," in rhs_str:
+                raw_rhs = rhs_str.lstrip(".{(").rstrip("})")
+                items = [it.strip() for it in raw_rhs.split(",") if it.strip()]
+                return f"\n{self._indent()}".join(f"_ = {it};" for it in items)
             return f"{lhs_str} {stmt.op} {rhs_str};"
 
         if isinstance(stmt, ExprStmt):
             expr_str = self._emit_expr(stmt.expr)
+            if expr_str.startswith("_ = ") and "," in expr_str:
+                raw_rhs = expr_str[4:].strip().rstrip(";")
+                raw_rhs = raw_rhs.lstrip(".{(").rstrip("})")
+                items = [it.strip() for it in raw_rhs.split(",") if it.strip()]
+                return f"\n{self._indent()}".join(f"_ = {it};" for it in items)
             if isinstance(stmt.expr, (IfExpr, LoopExpr, MatchExpr)):
                 return expr_str
             if expr_str.startswith("{") and expr_str.endswith("}") and not isinstance(stmt.expr, (ReturnExpr, AssignStmt, CallExpr, StructInitExpr)):
@@ -395,8 +408,8 @@ class ZigEmitter:
                 val = val[1:]
             elif val.startswith("b'") and val.endswith("'"):
                 val = val[1:]
-            if val.startswith("r") and '"' in val:
-                val = re.sub(r'^r#*"(.*)"#*$', r'"\1"', val)
+            if (val.startswith("r") or val.startswith("br")) and '"' in val:
+                val = re.sub(r'^(?:b?r)#*"(.*)"#*$', r'"\1"', val)
             if val.startswith('"') and val.endswith('"'):
                 if "\n" in val:
                     inner = val[1:-1].replace("\r\n", "\\n").replace("\n", "\\n")
@@ -482,6 +495,8 @@ class ZigEmitter:
                 operand_str = operand_str[4:]
             if zop == "&" and operand_str.startswith("[") and operand_str.endswith("]"):
                 return f"&.{{{operand_str[1:-1]}}}"
+            if zop == "!" and not (operand_str in ("true", "false") or operand_str.startswith("is_") or operand_str.startswith("has_") or operand_str.startswith("can_")):
+                zop = "~"
             return f"({zop}{operand_str})" if zop != ".*" else f"({operand_str}.*)"
 
         if isinstance(expr, TryExpr):
@@ -528,9 +543,13 @@ class ZigEmitter:
 
         if isinstance(expr, StructInitExpr):
             s_name = expr.struct_name
-            fields_str = ", ".join(
-                f".{f.field_name} = {self._emit_expr(f.value)}" for f in expr.fields
-            )
+            formatted_fields = []
+            for f in expr.fields:
+                raw_fname = f.field_name.replace("r#", "")
+                fname = f'@"{raw_fname}"' if (raw_fname in ZIG_KEYWORDS_AND_PRIMITIVES or not raw_fname.isidentifier()) and not raw_fname.isdigit() else raw_fname
+                val_str = self._emit_expr(f.value)
+                formatted_fields.append(f".{fname} = {val_str}")
+            fields_str = ", ".join(formatted_fields)
             if "::" in s_name:
                 parts = s_name.split("::")
                 if len(parts) >= 2 and parts[-1][0].isupper():
@@ -696,14 +715,17 @@ class ZigEmitter:
 
         if isinstance(expr, ClosureExpr):
             params_parts = []
+            param_names = []
             for idx, p in enumerate(expr.params):
                 ptype = map_type(p.param_type) if (p.param_type and p.param_type.name != "anytype") else "anytype"
-                pname = p.name.replace("(", "").replace(")", "").replace(" ", "_").replace("&", "").strip() if p.name else f"arg{idx}"
+                raw_name = p.name.split(":")[0].strip() if p.name else ""
+                pname = raw_name.replace("(", "").replace(")", "").replace(" ", "_").replace("&", "").strip() if raw_name else f"arg{idx}"
                 if "," in pname or not pname.isidentifier() or pname == "_":
                     pname = f"arg{idx}"
                 if pname in ZIG_RESERVED_KEYWORDS and not pname.startswith("@"):
                     pname = f'@"{pname}"'
                 params_parts.append(f"{pname}: {ptype}")
+                param_names.append(pname)
             params_str = ", ".join(params_parts)
             ret_type = map_type(expr.return_type) if expr.return_type else "i32"
 
@@ -711,10 +733,11 @@ class ZigEmitter:
                 body_lines = self._emit_block_lines(expr.body)
                 body_text = "\n".join(body_lines)
                 discard_lines = []
-                for p in expr.params:
-                    if p.name and p.name != "_" and not p.name.startswith("_"):
-                        if not re.search(r"\b" + re.escape(p.name) + r"\b", body_text):
-                            discard_lines.append(f"{self._indent()}_ = {p.name};")
+                for pname in param_names:
+                    if pname and pname != "_" and not pname.startswith("_") and not pname.startswith("arg"):
+                        clean_search = pname.strip('"@')
+                        if not re.search(r"\b" + re.escape(clean_search) + r"\b", body_text):
+                            discard_lines.append(f"{self._indent()}_ = {pname};")
                 lines = [f"(struct {{ fn run({params_str}) {ret_type} {{"]
                 self.current_indent += 1
                 lines.extend(discard_lines)
@@ -725,10 +748,11 @@ class ZigEmitter:
             else:
                 body_str = self._emit_expr(expr.body)
                 discard_prefix = ""
-                for p in expr.params:
-                    if p.name and p.name != "_" and not p.name.startswith("_"):
-                        if not re.search(r"\b" + re.escape(p.name) + r"\b", body_str):
-                            discard_prefix += f"_ = {p.name}; "
+                for pname in param_names:
+                    if pname and pname != "_" and not pname.startswith("_") and not pname.startswith("arg"):
+                        clean_search = pname.strip('"@')
+                        if not re.search(r"\b" + re.escape(clean_search) + r"\b", body_str):
+                            discard_prefix += f"_ = {pname}; "
                 return f"(struct {{ fn run({params_str}) {ret_type} {{ {discard_prefix}return {body_str}; }} }}.run)"
 
         return "{}"

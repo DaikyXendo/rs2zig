@@ -286,7 +286,7 @@ class TestPatternFixes(unittest.TestCase):
         """
         zig = self._transpile_code(code)
         self.assertNotIn("-> (usize, usize)", zig)
-        self.assertIn("struct { usize, usize }", zig)
+        self.assertIn("struct { @\"0\": usize, @\"1\": usize }", zig)
 
     def test_keyword_call_escaping(self) -> None:
         """Verify calls to functions named after Zig keywords like test(...) are escaped with @""."""

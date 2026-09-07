@@ -42,6 +42,29 @@ RUST_TO_ZIG_TYPES: Dict[str, str] = {
     "__s16": "i16",
     "__s32": "i32",
     "__s64": "i64",
+    "AtomicBool": "std.atomic.Value(bool)",
+    "AtomicU8": "std.atomic.Value(u8)",
+    "AtomicU16": "std.atomic.Value(u16)",
+    "AtomicU32": "std.atomic.Value(u32)",
+    "AtomicU64": "std.atomic.Value(u64)",
+    "AtomicUsize": "std.atomic.Value(usize)",
+    "AtomicI8": "std.atomic.Value(i8)",
+    "AtomicI16": "std.atomic.Value(i16)",
+    "AtomicI32": "std.atomic.Value(i32)",
+    "AtomicI64": "std.atomic.Value(i64)",
+    "AtomicIsize": "std.atomic.Value(isize)",
+    "core::sync::atomic::AtomicBool": "std.atomic.Value(bool)",
+    "core::sync::atomic::AtomicUsize": "std.atomic.Value(usize)",
+    "core::sync::atomic::AtomicU32": "std.atomic.Value(u32)",
+    "core::sync::atomic::AtomicI32": "std.atomic.Value(i32)",
+    "core::sync::atomic::AtomicU64": "std.atomic.Value(u64)",
+    "core::sync::atomic::AtomicI64": "std.atomic.Value(i64)",
+    "std::sync::atomic::AtomicBool": "std.atomic.Value(bool)",
+    "std::sync::atomic::AtomicUsize": "std.atomic.Value(usize)",
+    "std::sync::atomic::AtomicU32": "std.atomic.Value(u32)",
+    "std::sync::atomic::AtomicI32": "std.atomic.Value(i32)",
+    "std::sync::atomic::AtomicU64": "std.atomic.Value(u64)",
+    "std::sync::atomic::AtomicI64": "std.atomic.Value(i64)",
 }
 
 
@@ -124,7 +147,8 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
                 return "void"
             if "," in inner:
                 elems = [map_type(p.strip()) for p in _split_top_level_commas(inner) if p.strip()]
-                return f"struct {{ {', '.join(elems)} }}"
+                fields_str = ", ".join(f'@"{idx}": {e}' for idx, e in enumerate(elems))
+                return f"struct {{ {fields_str} }}"
         if name in RUST_TO_ZIG_TYPES:
             return RUST_TO_ZIG_TYPES[name]
         if name.startswith("&mut [") and name.endswith("]"):

@@ -581,14 +581,16 @@ class ASTBuilder:
             inits: List[StructFieldInit] = []
             if body_node:
                 for child in body_node.children:
-                    if get_node_type(child) == "field_initializer":
-                        fn = child.child_by_field_name("field")
+                    nt = get_node_type(child)
+                    if nt in ("field_initializer", "shorthand_field_initializer"):
+                        fn = child.child_by_field_name("field") or (child if nt == "shorthand_field_initializer" else None)
                         fv = child.child_by_field_name("value")
-                        if fn and fv:
+                        if fn:
+                            val_expr = self._build_expr(fv) if fv else self._build_expr(fn)
                             inits.append(
                                 StructFieldInit(
                                     field_name=self.get_text(fn),
-                                    value=self._build_expr(fv)
+                                    value=val_expr
                                 )
                             )
             return StructInitExpr(

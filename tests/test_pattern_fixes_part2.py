@@ -294,6 +294,121 @@ class TestPatternFixesPart2(unittest.TestCase):
         self.assertNotIn("as *mut", zig)
         self.assertIn("@ptrCast(", zig)
 
+    def test_atomic_types_lowering(self) -> None:
+        """Verify Rust atomic types AtomicUsize, AtomicBool, AtomicU32 lower to std.atomic.Value in Zig."""
+        code = """
+        pub struct ReMutex {
+            owner: AtomicUsize,
+            flag: AtomicBool,
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("owner: AtomicUsize", zig)
+        self.assertIn("owner: std.atomic.Value(usize)", zig)
+        self.assertIn("flag: std.atomic.Value(bool)", zig)
+
+    def test_multiple_discard_closure_syntax(self) -> None:
+        """Verify tuple discard _ = (x, y); format into separate valid Zig statements."""
+        code = """
+        pub fn check(x: i32, y: i32) {
+            _ = (x, y);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("_ = x, y;", zig)
+        self.assertIn("_ = x;", zig)
+        self.assertIn("_ = y;", zig)
+
+    def test_closure_param_type_cleaning(self) -> None:
+        """Verify closure parameter types like |res: Option<T>, (x, y)| clean parameter names without colon types."""
+        code = """
+        pub fn fold_items() {
+            let res = items.fold(None, |res: Option<i32>, (x, y)| {
+                return res;
+            });
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn(": Option", zig)
+        self.assertNotIn("(x, y)", zig)
+        self.assertIn("fn run(", zig)
+
+    def test_duplicate_field_and_method_name_collision(self) -> None:
+        """Verify struct with method having exact same name as a field renames method to get_<name> in Zig."""
+        code = """
+        pub struct SMBIOSInfo {
+            pub length: u8,
+        }
+
+        impl SMBIOSInfo {
+            pub fn length(&self) -> u8 {
+                self.length
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("fn length(self:", zig)
+        self.assertIn("fn get_length(self:", zig)
+
+    def test_tuple_type_field_name_lowering(self) -> None:
+        """Verify Rust tuple types (A, B) lower to valid Zig struct { @"0": A, @"1": B }."""
+        code = """
+        pub fn get_pair() -> (f64, f64) {
+            return (0.0, 0.0);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("struct { f64, f64 }", zig)
+        self.assertIn("struct { @\"0\": f64, @\"1\": f64 }", zig)
+
+    def test_struct_init_field_shorthand_lowering(self) -> None:
+        """Verify Rust struct init field shorthand Point { x, y } preserves fields in Zig . { .x = x, .y = y }."""
+        code = """
+        pub fn create_point(x: f64, y: f64) -> Point {
+            Point { x, y }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("Point { }", zig)
+        self.assertIn(".x = x", zig)
+        self.assertIn(".y = y", zig)
+
+    def test_bitwise_not_operator_lowering(self) -> None:
+        """Verify Rust bitwise NOT on masks/flags !(a & b) lowers to ~ in Zig."""
+        code = """
+        pub fn clear_mask(a: u32, b: u32) -> u32 {
+            a & !(b)
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("!(b)", zig)
+        self.assertIn("~b", zig)
+
+    def test_raw_field_name_struct_initializer(self) -> None:
+        """Verify struct initializer with r#type field name lowers to .@"type" in Zig."""
+        code = """
+        pub fn init_field() -> FieldInfo {
+            FieldInfo {
+                r#type: 1,
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn(".r#type =", zig)
+        self.assertIn(".@\"type\" = 1", zig)
+
+    def test_raw_byte_string_literal_lowering(self) -> None:
+        """Verify Rust raw byte string literal br"hello" lowers to Zig string literal "hello"."""
+        code = """
+        pub fn get_str() -> &'static str {
+            let msg = br"hello";
+            return msg;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn('br"hello"', zig)
+        self.assertIn('"hello"', zig)
+
 
 if __name__ == "__main__":
     unittest.main()
