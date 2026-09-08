@@ -90,6 +90,7 @@ src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.ir.nod
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.ir.nodes,BlockExpr,,7
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.ir.nodes,TypeNode,,7
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.lowering.stdlib_map,map_type,,12
+src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.lowering.stdlib_map,_split_angle_brackets,,12
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.lowering.control_flow,lower_println_macro,,13
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.backend.emitter_constants,ZIG_RESERVED_KEYWORDS,,14
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.backend.emitter_constants,ZIG_KEYWORDS_AND_PRIMITIVES,,14

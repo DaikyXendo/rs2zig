@@ -135,6 +135,8 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
         vname = f'@"{vname}"' if (vname in ZIG_RESERVED_KEYWORDS and not vname.startswith("@")) else vname
         type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
         val_expr_str = emitter_ctx._emit_expr(stmt.value).rstrip(";").strip() if stmt.value else ""
+        if val_expr_str.startswith("{") and not val_expr_str.endswith("}"):
+            val_expr_str = f"({val_expr_str})"
         val_part = f" = {val_expr_str}" if stmt.value else ""
         res = f"{kw} {vname}{type_part}{val_part};"
         if was_renamed or is_dedup:

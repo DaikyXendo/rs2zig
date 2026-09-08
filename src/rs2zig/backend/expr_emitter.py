@@ -9,7 +9,7 @@ from rs2zig.ir.nodes import (
     FieldAccessExpr, StructInitExpr, MacroCallExpr, ReturnExpr, IfExpr,
     LoopExpr, MatchExpr, TryExpr, OptionalUnwrapExpr, ClosureExpr, BlockExpr, TypeNode
 )
-from rs2zig.lowering.stdlib_map import map_type
+from rs2zig.lowering.stdlib_map import map_type, _split_angle_brackets
 from rs2zig.lowering.control_flow import lower_println_macro
 from rs2zig.backend.emitter_constants import ZIG_RESERVED_KEYWORDS, ZIG_KEYWORDS_AND_PRIMITIVES
 
@@ -69,7 +69,11 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             return name
         while "::<" in name:
             base, rest = name.split("::<", 1)
-            gen_part, _, trailing = rest.partition(">")
+            split_res = _split_angle_brackets("<" + rest)
+            if split_res:
+                _, gen_part, trailing = split_res
+            else:
+                gen_part, _, trailing = rest.partition(">")
             base_str = emit_expr(IdentifierExpr(name=base), emitter_ctx)
             gen_type = map_type(gen_part.strip()) if gen_part.strip() else "void"
             name = f"{base_str}({gen_type}){trailing}"
@@ -175,7 +179,11 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             fname = f'@"{fname}"'
         if "::<" in fname:
             base, rest = fname.split("::<", 1)
-            gen_part, _, trailing = rest.partition(">")
+            split_res = _split_angle_brackets("<" + rest)
+            if split_res:
+                _, gen_part, trailing = split_res
+            else:
+                gen_part, _, trailing = rest.partition(">")
             gen_type = map_type(gen_part.strip()) if gen_part.strip() else "void"
             fname = f"{base}({gen_type}){trailing}"
         if isinstance(expr.target, StructInitExpr):
@@ -284,8 +292,9 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                         pat = f".{variant_name} => |{cap_var}|"
                     else:
                         pat = f".{variant_name}"
-            elif "::" in pat_str:
+            elif "::" in pat_str or "{" in pat_str:
                 clean_enum_variant = re.sub(r"\(\s*\.\.\s*\)", "", pat_str.split("::")[-1]).strip()
+                clean_enum_variant = re.sub(r"\s*\{.*?\}", "", clean_enum_variant).strip()
                 pat = f".{clean_enum_variant}"
             else:
                 pat = pat_str

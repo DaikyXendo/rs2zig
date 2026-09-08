@@ -286,6 +286,41 @@ class TestPatternFixesPart3(unittest.TestCase):
         self.assertNotIn("(State::Ground, true) =>", zig)
         self.assertIn(".{ .Ground, true } =>", zig)
 
+    def test_turbofish_nested_generic_partition_fix(self) -> None:
+        """Verify turbofish with nested generic args collect::<Result<Vec<_>, ArrowError>>() parses without breaking at Vec<_)."""
+        code = """
+        pub fn process(cols: &Cols) {
+            let res = cols.collect::<Result<Vec<_>, ArrowError>>();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("Vec<_)_", zig)
+        self.assertNotIn("Result<Vec<_)", zig)
+
+    def test_match_arm_struct_pattern_rest_dots_lowering(self) -> None:
+        """Verify match arm with struct pattern State::Inactive { is_view_focused, .. } lowers without invalid is_view_focused, .. inside pattern."""
+        code = """
+        pub fn handle(state: State) {
+            match state {
+                State::Inactive { is_view_focused, .. } => {},
+                _ => {},
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("is_view_focused, ..", zig)
+
+    def test_let_stmt_val_expr_leading_brace_parens(self) -> None:
+        """Verify let x: bool = {}.into(); wraps initializer expression starting with brace in parens."""
+        code = """
+        pub fn check() {
+            let x: bool = {}.into();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("= {}.into();", zig)
+        self.assertIn("= ({}.into());", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
