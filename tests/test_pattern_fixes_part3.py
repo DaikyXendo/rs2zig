@@ -215,6 +215,41 @@ class TestPatternFixesPart3(unittest.TestCase):
         self.assertNotIn("if (.Focused(is_focused) = event)", zig)
         self.assertIn("|is_focused|", zig)
 
+    def test_if_expr_double_equals_comparison(self) -> None:
+        """Verify if comparison with == is not split as if let assignment with leading =."""
+        code = """
+        pub fn check(role: Role) {
+            if role == Role::GenericContainer || role == Role::TextRun {
+                return;
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("if (=", zig)
+        self.assertIn("role == .GenericContainer", zig)
+
+    def test_string_literal_null_byte_escape(self) -> None:
+        """Verify string literal with null byte \\0 lowers to \\x00 in Zig."""
+        code = """
+        pub const PREFIX: &'static str = "l\\0";
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn('"l\\0"', zig)
+        self.assertIn('"l\\x00"', zig)
+
+    def test_tuple_match_arm_pattern(self) -> None:
+        """Verify tuple match arm (State::Escape, true) lowers cleanly without bare dot . pattern."""
+        code = """
+        pub fn parse(state: State, more: bool) {
+            match (state, more) {
+                (State::Escape, true) => {},
+                _ => {},
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn(" . =>", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

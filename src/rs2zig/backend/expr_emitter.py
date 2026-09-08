@@ -36,6 +36,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
         if (val.startswith("r") or val.startswith("br")) and '"' in val:
             val = re.sub(r'^(?:b?r)#*"(.*)"#*$', r'"\1"', val)
         if val.startswith('"') and val.endswith('"'):
+            if "\\0" in val:
+                val = val.replace("\\0", "\\x00")
             if "\n" in val:
                 inner = val[1:-1].replace("\r\n", "\\n").replace("\n", "\\n")
                 val = f'"{inner}"'
@@ -259,11 +261,14 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 if "::" in variant_part:
                     variant_part = variant_part.split("::")[-1]
                 variant_name = variant_part.lstrip(".")
-                cap_var = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
-                if cap_var and cap_var.isidentifier() and cap_var != "_":
-                    pat = f".{variant_name} => |{cap_var}|"
+                if not variant_name:
+                    pat = pat_str
                 else:
-                    pat = f".{variant_name}"
+                    cap_var = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
+                    if cap_var and cap_var.isidentifier() and cap_var != "_":
+                        pat = f".{variant_name} => |{cap_var}|"
+                    else:
+                        pat = f".{variant_name}"
             elif "::" in pat_str:
                 clean_enum_variant = re.sub(r"\(\s*\.\.\s*\)", "", pat_str.split("::")[-1]).strip()
                 pat = f".{clean_enum_variant}"
@@ -296,12 +301,12 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
     if isinstance(expr, IfExpr):
         cond_str = emit_expr(expr.condition, emitter_ctx)
         lines = []
-        if "=" in cond_str and not cond_str.startswith("if "):
+        if "=" in cond_str and not any(op in cond_str for op in ("==", "!=", "<=", ">=")) and not cond_str.startswith("if "):
             clean_cond = cond_str
             if clean_cond.startswith("(") and clean_cond.endswith(")"):
                 clean_cond = clean_cond[1:-1]
             clean_cond = clean_cond.replace("let ", "").strip()
-            if "=" in clean_cond:
+            if "=" in clean_cond and not any(op in clean_cond for op in ("==", "!=", "<=", ">=")):
                 parts = clean_cond.split("=", 1)
                 pat_part = parts[0].strip()
                 target_part = parts[1].strip()
