@@ -50,19 +50,19 @@ src/main.py,src.main,main,(),None,False,False,,Main application entry point.,17,
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,generate_build_zig,"(executable_name: str = 'app', main_src: str = 'main.zig', dependencies: Optional[List[str]] = None, target_wasm: bool = False)",str,False,False,,Generate content for a build.zig script targeting Zig 0.16.0.,13,70
 src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,emit_trait_decl,(trait: TraitDecl),str,False,False,,Emit Zig interface definition / comment for a trait.,10,16
 src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,emit_enum_decl,"(enum_decl: EnumDecl, indent_fn: Callable[[], str], inc_indent: Callable[[], None], dec_indent: Callable[[], None])",str,False,False,,Emit Zig enum or tagged union definition.,19,46
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.__init__,"(self, indent_str: str = '    ')",None,False,True,,Initialize emitter with specified indentation.,25,35
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.emit_source_file,"(self, sf: SourceFile, file_path: Optional[str] = None)",str,False,True,,Emit complete Zig source file string from SourceFile node.,37,116
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._indent,(self),str,False,True,,Get current indentation string.,119,121
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_trait,"(self, trait: TraitDecl)",str,False,True,,Emit Zig interface definition / comment for a trait.,123,125
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_enum,"(self, enum_decl: EnumDecl)",str,False,True,,Emit Zig enum or tagged union definition.,127,135
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._inc,(),None,False,True,,Increment indent.,129,131
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._dec,(),None,False,True,,Decrement indent.,132,134
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_struct,"(self, struct: StructDecl, methods: List[FnDecl])",str,False,True,,Emit Zig struct definition including any impl methods.,137,193
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_function,"(self, fn: FnDecl, parent_struct_name: Optional[str] = None)",str,False,True,,Emit Zig function or method definition.,195,258
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,260,289
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,291,303
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,305,421
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,423,795
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.__init__,"(self, indent_str: str = '    ')",None,False,True,,Initialize emitter with specified indentation.,26,36
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.emit_source_file,"(self, sf: SourceFile, file_path: Optional[str] = None)",str,False,True,,Emit complete Zig source file string from SourceFile node.,38,117
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._indent,(self),str,False,True,,Get current indentation string.,120,122
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_trait,"(self, trait: TraitDecl)",str,False,True,,Emit Zig interface definition / comment for a trait.,124,126
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_enum,"(self, enum_decl: EnumDecl)",str,False,True,,Emit Zig enum or tagged union definition.,128,136
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._inc,(),None,False,True,,Increment indent.,130,132
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._dec,(),None,False,True,,Decrement indent.,133,135
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_struct,"(self, struct: StructDecl, methods: List[FnDecl])",str,False,True,,Emit Zig struct definition including any impl methods.,138,194
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_function,"(self, fn: FnDecl, parent_struct_name: Optional[str] = None)",str,False,True,,Emit Zig function or method definition.,196,259
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,261,290
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,292,304
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,306,422
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,424,798
 src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,36,69
 src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,72,138
 src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])","Tuple[str, str, bool, int, Optional[str]]",False,False,,Worker task function for parallel project transpilation.,141,151

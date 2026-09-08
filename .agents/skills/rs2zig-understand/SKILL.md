@@ -51,3 +51,7 @@ If needed, inspect the CSV files directly in `data/rs2zig/`:
 - `data/rs2zig/dependency.csv`
 - `data/rs2zig/import.csv`
 - `data/rs2zig/fix_roadmap.csv`
+
+### 5. AOK Batch Progress Tracking CSVs
+- `data/aok_batch_progress.csv`: Log of batch numbers, file counts, valid vs failed stats, and pass rates.
+- `data/aok_file_status.csv`: Per-file conversion status (`VALID` or `FAILED`) and exact `zig ast-check` error tracebacks.

@@ -15,6 +15,7 @@ from rs2zig.ir.nodes import (
     MatchExpr, MatchArm, TryExpr, OptionalUnwrapExpr, ClosureExpr
 )
 from rs2zig.lowering.stdlib_map import map_type
+from rs2zig.lowering.control_flow import lower_println_macro
 from rs2zig.backend.emitter_constants import ZIG_PRIMITIVE_TYPES, ZIG_RESERVED_KEYWORDS, ZIG_KEYWORDS_AND_PRIMITIVES
 from rs2zig.backend.decl_emitter import emit_trait_decl, emit_enum_decl
 
@@ -470,7 +471,9 @@ class ZigEmitter:
                 gen_type = map_type(gen_part.strip()) if gen_part.strip() else "void"
                 name = f"{base_str}({gen_type}){trailing}"
             if "::" in name:
-                parts = name.split("::")
+                parts = [p.strip() for p in name.split("::") if p.strip()]
+                if not parts:
+                    return name
                 if parts[0] in ("bevy", "std", "bevy_ecs"):
                     return ".".join(parts)
                 if parts[0] in ("Some", "Ok"):
