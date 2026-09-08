@@ -256,6 +256,21 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             elif pat_str.startswith("Err(") or pat_str == "None":
                 var_name = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip() if "(" in pat_str else ""
                 pat = "else" if not has_else else "error.Unknown"
+            elif pat_str.startswith("(") and pat_str.endswith(")"):
+                inner = pat_str[1:-1].strip()
+                if "," in inner:
+                    raw_items = [p.strip() for p in inner.split(",") if p.strip()]
+                    mapped_items = []
+                    for it in raw_items:
+                        if "::" in it:
+                            mapped_items.append(f".{it.split('::')[-1]}")
+                        else:
+                            mapped_items.append(it)
+                    pat = f".{{ {', '.join(mapped_items)} }}"
+                elif "::" in inner:
+                    pat = f".{inner.split('::')[-1]}"
+                else:
+                    pat = pat_str
             elif "(" in pat_str and ")" in pat_str:
                 variant_part = pat_str[:pat_str.find("(")].strip()
                 if "::" in variant_part:
@@ -402,7 +417,7 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             discard_lines = [
                 f"{emitter_ctx._indent()}_ = {pname};"
                 for pname in param_names
-                if pname and pname != "_" and not pname.startswith("_")
+                if pname and pname != "_"
                 and not re.search(r"\b" + re.escape(pname.strip('"@')) + r"\b", body_text)
             ]
             lines = [f"(struct {{ fn run({params_str}) {ret_type} {{"]
@@ -416,7 +431,7 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             body_str = emit_expr(expr.body, emitter_ctx)
             discards = [
                 f"_ = {pname}; " for pname in param_names
-                if pname and pname != "_" and not pname.startswith("_")
+                if pname and pname != "_"
                 and not re.search(r"\b" + re.escape(pname.strip('"@')) + r"\b", body_str)
             ]
             discard_prefix = "".join(discards)

@@ -32,7 +32,10 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
 
         if block.trailing_expr:
             expr_str = emitter_ctx._emit_expr(block.trailing_expr)
-            lines.append(f"{emitter_ctx._indent()}return {expr_str};")
+            if expr_str.strip() in ("()", ".{}", "void"):
+                lines.append(f"{emitter_ctx._indent()}return;")
+            else:
+                lines.append(f"{emitter_ctx._indent()}return {expr_str};")
 
         return lines
     finally:

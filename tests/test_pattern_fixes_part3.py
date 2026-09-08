@@ -250,6 +250,42 @@ class TestPatternFixesPart3(unittest.TestCase):
         zig = self._transpile_code(code)
         self.assertNotIn(" . =>", zig)
 
+    def test_trailing_block_expr_return_unit(self) -> None:
+        """Verify block ending with () emits return; instead of return ();."""
+        code = """
+        pub fn finish(state: &mut State, sid: usize) {
+            state.at += 1;
+            ()
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("return ();", zig)
+        self.assertIn("return;", zig)
+
+    def test_param_with_leading_underscore_discard(self) -> None:
+        """Verify function parameter like _cmd: Sel emits _ = _cmd; discard line if unused."""
+        code = """
+        pub fn focus_forwarder(this: &NSWindow, _cmd: Sel) -> *mut AnyObject {
+            return std::ptr::null_mut();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("_ = _cmd;", zig)
+
+    def test_tuple_switch_arm_pattern_syntax(self) -> None:
+        """Verify tuple pattern arm (State::Ground, true) lowers to .{ .Ground, true } in Zig switch."""
+        code = """
+        pub fn parse(state: State, more: bool) {
+            match (state, more) {
+                (State::Ground, true) => {},
+                _ => {},
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("(State::Ground, true) =>", zig)
+        self.assertIn(".{ .Ground, true } =>", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

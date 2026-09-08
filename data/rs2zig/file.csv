@@ -13,11 +13,11 @@ src/main.py,src.main,22,431
 src/rs2zig/__init__.py,src.rs2zig,7,132
 src/rs2zig/backend/__init__.py,src.rs2zig.backend,5,101
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,70,1985
-src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,213,9950
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,213,9917
 src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,18,737
-src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,425,20045
+src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,440,20697
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,72,3499
-src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,179,8035
+src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,182,8179
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,153,6774
 src/rs2zig/cli.py,src.rs2zig.cli,282,11593
 src/rs2zig/frontend/__init__.py,src.rs2zig.frontend,5,126
@@ -49,4 +49,4 @@ tests/test_cargo_parser.py,tests.test_cargo_parser,54,1778
 tests/test_golden.py,tests.test_golden,61,2191
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,668,24519
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,144,4831
-tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,256,9489
+tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,292,10819

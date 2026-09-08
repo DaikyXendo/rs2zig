@@ -166,7 +166,7 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                         discard_lines.append(f'{emitter_ctx._indent()}const {e} = p{p_idx}.@"{e_idx}";')
                 elif raw_name and not raw_name.isidentifier() and not raw_name.startswith("comptime"):
                     discard_lines.append(f"{emitter_ctx._indent()}_ = p{p_idx};")
-                elif raw_name and raw_name != "_" and not raw_name.startswith("_") and p.param_type.name != "type" and "comptime" not in raw_name:
+                elif raw_name and raw_name != "_" and p.param_type.name != "type" and "comptime" not in raw_name:
                     if not re.search(r"\b" + re.escape(raw_name) + r"\b", body_text):
                         discard_lines.append(f"{emitter_ctx._indent()}_ = {raw_name};")
 
