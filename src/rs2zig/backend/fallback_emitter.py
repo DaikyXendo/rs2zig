@@ -53,6 +53,9 @@ def generate_fallback_headers(
     found_types = set(re.findall(r"(?::|->|!|\*const|\?|\[|\(|\,)\s*([A-Z][a-zA-Z0-9_]{1,})\b", clean_body))
     found_types.update(re.findall(r"\b([A-Z][a-zA-Z0-9_]{1,})\s*!", clean_body))
     found_types.update(re.findall(r"\]\s*([A-Z][a-zA-Z0-9_]{1,})\b", clean_body))
+    found_types.update(re.findall(r"\b([A-Z][a-zA-Z0-9_]{1,})\.\b", clean_body))
+    if re.search(r"\bSelf\b", clean_body):
+        found_types.add("Self")
 
     for ext_type in sorted(found_types):
         if (
@@ -61,5 +64,9 @@ def generate_fallback_headers(
             and ext_type not in STD_TYPES
             and ext_type not in imported_modules
         ):
-            if not re.search(r"\.\s*" + re.escape(ext_type) + r"\b", clean_body):
-                header_lines.append(f"pub const {ext_type} = type;")
+            if ext_type == "Self":
+                if not any("const Self" in h for h in header_lines):
+                    header_lines.append("pub const Self = @This();")
+            elif not re.search(r"\.\s*" + re.escape(ext_type) + r"\b", clean_body):
+                if not any(f"const {ext_type}" in h for h in header_lines):
+                    header_lines.append(f"pub const {ext_type} = type;")

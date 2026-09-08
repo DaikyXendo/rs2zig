@@ -118,6 +118,26 @@ class TestPatternFixesPart3(unittest.TestCase):
         self.assertNotIn("anytype, 2", zig)
         self.assertIn("anyopaque, 2", zig)
 
+    def test_self_identifier_fallback(self) -> None:
+        """Verify Self identifier in expressions or returns emits pub const Self = @This(); fallback in Zig."""
+        code = """
+        pub fn from_data(data: &[u8]) -> Self {
+            return Self::try_from(data);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("pub const Self = @This();", zig)
+
+    def test_static_method_type_fallback(self) -> None:
+        """Verify static type method calls like Rasterizer::new() generate pub const Rasterizer = type; fallback."""
+        code = """
+        pub fn create_r() {
+            let r = Rasterizer::new(6, 16);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("pub const Rasterizer = type;", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
