@@ -82,7 +82,10 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             if parts[0] == "None":
                 return "null"
             if parts[0] == "Err":
-                return f"error.{parts[1]}"
+                err_clean = parts[1].lstrip(".")
+                if err_clean.startswith("error."):
+                    return err_clean
+                return f"error.{err_clean}"
             if parts[0][0].islower() and parts[0].isidentifier():
                 if parts[0] not in ("self", "super", "crate", "std", "bevy", "bevy_ecs"):
                     emitter_ctx.imported_modules.add(parts[0])
@@ -146,7 +149,10 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             return emit_expr(expr.args[0], emitter_ctx) if expr.args else "null"
         if callee_str == "Err":
             err_val = emit_expr(expr.args[0], emitter_ctx) if expr.args else "UnknownError"
-            return f"error.{err_val.strip('\"')}"
+            err_clean = err_val.strip('"').lstrip(".")
+            if err_clean.startswith("error."):
+                return err_clean
+            return f"error.{err_clean}"
         if callee_str in ZIG_KEYWORDS_AND_PRIMITIVES:
             callee_str = f'@"{callee_str}"'
         args_list = []

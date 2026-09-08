@@ -27,7 +27,7 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
         lines: List[str] = []
         for stmt in block.stmts:
             stmt_str = emit_stmt(stmt, emitter_ctx)
-            if stmt_str:
+            if stmt_str and stmt_str.strip() != ";":
                 lines.append(f"{emitter_ctx._indent()}{stmt_str}")
 
         if block.trailing_expr:
@@ -152,6 +152,8 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
 
     if isinstance(stmt, ExprStmt):
         expr_str = emitter_ctx._emit_expr(stmt.expr).rstrip(";").strip()
+        if not expr_str:
+            return ""
         if expr_str.startswith("_ = ") and "," in expr_str:
             raw_rhs = expr_str[4:].strip().rstrip(";")
             raw_rhs = raw_rhs.lstrip(".{(").rstrip("})")

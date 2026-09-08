@@ -115,6 +115,19 @@ def _split_top_level_commas(s: str) -> List[str]:
     return parts
 
 
+def _split_top_level_semicolon(s: str) -> Optional[Tuple[str, str]]:
+    """Split type string on top-level semicolon respecting bracket depth."""
+    depth = 0
+    for i, c in enumerate(s):
+        if c in "<[(":
+            depth += 1
+        elif c in ">])":
+            depth -= 1
+        elif c == ";" and depth == 0:
+            return s[:i].strip(), s[i + 1:].strip()
+    return None
+
+
 def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> str:
     """Map a Rust TypeNode or type string into Zig target type string representation.
 
@@ -183,15 +196,16 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             return f"*const {map_type(name[7:].strip())}"
         if name.startswith("[") and name.endswith("]"):
             inner = name[1:-1].strip()
-            if ";" in inner:
-                elem, count = inner.split(";", 1)
+            semi_split = _split_top_level_semicolon(inner)
+            if semi_split:
+                elem, count = semi_split
                 return f"[{map_type(count.strip())}]{map_type(elem.strip())}"
             return f"[]{map_type(inner)}"
         split_res = _split_angle_brackets(name)
         if split_res:
             base, gen, suffix = split_res
             gen_parts = [p.strip() for p in _split_top_level_commas(gen) if not p.strip().startswith("'")]
-            mapped_gen = ", ".join("anytype" if p == "_" else map_type(p) for p in gen_parts) if gen_parts else ""
+            mapped_gen = ", ".join("anyopaque" if p == "_" else map_type(p) for p in gen_parts) if gen_parts else ""
             base_clean = base.strip()
             suffix_mapped = map_type(suffix) if suffix else ""
             if base_clean in ("PhantomData", "std::marker::PhantomData", "core::marker::PhantomData"):
