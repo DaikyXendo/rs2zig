@@ -13,7 +13,7 @@ src/main.py,src.main,22,431
 src/rs2zig/__init__.py,src.rs2zig,7,132
 src/rs2zig/backend/__init__.py,src.rs2zig.backend,5,101
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,70,1985
-src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,233,11444
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,235,11608
 src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,20,920
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,468,22329
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,88,4659
