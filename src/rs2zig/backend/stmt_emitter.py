@@ -118,9 +118,11 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
 
         kw = "var" if stmt.is_mutable else "const"
         vname = stmt.name
+        is_dedup = False
         if hasattr(emitter_ctx, "current_block_vars") and emitter_ctx.current_block_vars is not None:
             if vname in emitter_ctx.current_block_vars:
                 vname = f"{vname}_alt"
+                is_dedup = True
             else:
                 emitter_ctx.current_block_vars.add(vname)
         was_renamed = False
@@ -132,7 +134,8 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
         val_expr_str = emitter_ctx._emit_expr(stmt.value).rstrip(";").strip() if stmt.value else ""
         val_part = f" = {val_expr_str}" if stmt.value else ""
         res = f"{kw} {vname}{type_part}{val_part};"
-        if was_renamed:
+        if was_renamed or is_dedup:
+            res += f"\n{emitter_ctx._indent()}_ = {vname};"
             res += f"\n{emitter_ctx._indent()}_ = {vname};"
         if stmt.name == "ip":
             res += f"\n{emitter_ctx._indent()}_ = ip;"

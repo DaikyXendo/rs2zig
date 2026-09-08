@@ -54,7 +54,11 @@ class ZigEmitter:
             body_lines.append(self._emit_struct(struct, methods))
             body_lines.append("")
 
+        seen_fn_names: Set[str] = set()
         for fn in sf.functions:
+            if fn.name in seen_fn_names:
+                continue
+            seen_fn_names.add(fn.name)
             body_lines.append(self._emit_function(fn))
             body_lines.append("")
 

@@ -770,6 +770,21 @@ class TestPatternFixesPart2(unittest.TestCase):
         self.assertNotIn("const name = 1;\n    const name = 2;", zig)
 
 
+    def test_duplicate_top_level_function_deduplication(self) -> None:
+        """Verify top-level functions with duplicate names are deduplicated cleanly in Zig output."""
+        code = """
+        pub fn folded_multiply(s: u64, by: u64) -> u64 {
+            return s * by;
+        }
+
+        pub fn folded_multiply(s: u64, by: u64) -> u64 {
+            return s + by;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertEqual(zig.count("fn folded_multiply("), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
 
