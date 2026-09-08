@@ -1,8 +1,8 @@
 file_path,module,class_name,base_classes,methods_count,decorators,docstring,start_line,end_line
 script/extract_data/find_classes.py,script.extract_data.find_classes,ClassVisitor,ast.NodeVisitor,2,,AST NodeVisitor to collect Python class definitions.,32,75
 script/extract_data/find_functions.py,script.extract_data.find_functions,FunctionVisitor,ast.NodeVisitor,5,,AST NodeVisitor to collect functions and class methods.,71,139
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter,,10,,Walks rs2zig IR nodes and emits formatted Zig source code.,19,155
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder,,16,,Walks tree-sitter syntax nodes and constructs IR AST objects.,67,758
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter,,10,,Walks rs2zig IR nodes and emits formatted Zig source code.,19,161
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,ASTBuilder,,16,,Walks tree-sitter syntax nodes and constructs IR AST objects.,69,791
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,CargoPackage,,0,dataclass,Metadata for a Cargo package.,17,21
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,CargoManifest,,0,dataclass,Parsed representation of a Cargo.toml file.,25,29
 src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,ModuleResolver,,2,,Discovers and resolves sub-modules in multi-file Rust projects.,14,42
@@ -26,25 +26,27 @@ src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,OptionalUnwrapExpr,Expr,0,dataclass,U
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,MatchArm,ASTNode,0,dataclass,Single arm in a match or switch statement (pattern => body).,138,142
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,MatchExpr,Expr,0,dataclass,"Match expression/statement (match target { pat => body, ... }).",146,149
 src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ReturnExpr,Expr,0,dataclass,Return statement or expression.,153,155
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,Stmt,ASTNode,0,dataclass,Base dataclass for statements.,159,161
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ExprStmt,Stmt,0,dataclass,Statement consisting of an expression followed by semicolon.,165,167
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,LetStmt,Stmt,0,dataclass,Variable binding statement (let [mut] var: Type = expr).,171,176
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,AssignStmt,Stmt,0,dataclass,Assignment statement (lhs = rhs or lhs += rhs).,180,184
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,BlockExpr,Expr,0,dataclass,Block of statements with an optional trailing expression.,188,191
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,IfExpr,Expr,0,dataclass,If expression/statement (if cond { then_block } else { else_block }).,195,199
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,LoopExpr,Expr,0,dataclass,"Loop expression/statement (while, for, infinite loop).",203,209
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ClosureExpr,Expr,0,dataclass,Closure / lambda expression (e.g. |x: i32| x + 1).,213,217
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,Param,ASTNode,0,dataclass,Function parameter definition.,221,226
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,FieldDecl,ASTNode,0,dataclass,Struct field declaration.,230,234
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,FnDecl,ASTNode,0,dataclass,Function declaration.,238,245
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,StructDecl,ASTNode,0,dataclass,Struct definition.,249,255
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,EnumVariantField,ASTNode,0,dataclass,Field inside an enum variant (e.g. V(i32) or V { val: i32 }).,259,262
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,EnumVariant,ASTNode,0,dataclass,Single variant inside an enum definition.,266,269
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,EnumDecl,ASTNode,0,dataclass,Enum definition (simple enum or tagged union with payload).,273,278
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,TraitDecl,ASTNode,0,dataclass,Trait declaration definition.,282,286
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ImplBlock,ASTNode,0,dataclass,"Impl block containing methods for a struct or enum, optionally implementing a trait.",290,294
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ConstDecl,ASTNode,0,dataclass,"Constant or static variable declaration (e.g. const BOM: &str = ""..."").",298,304
-src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,SourceFile,ASTNode,0,dataclass,Top-level source file module container.,308,316
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,BreakExpr,Expr,0,dataclass,"Break statement with optional value (e.g. break, break value).",159,162
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ContinueExpr,Expr,0,dataclass,"Continue statement with optional label (e.g. continue, continue 'label).",166,168
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,Stmt,ASTNode,0,dataclass,Base dataclass for statements.,172,174
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ExprStmt,Stmt,0,dataclass,Statement consisting of an expression followed by semicolon.,178,180
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,LetStmt,Stmt,0,dataclass,Variable binding statement (let [mut] var: Type = expr).,184,189
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,AssignStmt,Stmt,0,dataclass,Assignment statement (lhs = rhs or lhs += rhs).,193,197
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,BlockExpr,Expr,0,dataclass,Block of statements with an optional trailing expression.,201,204
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,IfExpr,Expr,0,dataclass,If expression/statement (if cond { then_block } else { else_block }).,208,212
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,LoopExpr,Expr,0,dataclass,"Loop expression/statement (while, for, infinite loop).",216,222
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ClosureExpr,Expr,0,dataclass,Closure / lambda expression (e.g. |x: i32| x + 1).,226,230
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,Param,ASTNode,0,dataclass,Function parameter definition.,234,239
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,FieldDecl,ASTNode,0,dataclass,Struct field declaration.,243,247
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,FnDecl,ASTNode,0,dataclass,Function declaration.,251,258
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,StructDecl,ASTNode,0,dataclass,Struct definition.,262,268
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,EnumVariantField,ASTNode,0,dataclass,Field inside an enum variant (e.g. V(i32) or V { val: i32 }).,272,275
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,EnumVariant,ASTNode,0,dataclass,Single variant inside an enum definition.,279,282
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,EnumDecl,ASTNode,0,dataclass,Enum definition (simple enum or tagged union with payload).,286,291
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,TraitDecl,ASTNode,0,dataclass,Trait declaration definition.,295,299
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ImplBlock,ASTNode,0,dataclass,"Impl block containing methods for a struct or enum, optionally implementing a trait.",303,307
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,ConstDecl,ASTNode,0,dataclass,"Constant or static variable declaration (e.g. const BOM: &str = ""..."").",311,317
+src/rs2zig/ir/nodes.py,src.rs2zig.ir.nodes,SourceFile,ASTNode,0,dataclass,Top-level source file module container.,321,329
 src/rs2zig/lowering/async_plugin.py,src.rs2zig.lowering.async_plugin,AsyncPlugin,LibraryLoweringPlugin,3,,Lowering plugin for Rust multithreading and async tasks.,23,71
 src/rs2zig/lowering/bevy_plugin.py,src.rs2zig.lowering.bevy_plugin,BevyPlugin,LibraryLoweringPlugin,6,,Lowering plugin for Bevy Engine ECS framework.,26,158
 src/rs2zig/lowering/cffi_plugin.py,src.rs2zig.lowering.cffi_plugin,CFFIPlugin,LibraryLoweringPlugin,3,,Lowering plugin for C-FFI and raw pointers.,15,62
@@ -64,3 +66,4 @@ tests/test_golden.py,tests.test_golden,TestGolden,unittest.TestCase,2,,Test suit
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes,unittest.TestCase,59,,Test suite verifying transpiler accuracy on isolated Rust syntax patterns.,13,658
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixesPart2,unittest.TestCase,13,,Test cases for transpiler fixes part 2.,9,140
 tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,TestPatternFixesPart3,unittest.TestCase,48,,Test cases for transpiler fixes part 3.,9,554
+tests/test_pattern_fixes_part4.py,tests.test_pattern_fixes_part4,TestPatternFixesPart4,unittest.TestCase,16,,Test cases for transpiler fixes part 4.,17,244

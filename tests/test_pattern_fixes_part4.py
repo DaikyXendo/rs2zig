@@ -195,6 +195,55 @@ class TestPatternFixesPart4(unittest.TestCase):
         # Inside the function, MAX should be renamed
         self.assertIn("MAX_local", result)
 
+    def test_slice_generic_type_parsing(self) -> None:
+        """Verify &[Box<dyn Any>] maps to []const *anyopaque without truncated '[Box'."""
+        code = """
+        pub fn get_field_builders(data: &[Box<dyn Any>]) -> &[Box<dyn Any>] {
+            return data;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("[Box", result)
+        self.assertIn("[]const *anyopaque", result)
+
+    def test_crate_fallback_header(self) -> None:
+        """Verify crate reference generates pub const crate = @This(); header."""
+        code = """
+        pub fn run_crate() {
+            let _ = crate::foo();
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("pub const crate = @This();", result)
+
+    def test_break_unit_emits_clean_break(self) -> None:
+        """Verify break () emits clean 'break;' without () in Zig."""
+        code = """
+        pub fn loop_break() {
+            loop {
+                break ();
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("break ()", result)
+        self.assertIn("break;", result)
+
+    def test_match_arm_no_duplicate_else(self) -> None:
+        """Verify match with Ok and Err arms emits at most one else branch."""
+        code = """
+        pub fn check_res(val: Result<i32, ()>) -> i32 {
+            match val {
+                Ok(x) => x,
+                Err(_) => 0,
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        count = result.count("else")
+        self.assertEqual(count, 1, f"Expected 1 else branch in switch, got {count}\nResult:\n{result}")
+
 
 if __name__ == "__main__":
     unittest.main()
+

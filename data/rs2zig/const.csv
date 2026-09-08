@@ -37,11 +37,11 @@ script/extract_data/find_imports.py,script.extract_data.find_imports,PROJECT_ROO
 script/extract_data/find_imports.py,script.extract_data.find_imports,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",13
 script/extract_data/find_imports.py,script.extract_data.find_imports,OUTPUT_CSV,"os.path.join(DATA_DIR, 'import.csv')",14
 script/extract_data/find_imports.py,script.extract_data.find_imports,EXCLUDE_DIRS,"{'.git', 'venv', '.venv', '__pycache__', 'data', '.agents', '.mypy_cache', '.pytest_cache', '.ruff_c",16
-script/incremental_batch_convert.py,script.incremental_batch_convert,CSV_PROGRESS_PATH,'data/aok_batch_progress.csv',29
-script/incremental_batch_convert.py,script.incremental_batch_convert,CSV_FILE_STATUS_PATH,'data/aok_file_status.csv',30
-script/incremental_batch_convert.py,script.incremental_batch_convert,DEFAULT_STEP_SIZE,20,31
-script/incremental_batch_convert.py,script.incremental_batch_convert,VENDOR_RUST_DIR,'/Users/levanthanh/Documents/code/rust/aok/vendor',32
-script/incremental_batch_convert.py,script.incremental_batch_convert,OUTPUT_ZIG_DIR,'aok_converted/vendor',33
+script/incremental_batch_convert.py,script.incremental_batch_convert,CSV_PROGRESS_PATH,'data/aok_batch_progress.csv',30
+script/incremental_batch_convert.py,script.incremental_batch_convert,CSV_FILE_STATUS_PATH,'data/aok_file_status.csv',31
+script/incremental_batch_convert.py,script.incremental_batch_convert,DEFAULT_STEP_SIZE,20,32
+script/incremental_batch_convert.py,script.incremental_batch_convert,VENDOR_RUST_DIR,'/Users/levanthanh/Documents/code/rust/aok/vendor',33
+script/incremental_batch_convert.py,script.incremental_batch_convert,OUTPUT_ZIG_DIR,'aok_converted/vendor',34
 script/rs2zig_query.py,script.rs2zig_query,SCRIPT_DIR,os.path.dirname(os.path.abspath(__file__)),15
 script/rs2zig_query.py,script.rs2zig_query,PROJECT_ROOT,os.path.dirname(SCRIPT_DIR),16
 script/rs2zig_query.py,script.rs2zig_query,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",17
@@ -56,7 +56,7 @@ src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,ZIG
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,STD_SUBMODULES,"{'std', 'self', 'super', 'crate', 'bevy', 'bevy_ecs', 'aok_core', 'core', 'libc', 'mem', 'io', 'os',",9
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,STD_TYPES,"{'std', 'anytype', 'void', 'bool', 'usize', 'isize', 'i8', 'i16', 'i32', 'i64', 'i128', 'u8', 'u16',",15
 src/rs2zig/cli.py,src.rs2zig.cli,logger,logging.getLogger('rs2zig.cli'),33
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),52
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),54
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,logger,logging.getLogger('rs2zig.frontend.cargo_parser'),13
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,logger,logging.getLogger('rs2zig.frontend.macro_expand'),12
 src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,logger,logging.getLogger('rs2zig.frontend.mod_resolver'),11

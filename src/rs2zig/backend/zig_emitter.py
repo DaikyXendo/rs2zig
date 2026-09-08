@@ -32,6 +32,17 @@ class ZigEmitter:
         self.imported_modules.clear()
         impl_map = {impl.struct_name: impl.methods for impl in sf.impls}
 
+        top_level_names = {c.name for c in sf.constants} | {s.name for s in sf.structs} | {e.name for e in sf.enums} | {t.name for t in sf.traits} | {f.name for f in sf.functions}
+        all_declared_names = set(top_level_names)
+        for s in sf.structs:
+            all_declared_names.update(f.name for f in s.fields)
+        for e in sf.enums:
+            all_declared_names.update(v.name for v in e.variants)
+        for impl in sf.impls:
+            all_declared_names.update(m.name for m in impl.methods)
+
+        self.all_declared_names = all_declared_names
+
         body_lines: List[str] = []
 
         for c in sf.constants:
@@ -83,16 +94,6 @@ class ZigEmitter:
                 header_lines.append('const create_app = aok_core.create_app;')
 
         out_dir = os.path.dirname(file_path) if file_path else ""
-        top_level_names = {c.name for c in sf.constants} | {s.name for s in sf.structs} | {e.name for e in sf.enums} | {t.name for t in sf.traits} | {f.name for f in sf.functions}
-        all_declared_names = set(top_level_names)
-        for s in sf.structs:
-            all_declared_names.update(f.name for f in s.fields)
-        for e in sf.enums:
-            all_declared_names.update(v.name for v in e.variants)
-        for impl in sf.impls:
-            all_declared_names.update(m.name for m in impl.methods)
-
-        self.all_declared_names = all_declared_names
 
         for mod_name in sorted(set(self.imported_modules) | set(getattr(sf, "imports", []))):
             if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app", "serde"):

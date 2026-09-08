@@ -135,7 +135,12 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             return f"{left_str} {expr.op} {right_str}"
         op_map = {"&&": "and", "||": "or"}
         op = op_map.get(expr.op, expr.op)
-        return f"({left_str} {op} {right_str})"
+        res = f"({left_str} {op} {right_str})"
+        if "&&" in res:
+            res = res.replace("&&", "and")
+        if "||" in res:
+            res = res.replace("||", "or")
+        return res
 
     if isinstance(expr, UnaryExpr):
         op_map = {"!": "!", "-": "-", "*": ".*", "&": "&", "&mut": "&"}
@@ -263,6 +268,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
     if isinstance(expr, BreakExpr):
         if expr.value:
             val_str = emit_expr(expr.value, emitter_ctx).strip()
+            if val_str in ("()", ".{}", "void", ""):
+                return "break"
             return f"break {val_str}"
         return "break"
 

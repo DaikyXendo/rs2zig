@@ -321,7 +321,8 @@ class ASTBuilder:
             if clean_text.startswith("(") and clean_text.endswith(")") and "," not in clean_text:
                 clean_text = clean_text[1:-1].strip()
             generic_args = []
-            split_res = _split_angle_brackets(clean_text) if not (clean_text.startswith("(") and clean_text.endswith(")")) else None
+            is_arr_slice = clean_text.startswith("[") and clean_text.endswith("]")
+            split_res = _split_angle_brackets(clean_text) if (not is_arr_slice and not (clean_text.startswith("(") and clean_text.endswith(")"))) else None
             if split_res:
                 base_name, generic_str, _ = split_res
                 for arg_part in _split_top_level_commas(generic_str):
@@ -551,6 +552,14 @@ class ASTBuilder:
             fn_node = node.child_by_field_name("function")
             args_node = node.child_by_field_name("arguments")
             callee_text = self.get_text(fn_node) if fn_node else ""
+
+            if fn_node and (get_node_type(fn_node) == "break_expression" or callee_text == "break"):
+                arg_expr = None
+                if args_node:
+                    non_delim = [c for c in args_node.children if get_node_type(c) not in ("(", ")", ",", "comment")]
+                    if non_delim:
+                        arg_expr = self._build_expr(non_delim[0])
+                return BreakExpr(value=arg_expr)
 
             if callee_text.endswith(".unwrap"):
                 target_expr = self._build_expr(fn_node.child_by_field_name("value")) if fn_node and fn_node.type == "field_expression" else IdentifierExpr("opt")

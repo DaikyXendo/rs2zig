@@ -8,6 +8,7 @@ import os
 import csv
 import glob
 import time
+import shutil
 import argparse
 import subprocess
 from datetime import datetime
@@ -207,6 +208,9 @@ def run_batch_conversion(step_size: int = DEFAULT_STEP_SIZE, recheck: bool = Fal
         err_msg = ""
         is_valid = False
         try:
+            runtime_src = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "rs2zig", "runtime", "bevy_ecs_runtime.zig"))
+            if os.path.exists(runtime_src):
+                shutil.copy(runtime_src, os.path.join(os.path.dirname(out_zig_path), "bevy_ecs_runtime.zig"))
             run_transpile(rs_file, output_path=out_zig_path, format_code=False, validate=False, expand=False)
             is_valid, err_msg = check_zig_file_syntax(out_zig_path)
             if is_valid:

@@ -32,16 +32,16 @@ def generate_fallback_headers(
         imported_modules: Set of imported module identifiers.
         header_lines: List of header code lines to append to.
     """
-    if re.search(r"\bc_void\b", clean_body) and "c_void" not in all_declared_names and not any("c_void" in h for h in header_lines):
+    if (re.search(r"\bcrate\b", clean_body) or "crate" in imported_modules) and "crate" not in all_declared_names and not any("const crate" in h for h in header_lines):
+        header_lines.append("pub const crate = @This();")
+    if (re.search(r"\bc_void\b", clean_body)) and "c_void" not in all_declared_names and not any("c_void" in h for h in header_lines):
         header_lines.append("pub const c_void = anyopaque;")
     if (re.search(r"\bcore\b", clean_body) or "core" in imported_modules) and "core" not in all_declared_names and not any("const core" in h for h in header_lines):
         header_lines.append("pub const core = std;")
     if (re.search(r"\blibc\b", clean_body) or "libc" in imported_modules) and "libc" not in all_declared_names and not any("const libc" in h for h in header_lines):
         header_lines.append("pub const libc = std.c;")
-    if (re.search(r"\bio\b", clean_body) or "io" in imported_modules) and "io" not in all_declared_names and not any("const io" in h for h in header_lines):
+    if (re.search(r"\bio\b", clean_body) or "io" in imported_modules) and "io" not in all_declared_names and not any("const io" in h for h in header_lines) and not re.search(r"\b(var|const|let)\s+io\b", clean_body) and not re.search(r"\bio\s*:", clean_body):
         header_lines.append("pub const io = std.io;")
-    if re.search(r"\brng\b", clean_body) and "rng" not in all_declared_names and not any("const rng" in h for h in header_lines):
-        header_lines.append("pub const rng = type;")
 
     for mod_prefix in sorted(set(re.findall(r"\b([a-z_][a-zA-Z0-9_]*)\.[A-Z]", clean_body))):
         if (
