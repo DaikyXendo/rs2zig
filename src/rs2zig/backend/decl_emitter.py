@@ -58,9 +58,9 @@ def emit_struct_decl(struct: StructDecl, methods: List[FnDecl], emitter_ctx: Any
         cargs = ", ".join(f"comptime {p}: type" for p in type_params)
         lines: List[str] = [f"{vis}fn {sname}({cargs}) type {{"]
         emitter_ctx.current_indent += 1
-        fields_type_str = " ".join(str(f.field_type) for f in struct.fields)
+        mapped_fields_type_str = " ".join(map_type(f.field_type) for f in struct.fields)
         for p in type_params:
-            if not re.search(r"\b" + re.escape(p) + r"\b", fields_type_str):
+            if not re.search(r"\b" + re.escape(p) + r"\b", mapped_fields_type_str):
                 lines.append(f"{emitter_ctx._indent()}_ = {p};")
         lines.append(f"{emitter_ctx._indent()}return struct {{")
     else:
@@ -122,7 +122,7 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
             gp_params.append(Param(name=f"comptime {gp_name}", param_type=TypeNode(name="type")))
 
     all_params = gp_params + fn.params
-    params_str = emit_params_decl(all_params, parent_struct_name, field_names, emitter_ctx)
+    params_str = emit_params_decl(all_params, parent_struct_name, field_names, emitter_ctx, parent_fn_name=fn_name)
 
     if fn_name == "main":
         ret_str = "!void" if fn.return_type is None else map_type(fn.return_type, is_return_type=True)
@@ -142,18 +142,31 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
         body_lines = emitter_ctx._emit_block_lines(fn.body)
         body_text = "\n".join(body_lines)
         discard_lines: List[str] = []
-        for p_idx, p in enumerate(fn.params):
+        clean_fn_name = fn_name.strip('"@')
+        check_text = f"({params_str}) {ret_str}\n" + body_text
+        for p_idx, p in enumerate(all_params):
             if p.is_self:
                 if not re.search(r"\bself\b", body_text):
                     discard_lines.append(f"{emitter_ctx._indent()}_ = self;")
             else:
                 raw_name = p.name or ""
                 clean_param_name = raw_name.replace("mut ", "").strip()
-                is_shadowing = (field_names and clean_param_name in field_names) or (getattr(emitter_ctx, "all_declared_names", None) and clean_param_name in emitter_ctx.all_declared_names)
+                is_shadowing = (
+                    (field_names and clean_param_name in field_names)
+                    or (getattr(emitter_ctx, "all_declared_names", None) and clean_param_name in emitter_ctx.all_declared_names)
+                    or clean_param_name == clean_fn_name
+                )
                 if is_shadowing:
-                    discard_lines.append(f"{emitter_ctx._indent()}const {clean_param_name} = {clean_param_name}_param;")
-                    if not re.search(r"\b" + re.escape(clean_param_name) + r"\b", body_text):
-                        discard_lines.append(f"{emitter_ctx._indent()}_ = {clean_param_name};")
+                    if clean_param_name == clean_fn_name:
+                        body_lines = [re.sub(r"\b" + re.escape(clean_param_name) + r"\b", f"{clean_param_name}_param", line) for line in body_lines]
+                        body_text = "\n".join(body_lines)
+                        check_text = f"({params_str}) {ret_str}\n" + body_text
+                    else:
+                        discard_lines.append(f"{emitter_ctx._indent()}const {clean_param_name} = {clean_param_name}_param;")
+                    check_name = f"{clean_param_name}_param" if clean_param_name == clean_fn_name else clean_param_name
+                    if len(re.findall(r"\b" + re.escape(check_name) + r"\b", check_text)) <= 1:
+                        discard_name = f"{clean_param_name}_param" if is_shadowing else clean_param_name
+                        discard_lines.append(f"{emitter_ctx._indent()}_ = {discard_name};")
                 elif raw_name.startswith("mut "):
                     real_name = raw_name[4:].strip()
                     discard_lines.append(f"{emitter_ctx._indent()}var {real_name}_var = p{p_idx}; _ = {real_name}_var;")
@@ -167,10 +180,10 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                         discard_lines.append(f'{emitter_ctx._indent()}const {e} = p{p_idx}.@"{e_idx}";')
                 elif raw_name and not raw_name.isidentifier() and not raw_name.startswith("comptime"):
                     discard_lines.append(f"{emitter_ctx._indent()}_ = p{p_idx};")
-                elif raw_name and raw_name != "_" and p.param_type.name != "type" and "comptime" not in raw_name:
-                    clean_raw = raw_name.replace("mut ", "").strip().strip('"@')
-                    if raw_name.startswith("_") or not re.search(r"\b" + re.escape(clean_raw) + r"\b", body_text):
-                        pident = f'@"{clean_raw}"' if (clean_raw in ZIG_RESERVED_KEYWORDS and not raw_name.startswith("@")) else raw_name
+                elif raw_name and raw_name != "_":
+                    clean_raw = raw_name.replace("comptime ", "").replace("mut ", "").strip().strip('"@')
+                    if clean_raw and (raw_name.startswith("_") or len(re.findall(r"\b" + re.escape(clean_raw) + r"\b", check_text)) <= 1):
+                        pident = f'@"{clean_raw}"' if (clean_raw in ZIG_KEYWORDS_AND_PRIMITIVES and not clean_raw.startswith("@")) else clean_raw
                         discard_lines.append(f"{emitter_ctx._indent()}_ = {pident};")
 
         lines.extend(discard_lines)
@@ -181,10 +194,11 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
     return "\n".join(lines)
 
 
-def emit_params_decl(params: List[Param], parent_struct_name: Optional[str] = None, field_names: Optional[Set[str]] = None, emitter_ctx: Any = None) -> str:
+def emit_params_decl(params: List[Param], parent_struct_name: Optional[str] = None, field_names: Optional[Set[str]] = None, emitter_ctx: Any = None, parent_fn_name: Optional[str] = None) -> str:
     """Emit comma-separated parameters list string."""
     parts: List[str] = []
     stype = parent_struct_name or "@This()"
+    clean_fn_name = parent_fn_name.strip('"@') if parent_fn_name else None
     for p_idx, p in enumerate(params):
         if p.is_self:
             ptype = f"*const {stype}" if p.param_type.is_reference and not p.param_type.is_mutable else (
@@ -208,7 +222,11 @@ def emit_params_decl(params: List[Param], parent_struct_name: Optional[str] = No
                     clean_name = clean_name[4:].strip()
                 if not clean_name or not clean_name.isidentifier() or any(c in clean_name for c in "[](){}, "):
                     clean_name = f"p{p_idx}"
-                is_shadowing = (field_names and clean_name in field_names) or (getattr(emitter_ctx, "all_declared_names", None) and clean_name in emitter_ctx.all_declared_names)
+                is_shadowing = (
+                    (field_names and clean_name in field_names)
+                    or (getattr(emitter_ctx, "all_declared_names", None) and clean_name in emitter_ctx.all_declared_names)
+                    or (clean_fn_name and clean_name == clean_fn_name)
+                )
                 if is_shadowing:
                     pname = f"{clean_name}_param"
                 else:

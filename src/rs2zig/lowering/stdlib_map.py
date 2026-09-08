@@ -165,7 +165,7 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             return f"*const fn({', '.join(args_list)}) {ret_str}"
         if name.startswith("Token![") and name.endswith("]"):
             return "Token"
-        if name.startswith("dyn ") or "dyn " in name:
+        if name.startswith("dyn "):
             if "Error" in name:
                 return "anyerror"
             return "anyopaque"
@@ -231,7 +231,9 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             if base_clean in ("Vec", "alloc::vec::Vec", "std::vec::Vec"):
                 return f"std.ArrayList({mapped_gen}){suffix_mapped}"
             if base_clean in ("Box", "alloc::boxed::Box", "std::boxed::Box"):
-                return f"{mapped_gen}{suffix_mapped}"
+                if not mapped_gen or mapped_gen == "anyopaque" or mapped_gen == "void":
+                    return f"*anyopaque{suffix_mapped}"
+                return f"*{mapped_gen}{suffix_mapped}"
             if base_clean in ("Arc", "std::sync::Arc", "alloc::sync::Arc", "Rc", "alloc::rc::Rc", "std::rc::Rc"):
                 return f"*{mapped_gen}{suffix_mapped}" if mapped_gen and mapped_gen != "anyopaque" else f"*anyopaque{suffix_mapped}"
             if base_clean in ("Result", "std::result::Result", "core::result::Result"):

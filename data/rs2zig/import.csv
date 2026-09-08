@@ -385,3 +385,4 @@ tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,unittest,,,3
 tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,rs2zig.frontend.ts_parser,RustParser,,4
 tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,rs2zig.frontend.ast_builder,ASTBuilder,,5
 tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,rs2zig.backend.zig_emitter,ZigEmitter,,6
+tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,rs2zig.lowering.stdlib_map,map_type,,519

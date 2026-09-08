@@ -345,7 +345,7 @@ class ASTBuilder:
         children = [c for c in node.children if get_node_type(c) not in ("{", "}")]
         for idx, child in enumerate(children):
             ntype = get_node_type(child)
-            if ntype in ("attribute_item", "inner_attribute_item", "use_declaration") or ntype.startswith("attribute"):
+            if ntype in ("attribute_item", "inner_attribute_item", "use_declaration", "impl_item", "trait_item") or ntype.startswith("attribute"):
                 continue
             if ntype == "let_declaration":
                 stmts.append(self._build_let_stmt(child))
@@ -453,7 +453,8 @@ class ASTBuilder:
             op_node = node.child_by_field_name("operator") or (node.children[0] if len(node.children) > 0 else None)
             arg_node = node.child_by_field_name("argument") or node.child_by_field_name("value")
             if not arg_node and len(node.children) > 1:
-                arg_node = node.children[1] if get_node_type(node.children[0]) in ("&", "-", "!") else node.children[-1]
+                non_op_children = [c for c in node.children if get_node_type(c) not in ("&", "mut", "mutable_specifier", "-", "!")]
+                arg_node = non_op_children[-1] if non_op_children else node.children[-1]
             op_str = "&" if ntype == "reference_expression" else (self.get_text(op_node) if op_node else "-")
             return UnaryExpr(
                 op=op_str,
@@ -663,6 +664,21 @@ class ASTBuilder:
 
             body_expr = self._build_expr(body_node) if body_node else BlockExpr()
             return ClosureExpr(params=closure_params, body=body_expr)
+
+        if ntype in ("async_expression", "async_block", "unsafe_block"):
+            body_node = node.child_by_field_name("body")
+            if not body_node and len(node.children) > 0:
+                body_candidates = [c for c in node.children if get_node_type(c) in ("block", "expression") or get_node_type(c).endswith("_expression") or get_node_type(c).endswith("_block")]
+                body_node = body_candidates[-1] if body_candidates else node.children[-1]
+            return self._build_expr(body_node) if body_node else BlockExpr()
+
+        if ntype == "await_expression":
+            val_node = node.children[0] if node.children else None
+            return self._build_expr(val_node) if val_node else IdentifierExpr(name="void")
+
+        if ntype == "try_expression":
+            val_node = node.children[0] if node.children else None
+            return self._build_expr(val_node) if val_node else IdentifierExpr(name="void")
 
         if ntype == "macro_invocation":
             macro_node = node.children[0] if node.children else None

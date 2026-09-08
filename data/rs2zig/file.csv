@@ -13,15 +13,15 @@ src/main.py,src.main,22,431
 src/rs2zig/__init__.py,src.rs2zig,7,132
 src/rs2zig/backend/__init__.py,src.rs2zig.backend,5,101
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,70,1985
-src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,217,10505
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,233,11444
 src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,20,920
-src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,466,22203
+src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,468,22329
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,88,4659
-src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,206,9688
+src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,214,10416
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,155,6828
 src/rs2zig/cli.py,src.rs2zig.cli,282,11593
 src/rs2zig/frontend/__init__.py,src.rs2zig.frontend,5,126
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,742,33852
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,758,34921
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,68,1960
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,67,2380
 src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,42,1195
@@ -39,7 +39,7 @@ src/rs2zig/lowering/ownership_pass.py,src.rs2zig.lowering.ownership_pass,104,405
 src/rs2zig/lowering/plugin_api.py,src.rs2zig.lowering.plugin_api,66,1716
 src/rs2zig/lowering/plugin_registry.py,src.rs2zig.lowering.plugin_registry,50,1612
 src/rs2zig/lowering/serde_plugin.py,src.rs2zig.lowering.serde_plugin,40,1292
-src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,276,11840
+src/rs2zig/lowering/stdlib_map.py,src.rs2zig.lowering.stdlib_map,278,11967
 src/rs2zig/lowering/stdlib_plugin.py,src.rs2zig.lowering.stdlib_plugin,110,3781
 src/rs2zig/lowering/trait_lowering.py,src.rs2zig.lowering.trait_lowering,74,2386
 src/rs2zig/validate/__init__.py,src.rs2zig.validate,5,171
@@ -49,4 +49,4 @@ tests/test_cargo_parser.py,tests.test_cargo_parser,54,1778
 tests/test_golden.py,tests.test_golden,61,2191
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,668,24519
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,144,4831
-tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,498,18665
+tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,561,20880

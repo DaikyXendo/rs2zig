@@ -186,7 +186,7 @@ class TestPatternFixesPart3(unittest.TestCase):
         """
         zig = self._transpile_code(code)
         self.assertNotIn("\n    {}.into();", zig)
-        self.assertIn("({}.into());", zig)
+        self.assertIn("({}).into();", zig)
 
     def test_match_enum_payload_capture_lowering(self) -> None:
         """Verify match arm with payload SearchKind::Teddy(ref teddy) lowers to .Teddy => |teddy| in Zig."""
@@ -319,7 +319,7 @@ class TestPatternFixesPart3(unittest.TestCase):
         """
         zig = self._transpile_code(code)
         self.assertNotIn("= {}.into();", zig)
-        self.assertIn("= ({}.into());", zig)
+        self.assertIn("= ({}).into();", zig)
 
     def test_call_args_comment_filtering(self) -> None:
         """Verify comments inside function call arguments do not emit // comments inline in argument list."""
@@ -370,7 +370,7 @@ class TestPatternFixesPart3(unittest.TestCase):
         """
         zig = self._transpile_code(code)
         self.assertNotIn(", {}.into(),", zig)
-        self.assertIn("({}.into())", zig)
+        self.assertIn("({}).into()", zig)
 
     def test_reference_mut_prefix_lowering(self) -> None:
         """Verify &mut changes lowers to &changes without raw &mut syntax in Zig."""
@@ -492,7 +492,70 @@ class TestPatternFixesPart3(unittest.TestCase):
         self.assertIn("node.children()", zig)
 
 
+    def test_unmutated_var_lowered_to_const(self) -> None:
+        """Verify let mut x = 5; without subsequent mutation is lowered to const x = 5; in Zig."""
+        code = """
+        pub fn count_bytes() -> u32 {
+            let mut byte_count = 0;
+            return byte_count;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("var byte_count", zig)
+        self.assertIn("const byte_count = 0;", zig)
+
+    def test_field_access_on_brace_expr_parens(self) -> None:
+        """Verify field/method access on {} receives parens ({}).map(Card) in Zig."""
+        code = """
+        pub fn process_card() {
+            let res = Option::None.map(Card);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("{}.map(", zig)
+
+    def test_box_slice_type_mapping(self) -> None:
+        """Verify map_type for &[Box<dyn Any>] maps to []const *anyopaque in Zig."""
+        from rs2zig.lowering.stdlib_map import map_type
+        mapped = map_type("&[Box<dyn Any>]")
+        self.assertEqual(mapped, "[]const *anyopaque")
+
+    def test_async_block_lowering(self) -> None:
+        """Verify async move { ... } inside block_on is transpiled without leaking raw async block syntax."""
+        code = """
+        pub fn run_task() {
+            block_on(async move {
+                do_work();
+            });
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("async move {", zig)
+
+    def test_ref_expr_mutable_specifier(self) -> None:
+        """Verify &mut self.0 does not produce invalid mut self.0 in Zig."""
+        code = """
+        pub fn get_ref(self: &mut Self) {
+            Pin::new(&mut self.0);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("&mut self.0", zig)
+
+    def test_param_matching_function_name(self) -> None:
+        """Verify fn ms(ms: u64) renames parameter ms to ms_param to avoid shadowing fn ms in Zig."""
+        code = """
+        pub fn ms(ms: u64) -> u64 {
+            return ms + 1;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("fn ms(ms_param:", zig)
+        self.assertIn("ms_param + 1", zig)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
 

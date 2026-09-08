@@ -187,6 +187,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
 
     if isinstance(expr, FieldAccessExpr):
         target_str = emit_expr(expr.target, emitter_ctx)
+        if target_str == "{}" or target_str == "()" or target_str.startswith("{"):
+            target_str = f"({target_str})"
         fname = expr.field_name
         if fname == "await":
             return target_str

@@ -51,6 +51,14 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
                         if raw_v and raw_v != "_" and raw_v.isidentifier():
                             pos = full_text.find(sub_line)
                             subsequent = full_text[pos + len(sub_line):] if pos != -1 else "\n".join(lines[i+1:])
+                            if stripped.startswith("var "):
+                                has_mut = (
+                                    re.search(r"\b" + re.escape(raw_v) + r"\b\s*(?:\.[a-zA-Z0-9_@]+)*\s*(?:[\+\-\*\/\%\&\|\^\<\>]?=|=(?![=>]))", subsequent)
+                                    or re.search(r"&\s*" + re.escape(raw_v) + r"\b", subsequent)
+                                    or re.search(r"\b" + re.escape(raw_v) + r"\.(?:append|push|insert|clear|add|remove|update|set|put|swap|extend|write|mut)\b", subsequent)
+                                )
+                                if not has_mut:
+                                    final_lines[-1] = final_lines[-1].replace("var " + raw_v, "const " + raw_v, 1)
                             if not re.search(r"\b" + re.escape(raw_v) + r"\b", subsequent):
                                 indent = line[: len(line) - len(line.lstrip())]
                                 clean_ident = f'@"{raw_v}"' if raw_v in ZIG_RESERVED_KEYWORDS else raw_v
