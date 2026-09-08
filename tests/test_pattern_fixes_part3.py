@@ -166,6 +166,56 @@ class TestPatternFixesPart3(unittest.TestCase):
         self.assertNotIn("fn from_origin_size(origin:", zig)
         self.assertIn("fn from_origin_size(origin_param:", zig)
 
+    def test_ffi_fn_pointer_generic_arrow_split(self) -> None:
+        """Verify Option<unsafe extern "C" fn(scope: *mut snd_pcm_scope_t) -> c_int> lowers without splitting at -> arrow."""
+        code = """
+        pub struct Ops {
+            pub enable: Option<unsafe extern "C" fn(scope: *mut snd_pcm_scope_t) -> c_int>,
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn(" -)", zig)
+        self.assertIn("?*const fn(scope: *snd_pcm_scope_t) c_int", zig)
+
+    def test_expr_stmt_leading_brace_parentheses(self) -> None:
+        """Verify statement starting with empty struct or tuple like {}.into(); is wrapped in parens ({}).into();."""
+        code = """
+        pub fn process() {
+            {}.into();
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("\n    {}.into();", zig)
+        self.assertIn("({}.into());", zig)
+
+    def test_match_enum_payload_capture_lowering(self) -> None:
+        """Verify match arm with payload SearchKind::Teddy(ref teddy) lowers to .Teddy => |teddy| in Zig."""
+        code = """
+        pub fn search(kind: SearchKind) {
+            match kind {
+                SearchKind::Teddy(ref teddy) => {},
+                SearchKind::RabinKarp => {},
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn(".Teddy(ref teddy)", zig)
+        self.assertIn(".Teddy => |teddy|", zig)
+
+    def test_if_let_enum_pattern_match_lowering(self) -> None:
+        """Verify if let WindowEvent::Focused(is_focused) = event lowers to if (event) |is_focused| or valid Zig if payload capture."""
+        code = """
+        pub fn process_event(event: WindowEvent) {
+            if let WindowEvent::Focused(is_focused) = event {
+                do_something();
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("if (.Focused(is_focused) = event)", zig)
+        self.assertIn("|is_focused|", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -254,6 +254,16 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             elif pat_str.startswith("Err(") or pat_str == "None":
                 var_name = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip() if "(" in pat_str else ""
                 pat = "else" if not has_else else "error.Unknown"
+            elif "(" in pat_str and ")" in pat_str:
+                variant_part = pat_str[:pat_str.find("(")].strip()
+                if "::" in variant_part:
+                    variant_part = variant_part.split("::")[-1]
+                variant_name = variant_part.lstrip(".")
+                cap_var = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
+                if cap_var and cap_var.isidentifier() and cap_var != "_":
+                    pat = f".{variant_name} => |{cap_var}|"
+                else:
+                    pat = f".{variant_name}"
             elif "::" in pat_str:
                 clean_enum_variant = re.sub(r"\(\s*\.\.\s*\)", "", pat_str.split("::")[-1]).strip()
                 pat = f".{clean_enum_variant}"
@@ -274,7 +284,7 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 else:
                     body_str = f"if ({guard_cond}) {body_str} else {{}}"
 
-            if pat.startswith("else =>"):
+            if pat.startswith("else =>") or "=> |" in pat:
                 lines.append(f"{emitter_ctx._indent()}{pat} {body_str},")
             else:
                 lines.append(f"{emitter_ctx._indent()}{pat} => {body_str},")
@@ -286,17 +296,18 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
     if isinstance(expr, IfExpr):
         cond_str = emit_expr(expr.condition, emitter_ctx)
         lines = []
-        if "let " in cond_str and "=" in cond_str:
+        if "=" in cond_str and not cond_str.startswith("if "):
             clean_cond = cond_str
             if clean_cond.startswith("(") and clean_cond.endswith(")"):
                 clean_cond = clean_cond[1:-1]
-            if clean_cond.startswith("let "):
-                parts = clean_cond[4:].split("=", 1)
+            clean_cond = clean_cond.replace("let ", "").strip()
+            if "=" in clean_cond:
+                parts = clean_cond.split("=", 1)
                 pat_part = parts[0].strip()
-                target_part = parts[1].strip() if len(parts) > 1 else ""
+                target_part = parts[1].strip()
                 cap_var = "item"
                 if "(" in pat_part and ")" in pat_part:
-                    cap_var = pat_part.split("(", 1)[1].rstrip(")").lstrip("(").strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
+                    cap_var = pat_part[pat_part.find("(")+1:pat_part.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
                     if "," in cap_var or not cap_var.isidentifier():
                         cap_var = "item"
                 if pat_part.startswith("Err"):

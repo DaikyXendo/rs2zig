@@ -63,4 +63,4 @@ tests/test_cargo_parser.py,tests.test_cargo_parser,TestCargoParserAndBuildGen,un
 tests/test_golden.py,tests.test_golden,TestGolden,unittest.TestCase,2,,Test suite executing golden tests in tests/golden/.,13,57
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes,unittest.TestCase,59,,Test suite verifying transpiler accuracy on isolated Rust syntax patterns.,13,658
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixesPart2,unittest.TestCase,13,,Test cases for transpiler fixes part 2.,9,140
-tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,TestPatternFixesPart3,unittest.TestCase,15,,Test cases for transpiler fixes part 3.,9,167
+tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,TestPatternFixesPart3,unittest.TestCase,19,,Test cases for transpiler fixes part 3.,9,216

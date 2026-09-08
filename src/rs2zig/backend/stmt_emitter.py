@@ -163,6 +163,8 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
             return expr_str
         if expr_str.startswith("{") and expr_str.endswith("}") and not isinstance(stmt.expr, (ReturnExpr, AssignStmt, CallExpr, StructInitExpr)):
             return expr_str
+        if expr_str.startswith("{") and not expr_str.endswith("}"):
+            expr_str = f"({expr_str})"
         return f"{expr_str};"
 
     if isinstance(stmt, StructDecl):

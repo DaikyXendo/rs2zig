@@ -85,6 +85,8 @@ def _split_angle_brackets(s: str) -> Optional[Tuple[str, str, str]]:
         if s[i] == "<":
             depth += 1
         elif s[i] == ">":
+            if i > 0 and s[i - 1] == "-":
+                continue
             depth -= 1
             if depth == 0:
                 inner = s[first + 1 : i].strip()
@@ -98,11 +100,14 @@ def _split_top_level_commas(s: str) -> List[str]:
     parts: List[str] = []
     current: List[str] = []
     depth = 0
-    for char in s:
+    for idx, char in enumerate(s):
         if char in "<[(":
             depth += 1
             current.append(char)
         elif char in ">])":
+            if char == ">" and idx > 0 and s[idx - 1] == "-":
+                current.append(char)
+                continue
             depth -= 1
             current.append(char)
         elif char == "," and depth == 0:
@@ -122,6 +127,8 @@ def _split_top_level_semicolon(s: str) -> Optional[Tuple[str, str]]:
         if c in "<[(":
             depth += 1
         elif c in ">])":
+            if c == ">" and i > 0 and s[i - 1] == "-":
+                continue
             depth -= 1
         elif c == ";" and depth == 0:
             return s[:i].strip(), s[i + 1:].strip()
@@ -142,10 +149,15 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
         name = rust_type.strip()
         if "'" in name:
             name = re.sub(r"'[a-zA-Z0-9_]+\s*", "", name).strip()
-        if name.startswith("fn(") or name.startswith("fn ("):
-            args_and_ret = name[name.find("(")+1:]
+        if name.startswith("*const fn(") or name.startswith("*const fn ("):
+            return f"{name} void" if name.endswith(")") else name
+        if (name.startswith("fn(") or name.startswith("fn (") or name.startswith("unsafe ") or name.startswith("extern ")) and ("fn(" in name or "fn (" in name):
+            fn_pos = name.find("fn(") if "fn(" in name else name.find("fn (")
+            args_and_ret = name[fn_pos + (3 if "fn(" in name else 4):]
             args_part, _, ret_part = args_and_ret.partition(")")
-            clean_ret = ret_part.strip().lstrip("->").strip()
+            clean_ret = ret_part.strip()
+            if clean_ret.startswith("->"):
+                clean_ret = clean_ret[2:].strip()
             ret_str = map_type(clean_ret, is_return_type=True) if (clean_ret and clean_ret not in ("()", "void")) else "void"
             args_list = [map_type(a.strip()) for a in _split_top_level_commas(args_part) if a.strip()]
             return f"*const fn({', '.join(args_list)}) {ret_str}"
@@ -257,7 +269,7 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
         if mapped == "anytype":
             return "anytype"
         if rust_type.is_reference or rust_type.is_raw_pointer:
-            if not (mapped.startswith("*") or mapped.startswith("[]")):
+            if not (mapped.startswith("*") or mapped.startswith("[]") or mapped.startswith("?")):
                 prefix = "*" if rust_type.is_mutable else "*const "
                 return f"{prefix}{mapped}"
         return mapped
