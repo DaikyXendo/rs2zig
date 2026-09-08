@@ -57,6 +57,9 @@ src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,typing,Callab
 src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,rs2zig.ir.nodes,TraitDecl,,6
 src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,rs2zig.ir.nodes,EnumDecl,,6
 src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,rs2zig.lowering.stdlib_map,map_type,,7
+src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,re,,,4
+src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,typing,List,,5
+src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,typing,Set,,5
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,os,,,7
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,re,,,8
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,logging,,,9
@@ -101,6 +104,7 @@ src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.backend.
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.backend.emitter_constants,ZIG_KEYWORDS_AND_PRIMITIVES,,19
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.backend.decl_emitter,emit_trait_decl,,20
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.backend.decl_emitter,emit_enum_decl,,20
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,rs2zig.backend.fallback_emitter,generate_fallback_headers,,21
 src/rs2zig/cli.py,src.rs2zig.cli,sys,,,7
 src/rs2zig/cli.py,src.rs2zig.cli,os,,,8
 src/rs2zig/cli.py,src.rs2zig.cli,argparse,,,9

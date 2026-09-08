@@ -53,6 +53,8 @@ src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,logger,logg
 src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,ZIG_PRIMITIVE_TYPES,"{'u8', 'u16', 'u32', 'u64', 'u128', 'i8', 'i16', 'i32', 'i64', 'i128', 'usize', 'isize', 'f32', 'f64",5
 src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,ZIG_RESERVED_KEYWORDS,"{'error', 'test', 'usingnamespace', 'async', 'await', 'nosuspend', 'resume', 'suspend', 'export', 'e",10
 src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,ZIG_KEYWORDS_AND_PRIMITIVES,ZIG_PRIMITIVE_TYPES | ZIG_RESERVED_KEYWORDS,18
+src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,STD_SUBMODULES,"{'std', 'self', 'super', 'crate', 'bevy', 'bevy_ecs', 'aok_core', 'core', 'libc', 'mem', 'io', 'os',",8
+src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,STD_TYPES,"{'std', 'anytype', 'void', 'bool', 'usize', 'isize', 'i8', 'i16', 'i32', 'i64', 'i128', 'u8', 'u16',",14
 src/rs2zig/cli.py,src.rs2zig.cli,logger,logging.getLogger('rs2zig.cli'),33
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),52
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,logger,logging.getLogger('rs2zig.frontend.cargo_parser'),13

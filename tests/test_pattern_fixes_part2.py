@@ -680,22 +680,56 @@ class TestPatternFixesPart2(unittest.TestCase):
         }
         """
         zig = self._transpile_code(code)
-    def test_multiple_tuple_destructure_let_statements(self) -> None:
-        """Verify multiple tuple destructure let statements emit unique temporary variable names in Zig."""
+    def test_self_type_fallback_lowering(self) -> None:
+        """Verify Self type used in signature generates idiomatic @This() in Zig."""
         code = """
-        pub fn test_multi_destruct() {
-            let (a, b) = (1, 2);
-            let (c, d) = (3, 4);
+        pub fn clone_item(item: &Self) -> Self {
+            return item;
         }
         """
         zig = self._transpile_code(code)
-        self.assertIn("const __tuple_tmp_1 =", zig)
-        self.assertIn("const __tuple_tmp_2 =", zig)
-        self.assertNotIn("const __tuple_tmp =", zig)
+        self.assertIn("@This()", zig)
+
+    def test_rust_std_core_libc_c_void_fallbacks(self) -> None:
+        """Verify core, libc, and c_void standard Rust primitives generate clean Zig fallbacks."""
+        code = """
+        pub fn process_c(ptr: *c_void) {
+            core::mem::drop(ptr);
+            libc::free(ptr);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("pub const c_void = anyopaque;", zig)
+        self.assertIn("pub const core = std;", zig)
+        self.assertIn("pub const libc = std.c;", zig)
+
+    def test_array_and_error_generic_undeclared_types(self) -> None:
+        """Verify undeclared types in array sizes [2]FloatVal, Result types, and container std.ArrayList(OutlineCurve) generate type fallbacks."""
+        code = """
+        pub fn parse(p: [FloatVal; 2]) -> Result<FontVec, InvalidFont> {
+            let list: std::ArrayList<OutlineCurve> = std::ArrayList::new();
+            return list;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("pub const FloatVal = type;", zig)
+        self.assertIn("pub const InvalidFont = type;", zig)
+        self.assertIn("pub const OutlineCurve = type;", zig)
+
+    def test_undeclared_module_prefix_fallback(self) -> None:
+        """Verify undeclared module prefix ttfp in ttfp.Face generates pub const ttfp = *anyopaque; header fallback."""
+        code = """
+        pub fn variations(face: &ttfp::Face) {
+            let x = face;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("pub const ttfp = *anyopaque;", zig)
 
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

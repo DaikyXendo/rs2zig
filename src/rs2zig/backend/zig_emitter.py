@@ -18,6 +18,7 @@ from rs2zig.lowering.stdlib_map import map_type
 from rs2zig.lowering.control_flow import lower_println_macro
 from rs2zig.backend.emitter_constants import ZIG_PRIMITIVE_TYPES, ZIG_RESERVED_KEYWORDS, ZIG_KEYWORDS_AND_PRIMITIVES
 from rs2zig.backend.decl_emitter import emit_trait_decl, emit_enum_decl
+from rs2zig.backend.fallback_emitter import generate_fallback_headers
 
 
 class ZigEmitter:
@@ -71,26 +72,41 @@ class ZigEmitter:
         ]
 
         if self.requires_bevy_runtime:
-            header_lines.append('const bevy_ecs = @import("bevy_ecs_runtime.zig");')
-            header_lines.append('const channel = bevy_ecs.channel;')
-            header_lines.append('const stdin = bevy_ecs.stdin;')
-            header_lines.append('const String = []u8;')
-            header_lines.append('const IpAddr = []u8;')
-            header_lines.append('const UdpSocket = bevy_ecs.UdpSocket;')
-            header_lines.append('const aok_core = @import("aok_core");')
+            header_lines.extend([
+                'const bevy_ecs = @import("bevy_ecs_runtime.zig");',
+                'const channel = bevy_ecs.channel;',
+                'const stdin = bevy_ecs.stdin;',
+                'const String = []u8;',
+                'const IpAddr = []u8;',
+                'const UdpSocket = bevy_ecs.UdpSocket;',
+                'const aok_core = @import("aok_core");'
+            ])
             if not any(fn.name == "create_app" for fn in sf.functions):
                 header_lines.append('const create_app = aok_core.create_app;')
 
         out_dir = os.path.dirname(file_path) if file_path else ""
         top_level_names = {c.name for c in sf.constants} | {s.name for s in sf.structs} | {e.name for e in sf.enums} | {t.name for t in sf.traits} | {f.name for f in sf.functions}
+        all_declared_names = set(top_level_names)
+        for s in sf.structs:
+            all_declared_names.update(f.name for f in s.fields)
+        for e in sf.enums:
+            all_declared_names.update(v.name for v in e.variants)
+        for impl in sf.impls:
+            all_declared_names.update(m.name for m in impl.methods)
 
         for mod_name in sorted(set(self.imported_modules) | set(getattr(sf, "imports", []))):
             if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app", "serde"):
-                if mod_name in top_level_names:
+                if mod_name in all_declared_names:
                     continue
                 clean_mod_name = f'@"{mod_name}"' if mod_name in ZIG_KEYWORDS_AND_PRIMITIVES else mod_name
                 if mod_name == "aok":
                     header_lines.append('const aok = aok_core;')
+                elif mod_name == "core":
+                    header_lines.append('pub const core = std;')
+                elif mod_name == "libc":
+                    header_lines.append('pub const libc = std.c;')
+                elif mod_name == "c_void":
+                    header_lines.append('pub const c_void = anyopaque;')
                 elif out_dir and os.path.exists(os.path.join(out_dir, f"{mod_name}.zig")):
                     header_lines.append(f'const {clean_mod_name} = @import("{mod_name}.zig");')
                 else:
@@ -100,16 +116,7 @@ class ZigEmitter:
         clean_body = re.sub(r'"[^"]*"', '""', body_text)
         clean_body = re.sub(r'//.*', '', clean_body)
 
-        found_types = set(re.findall(r"(?::|->|!|\*const|\?)\s*([A-Z][a-zA-Z0-9_]*)\b", clean_body))
-        std_types = {
-            "std", "anytype", "void", "bool", "usize", "isize", "i8", "i16", "i32", "i64", "i128",
-            "u8", "u16", "u32", "u64", "u128", "f32", "f64", "anyerror", "type", "String", "IpAddr",
-            "UdpSocket", "Token", "Self", "c_void", "f16", "f80", "f128"
-        }
-        for ext_type in sorted(found_types):
-            if len(ext_type) > 1 and ext_type not in top_level_names and ext_type not in std_types and ext_type not in self.imported_modules:
-                if not re.search(r"\.\s*" + re.escape(ext_type) + r"\b", clean_body):
-                    header_lines.append(f"pub const {ext_type} = type;")
+        generate_fallback_headers(clean_body, all_declared_names, self.imported_modules, header_lines)
 
         header_lines.append("")
         all_lines = header_lines + body_lines
@@ -122,18 +129,16 @@ class ZigEmitter:
         return self.indent_str * self.current_indent
 
     def _emit_trait(self, trait: TraitDecl) -> str:
-        """Emit Zig interface definition / comment for a trait."""
+        """Emit Zig interface definition for a trait."""
         return emit_trait_decl(trait)
 
     def _emit_enum(self, enum_decl: EnumDecl) -> str:
         """Emit Zig enum or tagged union definition."""
-        def _inc() -> None:
-            """Increment indent."""
-            self.current_indent += 1
-        def _dec() -> None:
-            """Decrement indent."""
-            self.current_indent -= 1
-        return emit_enum_decl(enum_decl, self._indent, _inc, _dec)
+        return emit_enum_decl(
+            enum_decl, self._indent,
+            lambda: setattr(self, "current_indent", self.current_indent + 1),
+            lambda: setattr(self, "current_indent", self.current_indent - 1)
+        )
 
     def _emit_struct(self, struct: StructDecl, methods: List[FnDecl]) -> str:
         """Emit Zig struct definition including any impl methods."""
@@ -772,12 +777,12 @@ class ZigEmitter:
             if isinstance(expr.body, BlockExpr):
                 body_lines = self._emit_block_lines(expr.body)
                 body_text = "\n".join(body_lines)
-                discard_lines = []
-                for pname in param_names:
-                    if pname and pname != "_" and not pname.startswith("_") and not pname.startswith("arg"):
-                        clean_search = pname.strip('"@')
-                        if not re.search(r"\b" + re.escape(clean_search) + r"\b", body_text):
-                            discard_lines.append(f"{self._indent()}_ = {pname};")
+                discard_lines = [
+                    f"{self._indent()}_ = {pname};"
+                    for pname in param_names
+                    if pname and pname != "_" and not pname.startswith("_") and not pname.startswith("arg")
+                    and not re.search(r"\b" + re.escape(pname.strip('"@')) + r"\b", body_text)
+                ]
                 lines = [f"(struct {{ fn run({params_str}) {ret_type} {{"]
                 self.current_indent += 1
                 lines.extend(discard_lines)
@@ -787,12 +792,12 @@ class ZigEmitter:
                 return "\n".join(lines)
             else:
                 body_str = self._emit_expr(expr.body)
-                discard_prefix = ""
-                for pname in param_names:
-                    if pname and pname != "_" and not pname.startswith("_") and not pname.startswith("arg"):
-                        clean_search = pname.strip('"@')
-                        if not re.search(r"\b" + re.escape(clean_search) + r"\b", body_str):
-                            discard_prefix += f"_ = {pname}; "
+                discards = [
+                    f"_ = {pname}; " for pname in param_names
+                    if pname and pname != "_" and not pname.startswith("_") and not pname.startswith("arg")
+                    and not re.search(r"\b" + re.escape(pname.strip('"@')) + r"\b", body_str)
+                ]
+                discard_prefix = "".join(discards)
                 return f"(struct {{ fn run({params_str}) {ret_type} {{ {discard_prefix}return {body_str}; }} }}.run)"
 
         return "{}"
