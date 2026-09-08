@@ -105,6 +105,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                     return f"bevy_ecs.{parts[0]}.{parts[1]}"
                 escaped_parts = [f'@"{p}"' if (p in ZIG_RESERVED_KEYWORDS and not p.startswith("@")) else p for p in parts]
                 return f"{escaped_parts[0]}.{escaped_parts[1]}"
+            if len(parts) == 2 and parts[0].isidentifier() and parts[1].isupper():
+                return f"{parts[0]}.{parts[1]}"
             return f".{parts[-1]}"
         if name == "Some":
             return ""
@@ -270,6 +272,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 pat_clean, _, guard_part = pat_str.partition(" if ")
                 pat_str = pat_clean.strip()
                 guard_cond = guard_part.strip()
+                if "::" in guard_cond:
+                    guard_cond = re.sub(r"\b([A-Za-z0-9_]+)::([A-Za-z0-9_]+)\b", r"\1.\2", guard_cond)
             elif arm.guard:
                 guard_cond = emit_expr(arm.guard, emitter_ctx)
 
@@ -284,11 +288,35 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             elif pat_str.startswith("(") and pat_str.endswith(")"):
                 inner = pat_str[1:-1].strip()
                 if "," in inner:
-                    raw_items = [p.strip() for p in inner.split(",") if p.strip()]
+                    raw_items = []
+                    curr_item = []
+                    paren_depth = 0
+                    for ch in inner:
+                        if ch in "({[":
+                            paren_depth += 1
+                            curr_item.append(ch)
+                        elif ch in ")}]":
+                            paren_depth -= 1
+                            curr_item.append(ch)
+                        elif ch == "," and paren_depth == 0:
+                            raw_items.append("".join(curr_item).strip())
+                            curr_item = []
+                        else:
+                            curr_item.append(ch)
+                    if curr_item:
+                        raw_items.append("".join(curr_item).strip())
+
                     mapped_items = []
                     for it in raw_items:
+                        if not it:
+                            continue
                         if "::" in it:
                             mapped_items.append(f".{it.split('::')[-1]}")
+                        elif "(" in it and it[0].isupper():
+                            vname = it[:it.find("(")].strip().split("::")[-1].lstrip(".")
+                            mapped_items.append(f".{vname}")
+                        elif it and it[0].isupper() and not it.startswith("."):
+                            mapped_items.append(f".{it}")
                         else:
                             mapped_items.append(it)
                     pat = f".{{ {', '.join(mapped_items)} }}"
@@ -306,7 +334,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 else:
                     cap_var = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
                     if cap_var and cap_var.isidentifier() and cap_var != "_":
-                        pat = f".{variant_name} => |{cap_var}|"
+                        clean_cap = cap_var.lower() if cap_var[0].isupper() else cap_var
+                        pat = f".{variant_name} => |{clean_cap}|"
                     else:
                         pat = f".{variant_name}"
             elif "::" in pat_str or "{" in pat_str:
@@ -322,10 +351,21 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 if has_else:
                     continue
                 has_else = True
-
-            body_str = emit_expr(arm.body, emitter_ctx)
             if body_str.rstrip(";").strip() in ("()", ".{}"):
                 body_str = "{}"
+
+            if "=> |" in pat:
+                clean_cap = pat.split("=> |")[-1].strip("| ")
+                if clean_cap and not re.search(r"\b" + re.escape(clean_cap) + r"\b", body_str):
+                    if body_str == "{}":
+                        body_str = f"{{ _ = {clean_cap}; }}"
+                    else:
+                        clean_b = body_str.strip()
+                        if clean_b.startswith("{") and clean_b.endswith("}"):
+                            body_str = f"{{ _ = {clean_cap}; {clean_b[1:-1].strip()} }}"
+                        else:
+                            body_str = f"{{ _ = {clean_cap}; {clean_b} }}"
+
             if guard_cond:
                 if body_str == "{}":
                     body_str = f"if ({guard_cond}) {{}}"
@@ -463,6 +503,13 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 and not re.search(r"\b" + re.escape(pname.strip('"@')) + r"\b", body_str)
             ]
             discard_prefix = "".join(discards)
-            return f"(struct {{ fn run({params_str}) {ret_type} {{ {discard_prefix}return {body_str}; }} }}.run)"
+            body_expr_str = body_str.strip().rstrip(";")
+            if body_expr_str.startswith("return"):
+                ret_statement = f"{body_expr_str};"
+            elif body_expr_str in ("()", ".{}", "void"):
+                ret_statement = "return;"
+            else:
+                ret_statement = f"return {body_expr_str};"
+            return f"(struct {{ fn run({params_str}) {ret_type} {{ {discard_prefix}{ret_statement} }} }}.run)"
 
     return "{}"

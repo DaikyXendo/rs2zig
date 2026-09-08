@@ -38,8 +38,10 @@ def generate_fallback_headers(
         header_lines.append("pub const core = std;")
     if (re.search(r"\blibc\b", clean_body) or "libc" in imported_modules) and "libc" not in all_declared_names and not any("const libc" in h for h in header_lines):
         header_lines.append("pub const libc = std.c;")
-    if (re.search(r"\bcrate\b", clean_body) or "crate" in imported_modules) and "crate" not in all_declared_names and not any("const crate" in h for h in header_lines):
-        header_lines.append("pub const crate = @This();")
+    if (re.search(r"\bio\b", clean_body) or "io" in imported_modules) and "io" not in all_declared_names and not any("const io" in h for h in header_lines):
+        header_lines.append("pub const io = std.io;")
+    if re.search(r"\brng\b", clean_body) and "rng" not in all_declared_names and not any("const rng" in h for h in header_lines):
+        header_lines.append("pub const rng = type;")
 
     for mod_prefix in sorted(set(re.findall(r"\b([a-z_][a-zA-Z0-9_]*)\.[A-Z]", clean_body))):
         if (
@@ -54,7 +56,7 @@ def generate_fallback_headers(
 
     clean_body_no_ats = re.sub(r"@[a-zA-Z0-9_]+", "", clean_body)
 
-    found_types = set(re.findall(r"\b([A-Z][a-zA-Z0-9_]*)\b", clean_body_no_ats))
+    found_types = set(re.findall(r"\b(_?[A-Z][a-zA-Z0-9_]*)\b", clean_body_no_ats))
     found_types.update(re.findall(r"\b(_bindgen_[a-zA-Z0-9_]*)\b", clean_body_no_ats))
 
     for ext_type in sorted(found_types):
