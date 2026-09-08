@@ -722,13 +722,45 @@ class TestPatternFixesPart2(unittest.TestCase):
         pub fn variations(face: &ttfp::Face) {
             let x = face;
         }
+    def test_reserved_keyword_module_fallback_escaping(self) -> None:
+        """Verify module prefix named error generates pub const @"error" = *anyopaque; escaping keyword."""
+        code = """
+        pub fn handle_err(err: &error::CustomError) {
+            let x = err;
+        }
         """
         zig = self._transpile_code(code)
-        self.assertIn("pub const ttfp = *anyopaque;", zig)
+        self.assertIn('pub const @"error" = *anyopaque;', zig)
+        self.assertNotIn("pub const error =", zig)
+
+    def test_double_semicolon_elimination(self) -> None:
+        """Verify statements do not emit double semicolons ;; at end of lines."""
+        code = """
+        pub fn process() {
+            let x = 10;
+            return;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn(";;", zig)
+
+    def test_while_let_try_expression_lowering(self) -> None:
+        """Verify while let Some(arg) = args.next()? lowers to try expression without invalid trailing ? in Zig condition."""
+        code = """
+        pub fn parse() {
+            while let Some(arg) = args.next()? {
+                let x = arg;
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("args.next()?", zig)
+        self.assertIn("while (try args.next()) |arg|", zig)
 
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

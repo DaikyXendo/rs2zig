@@ -2,7 +2,7 @@
 Header and Fallback Type Generator for Zig Source Code Emitter.
 """
 import re
-from typing import List, Set
+from rs2zig.backend.emitter_constants import ZIG_KEYWORDS_AND_PRIMITIVES
 
 
 STD_SUBMODULES = {
@@ -45,8 +45,10 @@ def generate_fallback_headers(
             and mod_prefix not in imported_modules
             and mod_prefix not in STD_SUBMODULES
             and not any(f"const {mod_prefix}" in h for h in header_lines)
+            and not any(f'const @"{mod_prefix}"' in h for h in header_lines)
         ):
-            header_lines.append(f"pub const {mod_prefix} = *anyopaque;")
+            clean_mod_prefix = f'@"{mod_prefix}"' if mod_prefix in ZIG_KEYWORDS_AND_PRIMITIVES else mod_prefix
+            header_lines.append(f"pub const {clean_mod_prefix} = *anyopaque;")
 
     found_types = set(re.findall(r"(?::|->|!|\*const|\?|\[|\(|\,)\s*([A-Z][a-zA-Z0-9_]{1,})\b", clean_body))
     found_types.update(re.findall(r"\b([A-Z][a-zA-Z0-9_]{1,})\s*!", clean_body))

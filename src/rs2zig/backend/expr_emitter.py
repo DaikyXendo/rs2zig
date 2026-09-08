@@ -330,10 +330,14 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                     parts = clean_cond[4:].split("=", 1)
                     pat_part = parts[0].strip()
                     cond_str = parts[1].strip() if len(parts) > 1 else cond_str
+                    if cond_str.endswith("?"):
+                        cond_str = f"try {cond_str[:-1]}"
                     if not cap_var and "(" in pat_part and ")" in pat_part:
                         cap_var = pat_part.split("(", 1)[1].rstrip(")").lstrip("(").strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
                         if "," in cap_var or not cap_var.isidentifier():
                             cap_var = "item"
+            if cond_str.endswith("?"):
+                cond_str = f"try {cond_str[:-1]}"
             capture_str = f" |{cap_var}|" if cap_var else ""
             lines = [f"while ({cond_str}){capture_str} {{"]
             emitter_ctx.current_indent += 1

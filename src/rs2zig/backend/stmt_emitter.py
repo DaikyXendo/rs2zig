@@ -138,7 +138,7 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
         return f"{lhs_str} {stmt.op} {rhs_str};"
 
     if isinstance(stmt, ExprStmt):
-        expr_str = emitter_ctx._emit_expr(stmt.expr)
+        expr_str = emitter_ctx._emit_expr(stmt.expr).rstrip(";").strip()
         if expr_str.startswith("_ = ") and "," in expr_str:
             raw_rhs = expr_str[4:].strip().rstrip(";")
             raw_rhs = raw_rhs.lstrip(".{(").rstrip("})")

@@ -94,8 +94,7 @@ src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.loweri
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.backend.emitter_constants,ZIG_RESERVED_KEYWORDS,,14
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.backend.emitter_constants,ZIG_KEYWORDS_AND_PRIMITIVES,,14
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,re,,,4
-src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,typing,List,,5
-src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,typing,Set,,5
+src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,rs2zig.backend.emitter_constants,ZIG_KEYWORDS_AND_PRIMITIVES,,5
 src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,typing,Any,,5
 src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,typing,List,,5
 src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,rs2zig.ir.nodes,BlockExpr,,6
@@ -374,8 +373,3 @@ tests/test_pattern_fixes.py,tests.test_pattern_fixes,unittest,,,7
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,rs2zig.frontend.ts_parser,RustParser,,8
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,rs2zig.frontend.ast_builder,ASTBuilder,,9
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,rs2zig.backend.zig_emitter,ZigEmitter,,10
-tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,unittest,,,3
-tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,rs2zig.frontend.ts_parser,RustParser,,4
-tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,rs2zig.frontend.ast_builder,ASTBuilder,,5
-tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,rs2zig.backend.zig_emitter,ZigEmitter,,6
-tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,rs2zig.ir.nodes,SourceFile,,7

@@ -62,4 +62,3 @@ src/rs2zig/validate/zig_fmt_check.py,src.rs2zig.validate.zig_fmt_check,ZigValida
 tests/test_cargo_parser.py,tests.test_cargo_parser,TestCargoParserAndBuildGen,unittest.TestCase,2,,Test suite for Cargo.toml parser and build.zig generator.,13,50
 tests/test_golden.py,tests.test_golden,TestGolden,unittest.TestCase,2,,Test suite executing golden tests in tests/golden/.,13,57
 tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes,unittest.TestCase,59,,Test suite verifying transpiler accuracy on isolated Rust syntax patterns.,13,658
-tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixesPart2,unittest.TestCase,61,,Test cases for transpiler fixes part 2.,10,727
