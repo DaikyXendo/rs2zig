@@ -87,6 +87,8 @@ class ZigEmitter:
         for impl in sf.impls:
             all_declared_names.update(m.name for m in impl.methods)
 
+        self.all_declared_names = all_declared_names
+
         for mod_name in sorted(set(self.imported_modules) | set(getattr(sf, "imports", []))):
             if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app", "serde"):
                 if mod_name in all_declared_names:

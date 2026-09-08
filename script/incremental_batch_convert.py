@@ -159,28 +159,35 @@ def write_file_status_records(
             writer.writerow(rec)
 
 
-def run_batch_conversion(step_size: int = DEFAULT_STEP_SIZE) -> None:
-    """Execute next incremental batch conversion and validate results with ast-check.
+def run_batch_conversion(step_size: int = DEFAULT_STEP_SIZE, recheck: bool = False) -> None:
+    """Execute incremental batch conversion and validate results with ast-check.
 
     Args:
         step_size: Number of new files to add per batch.
+        recheck: If True, re-check existing working set without adding new files.
     """
     all_rs_files = get_all_rust_files()
     total_available = len(all_rs_files)
     existing_records = read_progress_csv()
-    batch_num = len(existing_records) + 1
 
-    target_count = batch_num * step_size
-    if target_count > total_available:
-        target_count = total_available
+    if recheck:
+        batch_num = len(existing_records) if existing_records else 1
+        target_count = int(existing_records[-1]["total_files"]) if existing_records else step_size
+        actual_new = 0
+    else:
+        batch_num = len(existing_records) + 1
+        target_count = batch_num * step_size
+        if target_count > total_available:
+            target_count = total_available
 
     files_to_convert = all_rs_files[:target_count]
-    actual_new = step_size if batch_num == 1 else len(files_to_convert) - (batch_num - 1) * step_size
-    if actual_new < 0:
-        actual_new = 0
+    if not recheck:
+        actual_new = step_size if batch_num == 1 else len(files_to_convert) - (batch_num - 1) * step_size
+        if actual_new < 0:
+            actual_new = 0
 
     print("=" * 65)
-    print(f" 🚀 RUNNING INCREMENTAL BATCH {batch_num}")
+    print(f" 🚀 RUNNING INCREMENTAL BATCH {batch_num} {'(RECHECK)' if recheck else ''}")
     print(f" Total files in working set: {len(files_to_convert)} / {total_available}")
     print(f" New files added this batch: {actual_new}")
     print("=" * 65)
@@ -239,7 +246,7 @@ def run_batch_conversion(step_size: int = DEFAULT_STEP_SIZE) -> None:
 
     pass_pct = (valid_count / len(files_to_convert) * 100) if files_to_convert else 0.0
     print("\n" + "=" * 65)
-    print(f" 📊 BATCH {batch_num} RESULTS")
+    print(f" 📊 BATCH {batch_num} RESULTS {'(RECHECK)' if recheck else ''}")
     print(f" Total Converted: {len(files_to_convert)}")
     print(f" ✅ Valid (ast-check OK): {valid_count} ({pass_pct:.2f}%)")
     print(f" ❌ Failed: {failed_count}")
@@ -285,6 +292,7 @@ def main() -> None:
 
     run_parser = subparsers.add_parser("run", help="Run next incremental batch conversion.")
     run_parser.add_argument("--step", type=int, default=DEFAULT_STEP_SIZE, help="Files per batch step.")
+    run_parser.add_argument("--recheck", action="store_true", help="Re-check existing active files without adding new ones.")
 
     subparsers.add_parser("status", help="Print progress history from CSV file.")
 
@@ -294,7 +302,8 @@ def main() -> None:
         print_status()
     else:
         step = getattr(args, "step", DEFAULT_STEP_SIZE)
-        run_batch_conversion(step_size=step)
+        recheck = getattr(args, "recheck", False)
+        run_batch_conversion(step_size=step, recheck=recheck)
 
 
 if __name__ == "__main__":

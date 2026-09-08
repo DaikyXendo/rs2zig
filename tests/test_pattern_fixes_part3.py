@@ -400,7 +400,99 @@ class TestPatternFixesPart3(unittest.TestCase):
         self.assertIn("!ptr.is_null()", zig)
         self.assertIn("!vec.is_empty()", zig)
 
+    def test_array_index_as_cast_lowering(self) -> None:
+        """Verify array[id as usize] lowers to array[@as(usize, id)] without raw as usize inside brackets."""
+        code = """
+        pub fn get_val(arr: &[u8], id: u8) -> u8 {
+            return arr[id as usize];
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("[id as usize]", zig)
+        self.assertIn("[@as(usize, id)]", zig)
+
+    def test_single_letter_generic_type_fallback(self) -> None:
+        """Verify single letter generic type F in fn from(p0: [2]F) generates pub const F = type; fallback."""
+        code = """
+        pub fn from(p0: [2]F) -> Point {
+            return Point {};
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("pub const F = type;", zig)
+
+    def test_undeclared_function_identifier_fallback(self) -> None:
+        """Verify standalone call to imported/helper function point(x, y) generates pub const point = type; fallback."""
+        code = """
+        pub fn draw(x: f32, y: f32) {
+            let p = point(x, y);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("pub const point = type;", zig)
+
+
+    def test_and_or_reserved_keyword_escaping(self) -> None:
+        """Verify Zig reserved keywords and / or are escaped as @"and" / @"or" and not emitted as invalid pub const and = type;."""
+        code = """
+        pub fn check_logic(and_val: bool, or_val: bool) -> bool {
+            let and = and_val;
+            let or = or_val;
+            return and && or;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("pub const and = type;", zig)
+        self.assertNotIn("pub const or = type;", zig)
+        self.assertIn('@"and"', zig)
+        self.assertIn('@"or"', zig)
+
+    def test_pointer_type_fallback_header(self) -> None:
+        """Verify *const Glyph and *const Cow trigger fallback type headers pub const Glyph = type; and pub const Cow = type;."""
+        code = """
+        pub fn process_glyph(g: *const Glyph, c: *const Cow) {
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("pub const Glyph = type;", zig)
+        self.assertIn("pub const Cow = type;", zig)
+
+    def test_unary_not_on_brace_starting_expr(self) -> None:
+        """Verify !{}.@"0".is_null() wraps brace-starting target in parens so ! is not attached directly to {}."""
+        code = """
+        pub fn check_null(res: (Option<Node>, u32)) -> bool {
+            if !res.0.is_null() {
+                return true;
+            }
+            return false;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("!{", zig)
+
+    def test_underscore_prefixed_var_discard(self) -> None:
+        """Verify local variable starting with _ (e.g. let _cmd = 1;) receives _ = _cmd; discard in Zig."""
+        code = """
+        pub fn run_cmd() {
+            let _cmd = 10;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("_ = _cmd;", zig)
+
+    def test_closure_expression_lowering(self) -> None:
+        """Verify closure expression || node.children() lowers to Zig struct function runner."""
+        code = """
+        pub fn test_closure(flag: bool, node: Node) {
+            let res = flag.then(|| node.children());
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("struct { fn run()", zig)
+        self.assertIn("node.children()", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 

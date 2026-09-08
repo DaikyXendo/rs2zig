@@ -57,9 +57,9 @@ for err, count in err_counts.most_common(15):
 When the user says **"Tiếp"** (or "Next"), execute the following step-by-step loop:
 
 1. **Step Incremental Batch**: Run `PYTHONPATH=src ./venv/bin/python script/incremental_batch_convert.py run --step 20`.
-2. **Analyze Failure CSV**: Parse `data/aok_file_status.csv` to group all error messages across failed files.
-3. **Write Unit Tests (TDD)**: For each identified error pattern, write a standalone test case in `tests/test_pattern_fixes_part2.py`.
-4. **Fix Transpiler**: Update `src/rs2zig/backend/zig_emitter.py`, `ast_builder.py`, or lowering passes to resolve errors. If any modified file approaches 800 lines (e.g. > 600–700 lines), perform a thorough, comprehensive refactoring by splitting major logical components into distinct sub-modules completely at once (bringing file size < 400 lines). NEVER perform micro-refactoring (trimming a few lines at a time).
+2. **Analyze Failure CSV (Comprehensive)**: Parse `data/aok_file_status.csv` to group ALL error messages across ALL failed files (both old and newly added across all libraries).
+3. **Write Unit Tests (TDD)**: For each identified error pattern, write a standalone test case in `tests/test_pattern_fixes_part2.py` or `tests/test_pattern_fixes_part3.py`.
+4. **Fix Transpiler**: Update `src/rs2zig/backend/zig_emitter.py`, `expr_emitter.py`, `stmt_emitter.py`, `decl_emitter.py`, `ast_builder.py`, or lowering passes to resolve errors. If any modified file approaches 800 lines (e.g. > 600–700 lines), perform a thorough, comprehensive refactoring by splitting major logical components into distinct sub-modules completely at once (bringing file size < 400 lines). NEVER perform micro-refactoring (trimming a few lines at a time).
 5. **Verify 100% Tests Pass**: Run `PYTHONPATH=src ./venv/bin/python -m unittest discover tests`.
 6. **Re-run Batch**: Re-run `script/incremental_batch_convert.py run --step 20` to verify pass rate increase.
 7. **Sync & Audit**: Run `python3 script/rs2zig_query.py sync` and `python3 script/rs2zig_query.py audit`.

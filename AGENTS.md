@@ -41,9 +41,9 @@ The project includes an incremental batch conversion workflow for converting the
 ### User Directive "Tiếp" (Next) Workflow
 Whenever the user inputs **"Tiếp"** (or "Next"), the agent MUST automatically execute the following iterative TDD loop:
 1. **Run Next Batch Step**: Run `PYTHONPATH=src ./venv/bin/python script/incremental_batch_convert.py run --step 20`.
-2. **Analyze Failure Patterns**: Inspect `data/aok_file_status.csv` for ALL failed files (both old and newly added). Cluster error messages by root cause.
-3. **Implement Unit Tests (TDD)**: Add isolated test cases for every new syntax/compilation error pattern in `tests/test_pattern_fixes_part2.py`.
-4. **Fix Transpiler Logic**: Implement fixes in `src/rs2zig/backend/zig_emitter.py`, `ast_builder.py`, or lowering passes.
+2. **Analyze Failure Patterns (Comprehensive)**: Inspect `data/aok_file_status.csv` for ALL failed files (both old and newly added across all converted libraries, e.g. `ab_glyph`, `accesskit`, `arrow`, `anyhow`, etc.). Read and cluster ALL error messages by root cause.
+3. **Implement Unit Tests (TDD)**: Add isolated test cases for every syntax/compilation error pattern (both old and new) in `tests/test_pattern_fixes_part2.py` or `tests/test_pattern_fixes_part3.py`.
+4. **Fix Transpiler Logic**: Implement fixes in `src/rs2zig/backend/zig_emitter.py`, `expr_emitter.py`, `stmt_emitter.py`, `decl_emitter.py`, `ast_builder.py`, or lowering passes.
 5. **Verify 100% Unit Test Pass**: Run `PYTHONPATH=src ./venv/bin/python -m unittest discover tests` until all tests pass 100%.
 6. **Re-run Batch Step**: Re-run `script/incremental_batch_convert.py run --step 20` to verify pass rate increase across the growing batch.
 7. **Sync & Audit**: Run `python3 script/rs2zig_query.py sync` and `python3 script/rs2zig_query.py audit` before concluding.

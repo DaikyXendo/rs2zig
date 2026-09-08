@@ -2,6 +2,7 @@
 Statement Emitter for rs2zig Backend.
 """
 
+import re
 from typing import Any, List
 from rs2zig.ir.nodes import (
     BlockExpr, Stmt, LetStmt, AssignStmt, ExprStmt, FnDecl, StructDecl, EnumDecl,
@@ -37,7 +38,25 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
             else:
                 lines.append(f"{emitter_ctx._indent()}return {expr_str};")
 
-        return lines
+        full_text = "\n".join(lines)
+        final_lines: List[str] = []
+        for i, line in enumerate(lines):
+            final_lines.append(line)
+            for sub_line in line.splitlines():
+                stripped = sub_line.strip()
+                if (stripped.startswith("const ") or stripped.startswith("var ")) and "=" in stripped:
+                    parts = stripped.split()
+                    if len(parts) >= 2:
+                        raw_v = parts[1].split(":")[0].split("=")[0].strip().strip('";@')
+                        if raw_v and raw_v != "_" and raw_v.isidentifier():
+                            pos = full_text.find(sub_line)
+                            subsequent = full_text[pos + len(sub_line):] if pos != -1 else "\n".join(lines[i+1:])
+                            if not re.search(r"\b" + re.escape(raw_v) + r"\b", subsequent):
+                                indent = line[: len(line) - len(line.lstrip())]
+                                clean_ident = f'@"{raw_v}"' if raw_v in ZIG_RESERVED_KEYWORDS else raw_v
+                                final_lines.append(f"{indent}_ = {clean_ident};")
+
+        return final_lines
     finally:
         emitter_ctx.current_block_vars = prev_vars
 
@@ -142,8 +161,8 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
             val_expr_str = f"({val_expr_str})"
         val_part = f" = {val_expr_str}" if stmt.value else ""
         res = f"{kw} {vname}{type_part}{val_part};"
-        if was_renamed or is_dedup:
-            res += f"\n{emitter_ctx._indent()}_ = {vname};"
+        clean_vname = vname.strip('"@')
+        if was_renamed or is_dedup or (clean_vname.startswith("_") and clean_vname != "_"):
             res += f"\n{emitter_ctx._indent()}_ = {vname};"
         if stmt.name == "ip":
             res += f"\n{emitter_ctx._indent()}_ = ip;"

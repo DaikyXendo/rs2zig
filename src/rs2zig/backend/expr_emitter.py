@@ -56,6 +56,9 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
 
     if isinstance(expr, IdentifierExpr):
         name = expr.name
+        if " as " in name:
+            name = re.sub(r'\b([a-zA-Z0-9_@".]+)\s+as\s+([a-zA-Z0-9_@"._]+)\b', r'@as(\2, \1)', name)
+            name = name.replace("@as(_,", "@ptrCast(").replace("@as(*mut _,", "@ptrCast(")
         if name.endswith(".") and name[:-1].lstrip("-").isdigit():
             name += "0"
         if "[.." in name:
@@ -137,6 +140,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             operand_str = "&" + operand_str[5:]
         if operand_str.startswith("mut "):
             operand_str = operand_str[4:]
+        if operand_str.startswith("{"):
+            operand_str = f"({operand_str})"
         if zop == "&" and operand_str.startswith("[") and operand_str.endswith("]"):
             return f"&.{{{operand_str[1:-1]}}}"
         if zop == "!" and not (
@@ -303,9 +308,11 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                     else:
                         pat = f".{variant_name}"
             elif "::" in pat_str or "{" in pat_str:
-                clean_enum_variant = re.sub(r"\(\s*\.\.\s*\)", "", pat_str.split("::")[-1]).strip()
-                clean_enum_variant = re.sub(r"\s*\{.*?\}", "", clean_enum_variant).strip()
-                pat = f".{clean_enum_variant}"
+                clean_enum_variant = re.sub(r"\{.*\}", "", pat_str, flags=re.DOTALL)
+                clean_enum_variant = re.sub(r"\([^\)]*\)", "", clean_enum_variant, flags=re.DOTALL)
+                clean_enum_variant = clean_enum_variant.split("::")[-1]
+                clean_enum_variant = re.sub(r"[^a-zA-Z0-9_]", "", clean_enum_variant).strip()
+                pat = f".{clean_enum_variant}" if clean_enum_variant else "else"
             else:
                 pat = pat_str
 
@@ -343,7 +350,7 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             if "=" in clean_cond and not any(op in clean_cond for op in ("==", "!=", "<=", ">=")):
                 parts = clean_cond.split("=", 1)
                 pat_part = parts[0].strip()
-                target_part = parts[1].strip().replace("&mut ", "&")
+                target_part = parts[1].strip().rstrip(";").strip().replace("&mut ", "&")
                 cap_var = "item"
                 if "(" in pat_part and ")" in pat_part:
                     cap_var = pat_part[pat_part.find("(")+1:pat_part.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
