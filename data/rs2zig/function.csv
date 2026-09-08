@@ -48,20 +48,25 @@ script/rs2zig_query.py,script.rs2zig_query,cmd_sync,(),None,False,False,,Execute
 script/rs2zig_query.py,script.rs2zig_query,main,(),None,False,False,,Main CLI entry point.,251,276
 src/main.py,src.main,main,(),None,False,False,,Main application entry point.,17,19
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,generate_build_zig,"(executable_name: str = 'app', main_src: str = 'main.zig', dependencies: Optional[List[str]] = None, target_wasm: bool = False)",str,False,False,,Generate content for a build.zig script targeting Zig 0.16.0.,13,70
-src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,emit_trait_decl,(trait: TraitDecl),str,False,False,,Emit Zig interface definition / comment for a trait.,10,16
-src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,emit_enum_decl,"(enum_decl: EnumDecl, indent_fn: Callable[[], str], inc_indent: Callable[[], None], dec_indent: Callable[[], None])",str,False,False,,Emit Zig enum or tagged union definition.,19,46
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,emit_trait_decl,(trait: TraitDecl),str,False,False,,Emit Zig interface definition / comment for a trait.,12,18
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,emit_enum_decl,"(enum_decl: EnumDecl, indent_fn: Callable[[], str], inc_indent: Callable[[], None], dec_indent: Callable[[], None])",str,False,False,,Emit Zig enum or tagged union definition.,21,48
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,emit_struct_decl,"(struct: StructDecl, methods: List[FnDecl], emitter_ctx: Any)",str,False,False,,Emit Zig struct definition including any impl methods.,51,107
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,emit_function_decl,"(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optional[str] = None)",str,False,False,,Emit Zig function or method definition.,110,173
+src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,emit_params_decl,"(params: List[Param], parent_struct_name: Optional[str] = None)",str,False,False,,Emit comma-separated parameters list string.,176,205
+src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,emit_expr,"(expr: Expr, emitter_ctx: Any)",str,False,False,,Emit expression string.,17,399
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,generate_fallback_headers,"(clean_body: str, all_declared_names: Set[str], imported_modules: Set[str], header_lines: List[str])",None,False,False,,Generate clean fallback declarations for undeclared modules and types in header_lines.,21,63
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.__init__,"(self, indent_str: str = '    ')",None,False,True,,Initialize emitter with specified indentation.,27,37
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.emit_source_file,"(self, sf: SourceFile, file_path: Optional[str] = None)",str,False,True,,Emit complete Zig source file string from SourceFile node.,39,124
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._indent,(self),str,False,True,,Get current indentation string.,127,129
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_trait,"(self, trait: TraitDecl)",str,False,True,,Emit Zig interface definition for a trait.,131,133
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_enum,"(self, enum_decl: EnumDecl)",str,False,True,,Emit Zig enum or tagged union definition.,135,141
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_struct,"(self, struct: StructDecl, methods: List[FnDecl])",str,False,True,,Emit Zig struct definition including any impl methods.,143,199
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_function,"(self, fn: FnDecl, parent_struct_name: Optional[str] = None)",str,False,True,,Emit Zig function or method definition.,201,264
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_params,"(self, params: List[Param], parent_struct_name: Optional[str] = None)",str,False,True,,Emit comma-separated parameters list string.,266,295
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,297,309
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,311,427
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,429,803
+src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,emit_block_lines,"(block: BlockExpr, emitter_ctx: Any)",List[str],False,False,,Emit list of indented statement strings inside a block.,14,34
+src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,emit_stmt,"(stmt: Stmt, emitter_ctx: Any)",str,False,False,,Emit single statement string without leading indent.,37,162
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.__init__,"(self, indent_str: str = '    ')",None,False,True,,Initialize emitter with specified indentation.,22,28
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.emit_source_file,"(self, sf: SourceFile, file_path: Optional[str] = None)",str,False,True,,Emit complete Zig source file string from SourceFile node.,30,113
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._indent,(self),str,False,True,,Get current indentation string.,115,117
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_trait,"(self, trait: TraitDecl)",str,False,True,,Emit Zig interface definition for a trait.,119,121
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_enum,"(self, enum_decl: EnumDecl)",str,False,True,,Emit Zig enum or tagged union definition.,123,129
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_struct,"(self, struct: StructDecl, methods: List[FnDecl])",str,False,True,,Emit Zig struct definition including any impl methods.,131,133
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_function,"(self, fn: FnDecl, parent_struct_name: Optional[str] = None)",str,False,True,,Emit Zig function or method definition.,135,137
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_block_lines,"(self, block: BlockExpr)",List[str],False,True,,Emit list of indented statement strings inside a block.,139,141
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_stmt,"(self, stmt: Stmt)",str,False,True,,Emit single statement string without leading indent.,143,145
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._emit_expr,"(self, expr: Expr)",str,False,True,,Emit expression string.,147,149
 src/rs2zig/cli.py,src.rs2zig.cli,build_arg_parser,(),argparse.ArgumentParser,False,False,,Construct CLI argument parser.,36,69
 src/rs2zig/cli.py,src.rs2zig.cli,run_transpile,"(input_path: str, output_path: Optional[str] = None, format_code: bool = True, validate: bool = False, expand: bool = True)",str,False,False,,Run full transpilation pipeline on input Rust file.,72,138
 src/rs2zig/cli.py,src.rs2zig.cli,_transpile_worker,"(task_tuple: Tuple[str, str])","Tuple[str, str, bool, int, Optional[str]]",False,False,,Worker task function for parallel project transpilation.,141,151

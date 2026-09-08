@@ -53,7 +53,7 @@ Whenever the user inputs **"Tiếp"** (or "Next"), the agent MUST automatically 
 ## ⚙️ Mandatory Project Rules (AGENTS.md)
 
 1. **Consult CSV Metadata First**: Always check `data/rs2zig/*.csv` or run `python3 script/rs2zig_query.py search <term>` before creating new symbols to avoid duplicate code.
-2. **File Size Limit (800 Lines)**: If creating a new file or modifying an existing file such that it exceeds 800 lines, you MUST refactor it into smaller sub-modules/packages.
+2. **File Size Limit (800 Lines) & Comprehensive Refactoring**: If creating a new file or modifying an existing file such that it approaches 800 lines (e.g. > 600–700 lines), you MUST perform a thorough, comprehensive refactoring by splitting major logical components into distinct sub-modules completely at once (bringing the file size down to < 400 lines). DO NOT perform micro-refactoring (trimming a few lines at a time whenever approaching 800 lines).
 3. **Type Annotations**: All public functions and methods MUST include Python type hints (`def func(x: int) -> str:`).
 4. **Documentation**: All public functions, classes, and modules MUST have a docstring (`""" ... """`) explaining their purpose.
 5. **No Silent Exception Swallowing**: Never use bare `except:` or `except Exception: pass` without logging or explaining why errors are ignored.
