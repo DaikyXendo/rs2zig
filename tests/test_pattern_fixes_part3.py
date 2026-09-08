@@ -361,6 +361,45 @@ class TestPatternFixesPart3(unittest.TestCase):
         self.assertNotIn("    fn inner_helper(", zig)
         self.assertIn("const inner_helper =", zig)
 
+    def test_call_arg_leading_brace_expr_parens(self) -> None:
+        """Verify call argument {}.into() is wrapped in parens (({}.into())) inside function call args."""
+        code = """
+        pub fn create_list(vals: Vec<u8>) {
+            let list = try_new({}.into(), vals);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn(", {}.into(),", zig)
+        self.assertIn("({}.into())", zig)
+
+    def test_reference_mut_prefix_lowering(self) -> None:
+        """Verify &mut changes lowers to &changes without raw &mut syntax in Zig."""
+        code = """
+        pub fn update(changes: &mut Changes) {
+            if let Some(c) = &mut changes {
+                do_something();
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("&mut ", zig)
+
+    def test_logical_not_on_is_null_method_call(self) -> None:
+        """Verify !ptr.is_null() and !vec.is_empty() keep logical NOT ! instead of bitwise ~ in Zig."""
+        code = """
+        pub fn check(ptr: *const Node, vec: &[u8]) -> bool {
+            if !ptr.is_null() && !vec.is_empty() {
+                return true;
+            }
+            return false;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("~ptr.is_null()", zig)
+        self.assertNotIn("~vec.is_empty()", zig)
+        self.assertIn("!ptr.is_null()", zig)
+        self.assertIn("!vec.is_empty()", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -133,11 +133,19 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
         op_map = {"!": "!", "-": "-", "*": ".*", "&": "&", "&mut": "&"}
         zop = op_map.get(expr.op, expr.op)
         operand_str = emit_expr(expr.operand, emitter_ctx)
+        if operand_str.startswith("&mut "):
+            operand_str = "&" + operand_str[5:]
         if operand_str.startswith("mut "):
             operand_str = operand_str[4:]
         if zop == "&" and operand_str.startswith("[") and operand_str.endswith("]"):
             return f"&.{{{operand_str[1:-1]}}}"
-        if zop == "!" and not (operand_str in ("true", "false") or operand_str.startswith("is_") or operand_str.startswith("has_") or operand_str.startswith("can_")):
+        if zop == "!" and not (
+            operand_str in ("true", "false")
+            or operand_str.startswith("is_") or operand_str.startswith("has_") or operand_str.startswith("can_")
+            or ".is_" in operand_str or ".has_" in operand_str or ".can_" in operand_str
+            or ".contains(" in operand_str or ".ends_with(" in operand_str or ".starts_with(" in operand_str
+            or any(op in operand_str for op in ("==", "!=", "<", ">", "and", "or"))
+        ):
             zop = "~"
         return f"({zop}{operand_str})" if zop != ".*" else f"({operand_str}.*)"
 
@@ -166,6 +174,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             arg_str = emit_expr(arg, emitter_ctx)
             if arg_str == "()":
                 arg_str = "{}"
+            elif arg_str.startswith("{") and not arg_str.endswith("}"):
+                arg_str = f"({arg_str})"
             args_list.append(arg_str)
         args_str = ", ".join(args_list)
         return f"{callee_str}({args_str})"
@@ -333,7 +343,7 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             if "=" in clean_cond and not any(op in clean_cond for op in ("==", "!=", "<=", ">=")):
                 parts = clean_cond.split("=", 1)
                 pat_part = parts[0].strip()
-                target_part = parts[1].strip()
+                target_part = parts[1].strip().replace("&mut ", "&")
                 cap_var = "item"
                 if "(" in pat_part and ")" in pat_part:
                     cap_var = pat_part[pat_part.find("(")+1:pat_part.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
