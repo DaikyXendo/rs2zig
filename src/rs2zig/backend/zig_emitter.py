@@ -136,9 +136,9 @@ class ZigEmitter:
         """Emit Zig struct definition including any impl methods."""
         return emit_struct_decl(struct, methods, self)
 
-    def _emit_function(self, fn: FnDecl, parent_struct_name: Optional[str] = None) -> str:
+    def _emit_function(self, fn: FnDecl, parent_struct_name: Optional[str] = None, field_names: Optional[Set[str]] = None) -> str:
         """Emit Zig function or method definition."""
-        return emit_function_decl(fn, self, parent_struct_name)
+        return emit_function_decl(fn, self, parent_struct_name, field_names)
 
     def _emit_block_lines(self, block: BlockExpr) -> List[str]:
         """Emit list of indented statement strings inside a block."""

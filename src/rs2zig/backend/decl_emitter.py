@@ -94,7 +94,7 @@ def emit_struct_decl(struct: StructDecl, methods: List[FnDecl], emitter_ctx: Any
             continue
         seen_method_names.add(mname)
         method.name = mname
-        method_str = emitter_ctx._emit_function(method, parent_struct_name=sname)
+        method_str = emitter_ctx._emit_function(method, parent_struct_name=sname, field_names=field_names)
         for mline in method_str.splitlines():
             lines.append(f"{emitter_ctx._indent()}{mline}")
         lines.append("")
@@ -107,7 +107,7 @@ def emit_struct_decl(struct: StructDecl, methods: List[FnDecl], emitter_ctx: Any
     return "\n".join(lines)
 
 
-def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optional[str] = None) -> str:
+def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optional[str] = None, field_names: Optional[Set[str]] = None) -> str:
     """Emit Zig function or method definition."""
     emitter_ctx.current_fn_param_names = {p.name for p in fn.params}
     vis = "pub " if fn.is_pub or fn.name == "main" else ""
@@ -122,7 +122,7 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
             gp_params.append(Param(name=f"comptime {gp_name}", param_type=TypeNode(name="type")))
 
     all_params = gp_params + fn.params
-    params_str = emit_params_decl(all_params, parent_struct_name)
+    params_str = emit_params_decl(all_params, parent_struct_name, field_names)
 
     if fn_name == "main":
         ret_str = "!void" if fn.return_type is None else map_type(fn.return_type, is_return_type=True)
@@ -148,7 +148,12 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                     discard_lines.append(f"{emitter_ctx._indent()}_ = self;")
             else:
                 raw_name = p.name or ""
-                if raw_name.startswith("mut "):
+                clean_param_name = raw_name.replace("mut ", "").strip()
+                if field_names and clean_param_name in field_names:
+                    discard_lines.append(f"{emitter_ctx._indent()}const {clean_param_name} = {clean_param_name}_param;")
+                    if not re.search(r"\b" + re.escape(clean_param_name) + r"\b", body_text):
+                        discard_lines.append(f"{emitter_ctx._indent()}_ = {clean_param_name};")
+                elif raw_name.startswith("mut "):
                     real_name = raw_name[4:].strip()
                     discard_lines.append(f"{emitter_ctx._indent()}var {real_name}_var = p{p_idx}; _ = {real_name}_var;")
                 elif raw_name.startswith("[") and raw_name.endswith("]"):
@@ -173,7 +178,7 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
     return "\n".join(lines)
 
 
-def emit_params_decl(params: List[Param], parent_struct_name: Optional[str] = None) -> str:
+def emit_params_decl(params: List[Param], parent_struct_name: Optional[str] = None, field_names: Optional[Set[str]] = None) -> str:
     """Emit comma-separated parameters list string."""
     parts: List[str] = []
     stype = parent_struct_name or "@This()"
@@ -200,6 +205,9 @@ def emit_params_decl(params: List[Param], parent_struct_name: Optional[str] = No
                     clean_name = clean_name[4:].strip()
                 if not clean_name or not clean_name.isidentifier() or any(c in clean_name for c in "[](){}, "):
                     clean_name = f"p{p_idx}"
-                pname = f'@"{clean_name}"' if (clean_name in ZIG_RESERVED_KEYWORDS and not clean_name.startswith("@")) else clean_name
+                if field_names and clean_name in field_names:
+                    pname = f"{clean_name}_param"
+                else:
+                    pname = f'@"{clean_name}"' if (clean_name in ZIG_RESERVED_KEYWORDS and not clean_name.startswith("@")) else clean_name
             parts.append(f"{pname}: {ptype}")
     return ", ".join(parts)

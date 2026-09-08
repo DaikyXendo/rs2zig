@@ -386,7 +386,7 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             discard_lines = [
                 f"{emitter_ctx._indent()}_ = {pname};"
                 for pname in param_names
-                if pname and pname != "_" and not pname.startswith("_") and not pname.startswith("arg")
+                if pname and pname != "_" and not pname.startswith("_")
                 and not re.search(r"\b" + re.escape(pname.strip('"@')) + r"\b", body_text)
             ]
             lines = [f"(struct {{ fn run({params_str}) {ret_type} {{"]
@@ -400,7 +400,7 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             body_str = emit_expr(expr.body, emitter_ctx)
             discards = [
                 f"_ = {pname}; " for pname in param_names
-                if pname and pname != "_" and not pname.startswith("_") and not pname.startswith("arg")
+                if pname and pname != "_" and not pname.startswith("_")
                 and not re.search(r"\b" + re.escape(pname.strip('"@')) + r"\b", body_str)
             ]
             discard_prefix = "".join(discards)

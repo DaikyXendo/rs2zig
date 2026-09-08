@@ -138,6 +138,34 @@ class TestPatternFixesPart3(unittest.TestCase):
         zig = self._transpile_code(code)
         self.assertIn("pub const Rasterizer = type;", zig)
 
+    def test_unused_closure_arg_discard_lowering(self) -> None:
+        """Verify closure with unused parameter like map_err(|_| 42) emits _ = arg0; discard line in Zig wrapper."""
+        code = """
+        pub fn map_val(res: Result<u8, Error>) {
+            let res2 = res.map_err(|_| 42);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertIn("_ = arg0;", zig)
+
+    def test_method_parameter_struct_field_shadowing_fix(self) -> None:
+        """Verify struct method parameter matching struct field name origin does not shadow declaration in Zig signature."""
+        code = """
+        pub struct Rect {
+            pub origin: Point,
+            pub size: Size,
+        }
+
+        impl Rect {
+            pub fn from_origin_size(origin: Point, size: Size) -> Rect {
+                return Rect { origin, size };
+            }
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("fn from_origin_size(origin:", zig)
+        self.assertIn("fn from_origin_size(origin_param:", zig)
+
 
 if __name__ == "__main__":
     unittest.main()
