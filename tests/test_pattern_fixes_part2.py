@@ -758,6 +758,18 @@ class TestPatternFixesPart2(unittest.TestCase):
         self.assertIn("while (try args.next()) |arg|", zig)
 
 
+    def test_duplicate_cfg_let_declaration_deduplication(self) -> None:
+        """Verify duplicate let name declarations in the same block get unique variable names."""
+        code = """
+        pub fn process() {
+            let name = 1;
+            let name = 2;
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("const name = 1;\n    const name = 2;", zig)
+
+
 if __name__ == "__main__":
     unittest.main()
 

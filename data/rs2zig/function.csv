@@ -55,8 +55,8 @@ src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,emit_function
 src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,emit_params_decl,"(params: List[Param], parent_struct_name: Optional[str] = None)",str,False,False,,Emit comma-separated parameters list string.,176,205
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,emit_expr,"(expr: Expr, emitter_ctx: Any)",str,False,False,,Emit expression string.,17,403
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,generate_fallback_headers,"(clean_body: str, all_declared_names: Set[str], imported_modules: Set[str], header_lines: List[str])",None,False,False,,Generate clean fallback declarations for undeclared modules and types in header_lines.,21,65
-src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,emit_block_lines,"(block: BlockExpr, emitter_ctx: Any)",List[str],False,False,,Emit list of indented statement strings inside a block.,14,34
-src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,emit_stmt,"(stmt: Stmt, emitter_ctx: Any)",str,False,False,,Emit single statement string without leading indent.,37,162
+src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,emit_block_lines,"(block: BlockExpr, emitter_ctx: Any)",List[str],False,False,,Emit list of indented statement strings inside a block.,14,39
+src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,emit_stmt,"(stmt: Stmt, emitter_ctx: Any)",str,False,False,,Emit single statement string without leading indent.,42,172
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.__init__,"(self, indent_str: str = '    ')",None,False,True,,Initialize emitter with specified indentation.,22,28
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter.emit_source_file,"(self, sf: SourceFile, file_path: Optional[str] = None)",str,False,True,,Emit complete Zig source file string from SourceFile node.,30,113
 src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,ZigEmitter._indent,(self),str,False,True,,Get current indentation string.,115,117

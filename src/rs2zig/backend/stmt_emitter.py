@@ -21,17 +21,22 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
     Returns:
         List of formatted statement lines.
     """
-    lines: List[str] = []
-    for stmt in block.stmts:
-        stmt_str = emit_stmt(stmt, emitter_ctx)
-        if stmt_str:
-            lines.append(f"{emitter_ctx._indent()}{stmt_str}")
+    prev_vars = getattr(emitter_ctx, "current_block_vars", None)
+    emitter_ctx.current_block_vars = set()
+    try:
+        lines: List[str] = []
+        for stmt in block.stmts:
+            stmt_str = emit_stmt(stmt, emitter_ctx)
+            if stmt_str:
+                lines.append(f"{emitter_ctx._indent()}{stmt_str}")
 
-    if block.trailing_expr:
-        expr_str = emitter_ctx._emit_expr(block.trailing_expr)
-        lines.append(f"{emitter_ctx._indent()}return {expr_str};")
+        if block.trailing_expr:
+            expr_str = emitter_ctx._emit_expr(block.trailing_expr)
+            lines.append(f"{emitter_ctx._indent()}return {expr_str};")
 
-    return lines
+        return lines
+    finally:
+        emitter_ctx.current_block_vars = prev_vars
 
 
 def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
@@ -113,6 +118,11 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
 
         kw = "var" if stmt.is_mutable else "const"
         vname = stmt.name
+        if hasattr(emitter_ctx, "current_block_vars") and emitter_ctx.current_block_vars is not None:
+            if vname in emitter_ctx.current_block_vars:
+                vname = f"{vname}_alt"
+            else:
+                emitter_ctx.current_block_vars.add(vname)
         was_renamed = False
         if vname in getattr(emitter_ctx, "current_fn_param_names", set()):
             vname = f"{vname}_var"
