@@ -321,6 +321,46 @@ class TestPatternFixesPart3(unittest.TestCase):
         self.assertNotIn("= {}.into();", zig)
         self.assertIn("= ({}.into());", zig)
 
+    def test_call_args_comment_filtering(self) -> None:
+        """Verify comments inside function call arguments do not emit // comments inline in argument list."""
+        code = """
+        pub fn convert(sec: u32, milli_sec: u32) -> Option<DateTime> {
+            return DateTime::from_timestamp(
+                // comment 1
+                sec,
+                // comment 2
+                milli_sec,
+            );
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("from_timestamp(//", zig)
+
+    def test_dyn_trait_trailing_plus_lifetime_clean(self) -> None:
+        """Verify dyn StdError + 'static lowers cleanly without trailing + inside parens."""
+        code = """
+        pub enum ChainState {
+            Linked { next: Option<Box<dyn StdError + 'static>> },
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("+ )", zig)
+        self.assertNotIn("+ >", zig)
+
+    def test_nested_fn_decl_in_function_body_lowering(self) -> None:
+        """Verify inner nested fn record_graft() inside function body lowers to const record_graft = struct { ... }."""
+        code = """
+        pub fn outer() {
+            fn inner_helper(x: i32) -> i32 {
+                return x + 1;
+            }
+            let y = inner_helper(41);
+        }
+        """
+        zig = self._transpile_code(code)
+        self.assertNotIn("    fn inner_helper(", zig)
+        self.assertIn("const inner_helper =", zig)
+
 
 if __name__ == "__main__":
     unittest.main()

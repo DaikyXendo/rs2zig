@@ -147,8 +147,10 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
     """
     if isinstance(rust_type, str):
         name = rust_type.strip()
-        if "'" in name:
+        if "'" in name or "+" in name:
             name = re.sub(r"'[a-zA-Z0-9_]+\s*", "", name).strip()
+            name = re.sub(r"\+\s*(?=[)>]|$)", "", name).strip()
+            name = re.sub(r"\s+\+\s+", " ", name).strip()
         if name.startswith("*const fn(") or name.startswith("*const fn ("):
             return f"{name} void" if name.endswith(")") else name
         if (name.startswith("fn(") or name.startswith("fn (") or name.startswith("unsafe ") or name.startswith("extern ")) and ("fn(" in name or "fn (" in name):
@@ -163,9 +165,8 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             return f"*const fn({', '.join(args_list)}) {ret_str}"
         if name.startswith("Token![") and name.endswith("]"):
             return "Token"
-        if name.startswith("dyn "):
-            dyn_body = name[4:].strip()
-            if "Error" in dyn_body:
+        if name.startswith("dyn ") or "dyn " in name:
+            if "Error" in name:
                 return "anyerror"
             return "anyopaque"
         if name.startswith("impl "):

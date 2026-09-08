@@ -556,7 +556,7 @@ class ASTBuilder:
             args: List[Expr] = []
             if args_node:
                 for child in args_node.children:
-                    if get_node_type(child) not in ("(", ")", ","):
+                    if get_node_type(child) not in ("(", ")", ",", "comment", "line_comment", "block_comment"):
                         args.append(self._build_expr(child))
 
             return CallExpr(

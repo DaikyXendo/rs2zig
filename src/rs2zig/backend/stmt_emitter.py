@@ -53,7 +53,10 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
         Formatted Zig statement string.
     """
     if isinstance(stmt, FnDecl):
-        return emitter_ctx._emit_function(stmt)
+        fn_code = emitter_ctx._emit_function(stmt)
+        if getattr(emitter_ctx, "current_fn", None) is not None or emitter_ctx.current_indent > 0:
+            return f"const {stmt.name} = (struct {{ {fn_code} }}).{stmt.name};"
+        return fn_code
 
     if isinstance(stmt, LetStmt):
         if stmt.name == "_":
