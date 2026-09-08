@@ -162,6 +162,9 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
         if vname in getattr(emitter_ctx, "current_fn_param_names", set()):
             vname = f"{vname}_var"
             was_renamed = True
+        elif not is_dedup and vname in getattr(emitter_ctx, "all_declared_names", set()):
+            vname = f"{vname}_local"
+            was_renamed = True
         vname = f'@"{vname}"' if (vname in ZIG_RESERVED_KEYWORDS and not vname.startswith("@")) else vname
         type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
         val_expr_str = emitter_ctx._emit_expr(stmt.value).rstrip(";").strip() if stmt.value else ""

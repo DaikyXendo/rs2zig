@@ -84,6 +84,8 @@ def emit_struct_decl(struct: StructDecl, methods: List[FnDecl], emitter_ctx: Any
         lines.append("")
 
     field_names = {field.name.replace("r#", "") for field in struct.fields}
+    method_names = {m.name.split("<")[0].strip() for m in methods}
+    all_member_names = field_names | method_names
 
     seen_method_names: Set[str] = set()
     for method in methods:
@@ -94,7 +96,7 @@ def emit_struct_decl(struct: StructDecl, methods: List[FnDecl], emitter_ctx: Any
             continue
         seen_method_names.add(mname)
         method.name = mname
-        method_str = emitter_ctx._emit_function(method, parent_struct_name=sname, field_names=field_names)
+        method_str = emitter_ctx._emit_function(method, parent_struct_name=sname, field_names=all_member_names)
         for mline in method_str.splitlines():
             lines.append(f"{emitter_ctx._indent()}{mline}")
         lines.append("")

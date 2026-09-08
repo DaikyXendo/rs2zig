@@ -7,7 +7,8 @@ from typing import Any, List, Optional
 from rs2zig.ir.nodes import (
     Expr, LiteralExpr, IdentifierExpr, BinaryExpr, UnaryExpr, CallExpr,
     FieldAccessExpr, StructInitExpr, MacroCallExpr, ReturnExpr, IfExpr,
-    LoopExpr, MatchExpr, TryExpr, OptionalUnwrapExpr, ClosureExpr, BlockExpr, TypeNode
+    LoopExpr, MatchExpr, TryExpr, OptionalUnwrapExpr, ClosureExpr, BlockExpr, TypeNode,
+    BreakExpr, ContinueExpr
 )
 from rs2zig.lowering.stdlib_map import map_type, _split_angle_brackets
 from rs2zig.lowering.control_flow import lower_println_macro
@@ -50,6 +51,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
         if expr.kind == "bool":
             return expr.value.lower()
         res = re.sub(r"_?(u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64)$", "", val)
+        # Strip numeric suffixes from numbers inside array size context [Nusize]
+        res = re.sub(r"^(\d+)(usize|u8|u16|u32|u64|u128|i8|i16|i32|i64|i128|isize)$", r"\1", res)
         if res.endswith(".") and res[:-1].lstrip("-").isdigit():
             res += "0"
         return res
@@ -257,6 +260,15 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             val_str = val_str[1:-1].strip()
         return f"return {val_str}" if val_str else "return"
 
+    if isinstance(expr, BreakExpr):
+        if expr.value:
+            val_str = emit_expr(expr.value, emitter_ctx).strip()
+            return f"break {val_str}"
+        return "break"
+
+    if isinstance(expr, ContinueExpr):
+        return "continue"
+
     if isinstance(expr, MatchExpr):
         target_str = emit_expr(expr.target, emitter_ctx)
         lines: List[str] = [f"switch ({target_str}) {{"]
@@ -351,6 +363,7 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 if has_else:
                     continue
                 has_else = True
+            body_str = emit_expr(arm.body, emitter_ctx)
             if body_str.rstrip(";").strip() in ("()", ".{}"):
                 body_str = "{}"
 

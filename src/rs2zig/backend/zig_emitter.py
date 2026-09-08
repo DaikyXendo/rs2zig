@@ -41,7 +41,12 @@ class ZigEmitter:
             body_lines.append(f"{vis}const {c.name}: {type_str} = {val_str};")
             body_lines.append("")
 
+        seen_trait_names: Set[str] = set()
         for trait in sf.traits:
+            tname = trait.name.split("<")[0].strip() if "<" in trait.name else trait.name
+            if tname in seen_trait_names:
+                continue
+            seen_trait_names.add(tname)
             body_lines.append(self._emit_trait(trait))
             body_lines.append("")
 

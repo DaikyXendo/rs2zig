@@ -46,6 +46,8 @@ from rs2zig.ir.nodes import (
     TryExpr,
     OptionalUnwrapExpr,
     ClosureExpr,
+    BreakExpr,
+    ContinueExpr,
     ImplBlock,
 )
 
@@ -733,6 +735,28 @@ class ASTBuilder:
                 iterable=iterable,
                 body=body
             )
+
+        if ntype == "break_expression":
+            val_node = None
+            label = None
+            for child in node.children[1:]:
+                ctype = get_node_type(child)
+                if ctype == "loop_label" or (ctype == "label" and self.get_text(child).startswith("'")):
+                    label = self.get_text(child)
+                elif ctype not in (",", ";"):
+                    val_node = child
+            return BreakExpr(
+                value=self._build_expr(val_node) if val_node else None,
+                label=label
+            )
+
+        if ntype == "continue_expression":
+            label = None
+            for child in node.children[1:]:
+                ctype = get_node_type(child)
+                if ctype == "loop_label" or (ctype == "label" and self.get_text(child).startswith("'")):
+                    label = self.get_text(child)
+            return ContinueExpr(label=label)
 
         if ntype == "return_expression":
             val_node = node.children[1] if len(node.children) > 1 else None

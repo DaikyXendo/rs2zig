@@ -156,6 +156,19 @@ class ReturnExpr(Expr):
 
 
 @dataclass
+class BreakExpr(Expr):
+    """Break statement with optional value (e.g. break, break value)."""
+    value: Optional[Expr] = None
+    label: Optional[str] = None
+
+
+@dataclass
+class ContinueExpr(Expr):
+    """Continue statement with optional label (e.g. continue, continue 'label)."""
+    label: Optional[str] = None
+
+
+@dataclass
 class Stmt(ASTNode):
     """Base dataclass for statements."""
     pass

@@ -212,7 +212,8 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             semi_split = _split_top_level_semicolon(inner)
             if semi_split:
                 elem, count = semi_split
-                return f"[{map_type(count.strip())}]{map_type(elem.strip())}"
+                clean_count = re.sub(r"^(\d+)_?(u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize)$", r"\1", count.strip())
+                return f"[{map_type(clean_count)}]{map_type(elem.strip())}"
             return f"[]{map_type(inner)}"
         split_res = _split_angle_brackets(name)
         if split_res:
