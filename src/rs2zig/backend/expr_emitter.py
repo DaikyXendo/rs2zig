@@ -35,7 +35,7 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
         elif val.startswith("b'") and val.endswith("'"):
             val = val[1:]
         if (val.startswith("r") or val.startswith("br")) and '"' in val:
-            val = re.sub(r'^(?:b?r)#*"(.*)"#*$', r'"\1"', val)
+            val = re.sub(r'^(?:b?r)#*"(.*)"#*$', r'"\1"', val, flags=re.DOTALL)
         if val.startswith('"') and val.endswith('"'):
             if "\\0" in val:
                 val = val.replace("\\0", "\\x00")

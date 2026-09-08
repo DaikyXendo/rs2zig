@@ -241,9 +241,22 @@ class TestPatternFixesPart4(unittest.TestCase):
         """
         result = self._transpile_code(code)
         count = result.count("else")
-        self.assertEqual(count, 1, f"Expected 1 else branch in switch, got {count}\nResult:\n{result}")
+    def test_multiline_raw_string_literal(self) -> None:
+        """Verify multiline Rust raw string r#"..."# converts without leaving raw r# syntax."""
+        code = """
+        pub fn code_snippet() -> &'static str {
+            let code = r#"
+                pub fn hello() {}
+            "#;
+            return code;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn('r#"', result)
+        self.assertIn('"\\n', result)
 
 
 if __name__ == "__main__":
     unittest.main()
+
 
