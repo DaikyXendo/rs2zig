@@ -64,6 +64,12 @@ class ZigValidator:
         if not self.zig_bin:
             return (True, "Zig binary not found; syntax check skipped.")
 
+        runtime_src = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "runtime", "bevy_ecs_runtime.zig"))
+        if os.path.exists(runtime_src):
+            runtime_dst = os.path.join(tempfile.gettempdir(), "bevy_ecs_runtime.zig")
+            if not os.path.exists(runtime_dst):
+                shutil.copy(runtime_src, runtime_dst)
+
         with tempfile.NamedTemporaryFile("w", suffix=".zig", delete=False) as temp_file:
             temp_file.write(zig_code)
             temp_path = temp_file.name

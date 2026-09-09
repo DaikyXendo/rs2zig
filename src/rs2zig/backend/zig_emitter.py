@@ -33,15 +33,10 @@ class ZigEmitter:
         impl_map = {impl.struct_name: impl.methods for impl in sf.impls}
 
         top_level_names = {c.name for c in sf.constants} | {s.name for s in sf.structs} | {e.name for e in sf.enums} | {t.name for t in sf.traits} | {f.name for f in sf.functions}
-        all_declared_names = set(top_level_names)
-        for s in sf.structs:
-            all_declared_names.update(f.name for f in s.fields)
-        for e in sf.enums:
-            all_declared_names.update(v.name for v in e.variants)
         for impl in sf.impls:
-            all_declared_names.update(m.name for m in impl.methods)
+            top_level_names.update(m.name for m in impl.methods)
 
-        self.all_declared_names = all_declared_names
+        self.all_declared_names = top_level_names
 
         body_lines: List[str] = []
 
@@ -97,7 +92,7 @@ class ZigEmitter:
 
         for mod_name in sorted(set(self.imported_modules) | set(getattr(sf, "imports", []))):
             if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app", "serde"):
-                if mod_name in all_declared_names:
+                if mod_name in self.all_declared_names:
                     continue
                 clean_mod_name = f'@"{mod_name}"' if mod_name in ZIG_KEYWORDS_AND_PRIMITIVES else mod_name
                 if mod_name == "aok":
@@ -117,7 +112,7 @@ class ZigEmitter:
         clean_body = re.sub(r'"[^"]*"', '""', body_text)
         clean_body = re.sub(r'//.*', '', clean_body)
 
-        generate_fallback_headers(clean_body, all_declared_names, self.imported_modules, header_lines)
+        generate_fallback_headers(clean_body, self.all_declared_names, self.imported_modules, header_lines)
 
         header_lines.append("")
         all_lines = header_lines + body_lines

@@ -432,6 +432,13 @@ class ASTBuilder:
         if ntype == "identifier":
             return IdentifierExpr(name=self.get_text(node))
 
+        if ntype == "let_condition":
+            pat_node = node.child_by_field_name("pattern")
+            val_node = node.child_by_field_name("value")
+            pat_text = self.get_text(pat_node) if pat_node else "_"
+            val_expr = self._build_expr(val_node) if val_node else LiteralExpr("null", "int")
+            return BinaryExpr(left=IdentifierExpr(f"let {pat_text}"), op="=", right=val_expr)
+
         if ntype == "binary_expression":
             left_node = node.child_by_field_name("left")
             op_node = node.child_by_field_name("operator")

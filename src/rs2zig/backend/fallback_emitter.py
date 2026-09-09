@@ -40,8 +40,14 @@ def generate_fallback_headers(
         header_lines.append("pub const core = std;")
     if (re.search(r"\blibc\b", clean_body) or "libc" in imported_modules) and "libc" not in all_declared_names and not any("const libc" in h for h in header_lines):
         header_lines.append("pub const libc = std.c;")
-    if (re.search(r"\bio\b", clean_body) or "io" in imported_modules) and "io" not in all_declared_names and not any("const io" in h for h in header_lines) and not re.search(r"\b(var|const|let)\s+io\b", clean_body) and not re.search(r"\bio\s*:", clean_body):
+    if (re.search(r"(?<!std\.)\bio\b", clean_body) or "io" in imported_modules) and "io" not in all_declared_names and not any("const io" in h for h in header_lines) and not re.search(r"\b(var|const|let)\s+io\b", clean_body) and not re.search(r"\bio\s*:", clean_body):
         header_lines.append("pub const io = std.io;")
+    if (re.search(r"(?<!std\.)\bfmt\b", clean_body) or "fmt" in imported_modules) and "fmt" not in all_declared_names and not any("const fmt" in h for h in header_lines) and not re.search(r"\b(var|const|let)\s+fmt\b", clean_body) and not re.search(r"\bfmt\s*:", clean_body):
+        header_lines.append("pub const fmt = std.fmt;")
+    if (re.search(r"(?<!std\.)\bmem\b", clean_body) or "mem" in imported_modules) and "mem" not in all_declared_names and not any("const mem" in h for h in header_lines) and not re.search(r"\b(var|const|let)\s+mem\b", clean_body) and not re.search(r"\bmem\s*:", clean_body):
+        header_lines.append("pub const mem = std.mem;")
+    if (re.search(r"(?<!std\.)\bmath\b", clean_body) or "math" in imported_modules) and "math" not in all_declared_names and not any("const math" in h for h in header_lines) and not re.search(r"\b(var|const|let)\s+math\b", clean_body) and not re.search(r"\bmath\s*:", clean_body):
+        header_lines.append("pub const math = std.math;")
 
     for mod_prefix in sorted(set(re.findall(r"\b([a-z_][a-zA-Z0-9_]*)\.[A-Z]", clean_body))):
         if (
@@ -65,7 +71,7 @@ def generate_fallback_headers(
             and ext_type not in all_declared_names
             and ext_type not in STD_TYPES
             and ext_type not in imported_modules
-            and not re.search(r"\b(?:pub\s+)?(?:const|var|fn|struct|enum|union|comptime)\s+" + re.escape(ext_type) + r"\b(?:\s*=|[\s{:(])", clean_body_no_ats)
+            and not re.search(r"(?<!\*)\b(?:pub\s+)?(?:const|var|fn|struct|enum|union|comptime)\s+" + re.escape(ext_type) + r"\b(?:\s*[:=]|[\s{(])", clean_body_no_ats)
             and not re.search(r"\b" + re.escape(ext_type) + r"\s*:\s*type\b", clean_body_no_ats)
         ):
             if ext_type == "Self":

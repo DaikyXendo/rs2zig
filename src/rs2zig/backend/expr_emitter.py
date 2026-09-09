@@ -422,12 +422,17 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                     lines = [f"_ = {target_part} catch |{cap_var}| {{", f"{emitter_ctx.indent_str * (emitter_ctx.current_indent + 1)}_ = {cap_var};"]
                 else:
                     lines = [f"if ({target_part}) |{cap_var}| {{"]
+                    then_lines = emitter_ctx._emit_block_lines(expr.then_block)
+                    then_str = "\n".join(then_lines)
+                    if cap_var != "_" and not re.search(r"\b" + re.escape(cap_var) + r"\b", then_str):
+                        lines.append(f"{emitter_ctx.indent_str * (emitter_ctx.current_indent + 1)}_ = {cap_var};")
+                    lines.extend(then_lines)
 
         if not lines:
             lines = [f"if ({cond_str}) {{"]
-        emitter_ctx.current_indent += 1
-        lines.extend(emitter_ctx._emit_block_lines(expr.then_block))
-        emitter_ctx.current_indent -= 1
+            emitter_ctx.current_indent += 1
+            lines.extend(emitter_ctx._emit_block_lines(expr.then_block))
+            emitter_ctx.current_indent -= 1
 
         if expr.else_block:
             if isinstance(expr.else_block, BlockExpr):
@@ -466,7 +471,11 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             capture_str = f" |{cap_var}|" if cap_var else ""
             lines = [f"while ({cond_str}){capture_str} {{"]
             emitter_ctx.current_indent += 1
-            lines.extend(emitter_ctx._emit_block_lines(expr.body))
+            body_lines = emitter_ctx._emit_block_lines(expr.body)
+            body_str = "\n".join(body_lines)
+            if cap_var and cap_var != "_" and not re.search(r"\b" + re.escape(cap_var) + r"\b", body_str):
+                lines.append(f"{emitter_ctx.indent_str * emitter_ctx.current_indent}_ = {cap_var};")
+            lines.extend(body_lines)
             emitter_ctx.current_indent -= 1
             lines.append(f"{emitter_ctx._indent()}}}")
             return "\n".join(lines)

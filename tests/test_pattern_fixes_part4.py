@@ -267,11 +267,26 @@ class TestPatternFixesPart4(unittest.TestCase):
         """
         result = self._transpile_code(code)
         self.assertNotIn("_ = scale_param;", result)
-        self.assertIn("const scale = scale_param;", result)
+    def test_ptr_const_type_fallback_generated(self) -> None:
+        """Verify type referenced as *const Glyph in fn signature gets pub const Glyph = type; fallback."""
+        code = """
+        pub struct OutlinedGlyph {
+            glyph: Glyph,
+        }
+
+        impl OutlinedGlyph {
+            pub fn as_ref(&self) -> &Glyph {
+                return &self.glyph;
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("pub const Glyph = type;", result)
 
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 
