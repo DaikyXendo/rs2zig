@@ -116,9 +116,25 @@ class ASTBuilder:
                 sf.impls.append(self._build_impl(child))
             elif ntype == "use_declaration":
                 text = self.get_text(child).replace("use ", "").replace(";", "").strip()
-                mod_name = text.split("::")[0].strip()
-                if mod_name:
-                    sf.imports.append(mod_name)
+                if "{" in text and "}" in text:
+                    prefix = text[:text.find("{")].rstrip(":")
+                    if prefix:
+                        base_mod = prefix.split("::")[0].strip()
+                        if base_mod:
+                            sf.imports.append(base_mod)
+                    body = text[text.find("{") + 1 : text.rfind("}")].strip()
+                    items = [it.strip().split(" as ")[0].split("::")[-1].strip() for it in body.split(",") if it.strip()]
+                    for item in items:
+                        if item and item.isidentifier():
+                            sf.imports.append(item)
+                else:
+                    parts = [p.strip() for p in text.split("::") if p.strip()]
+                    if parts:
+                        sf.imports.append(parts[0])
+                        last_item = parts[-1].split(" as ")[0].strip()
+                        if last_item and last_item.isidentifier():
+                            sf.imports.append(last_item)
+
         return sf
 
     def _build_const(self, node: tree_sitter.Node) -> ConstDecl:

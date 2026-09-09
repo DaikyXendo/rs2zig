@@ -157,6 +157,8 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                     (field_names and clean_param_name in field_names)
                     or (getattr(emitter_ctx, "all_declared_names", None) and clean_param_name in emitter_ctx.all_declared_names)
                     or clean_param_name == clean_fn_name
+                    or (getattr(emitter_ctx, "current_block_vars", None) and clean_param_name in emitter_ctx.current_block_vars)
+                    or (getattr(emitter_ctx, "current_fn_param_names", None) and clean_param_name in emitter_ctx.current_fn_param_names)
                 )
                 if is_shadowing:
                     body_lines = [re.sub(r"\b" + re.escape(clean_param_name) + r"\b", f"{clean_param_name}_param", line) for line in body_lines]
@@ -224,9 +226,13 @@ def emit_params_decl(params: List[Param], parent_struct_name: Optional[str] = No
                     (field_names and clean_name in field_names)
                     or (getattr(emitter_ctx, "all_declared_names", None) and clean_name in emitter_ctx.all_declared_names)
                     or (clean_fn_name and clean_name == clean_fn_name)
+                    or (getattr(emitter_ctx, "current_block_vars", None) and clean_name in emitter_ctx.current_block_vars)
+                    or (getattr(emitter_ctx, "current_fn_param_names", None) and clean_name in emitter_ctx.current_fn_param_names)
                 )
                 if is_shadowing:
                     pname = f"{clean_name}_param"
+
+
                 else:
                     pname = f'@"{clean_name}"' if (clean_name in ZIG_RESERVED_KEYWORDS and not clean_name.startswith("@")) else clean_name
             parts.append(f"{pname}: {ptype}")

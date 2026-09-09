@@ -81,16 +81,3 @@ def generate_fallback_headers(
                 if not any(f"const {ext_type}" in h for h in header_lines):
                     header_lines.append(f"pub const {ext_type} = type;")
 
-    found_fns = set(re.findall(r"(?<!\.)(?<!@)(?<!\bconst\s)(?<!\bfn\s)\b([a-z_][a-zA-Z0-9_]*)\s*\(", clean_body_no_ats))
-    for fn_name in sorted(found_fns):
-        if (
-            fn_name not in all_declared_names
-            and fn_name not in imported_modules
-            and fn_name not in STD_SUBMODULES
-            and fn_name not in ZIG_KEYWORDS_AND_PRIMITIVES
-            and fn_name not in ("if", "while", "for", "switch", "return", "try", "catch", "defer", "errdefer", "asm", "comptime")
-            and not any(f"const {fn_name}" in h for h in header_lines)
-            and not any(f"fn {fn_name}" in h for h in header_lines)
-            and not re.search(r"\b(?:pub\s+)?(?:const|var|fn|struct|enum|union)\s+" + re.escape(fn_name) + r"\b(?:\s*=|[\s{(])", clean_body_no_ats)
-        ):
-            header_lines.append(f"pub const {fn_name} = type;")

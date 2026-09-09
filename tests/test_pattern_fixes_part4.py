@@ -283,9 +283,55 @@ class TestPatternFixesPart4(unittest.TestCase):
         result = self._transpile_code(code)
         self.assertIn("pub const Glyph = type;", result)
 
+    def test_function_parameter_does_not_shadow_fallback_type(self) -> None:
+        """Verify function parameter 'filter' does not emit top-level 'pub const filter = type;'."""
+        code = """
+        pub struct Node;
+        fn next_filtered_sibling(node: Option<Node>, filter: fn(&Node) -> bool) -> Option<Node> {
+            let child = node?;
+            let result = filter(&child);
+            if result {
+                return Some(child);
+            }
+            None
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("pub const filter = type;", result)
+
+    def test_nested_closure_parameter_shadows_outer_var(self) -> None:
+        """Verify inner closure parameter shadowing outer local variable is renamed cleanly."""
+        code = """
+        pub fn process() {
+            let mut pending_grafts = 10;
+            let record_graft = |pending_grafts: &mut i32| {
+                *pending_grafts += 1;
+            };
+            record_graft(&mut pending_grafts);
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("fn record_graft(pending_grafts: ", result)
+
+    def test_expr_stmt_catch_block_has_semicolon(self) -> None:
+        """Verify ExprStmt discard expression statement ends with a semicolon."""
+        code = """
+        pub fn main() {
+            let _ = probe_library("alsa").map_err(|e| {
+                let _ = e;
+            });
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("_ = probe_library", result)
+        self.assertTrue("}.run));" in result or result.strip().endswith(";"))
+
+
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

@@ -88,10 +88,15 @@ class ZigEmitter:
             if not any(fn.name == "create_app" for fn in sf.functions):
                 header_lines.append('const create_app = aok_core.create_app;')
 
+        body_text = "\n".join(body_lines)
+        clean_body = re.sub(r'"[^"]*"', '""', body_text)
+        clean_body = re.sub(r'//.*', '', clean_body)
+
         out_dir = os.path.dirname(file_path) if file_path else ""
 
         for mod_name in sorted(set(self.imported_modules) | set(getattr(sf, "imports", []))):
-            if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app", "serde"):
+            if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app", "serde", "Serialize", "Deserialize", "HashMap", "thread", "BTreeMap", "HashSet", "BTreeSet", "Vec", "String", "Option", "Result", "cell", "rc", "sync"):
+
                 if mod_name in self.all_declared_names:
                     continue
                 clean_mod_name = f'@"{mod_name}"' if mod_name in ZIG_KEYWORDS_AND_PRIMITIVES else mod_name
@@ -103,14 +108,16 @@ class ZigEmitter:
                     header_lines.append('pub const libc = std.c;')
                 elif mod_name == "c_void":
                     header_lines.append('pub const c_void = anyopaque;')
-                elif out_dir and os.path.exists(os.path.join(out_dir, f"{mod_name}.zig")):
+                elif out_dir and mod_name[0].islower() and os.path.exists(os.path.join(out_dir, f"{mod_name}.zig")):
                     header_lines.append(f'const {clean_mod_name} = @import("{mod_name}.zig");')
+                elif mod_name[0].isupper():
+                    header_lines.append(f'pub const {clean_mod_name} = type;')
+                elif re.search(r"\b" + re.escape(mod_name) + r"\s*\(", body_text):
+                    header_lines.append(f'pub const {clean_mod_name} = (struct {{ fn f(p0: anytype, p1: anytype, p2: anytype, p3: anytype) *anyopaque {{ _ = p0; _ = p1; _ = p2; _ = p3; return undefined; }} }}).f;')
                 else:
                     header_lines.append(f'pub const {clean_mod_name} = *anyopaque;')
 
-        body_text = "\n".join(body_lines)
-        clean_body = re.sub(r'"[^"]*"', '""', body_text)
-        clean_body = re.sub(r'//.*', '', clean_body)
+
 
         generate_fallback_headers(clean_body, self.all_declared_names, self.imported_modules, header_lines)
 

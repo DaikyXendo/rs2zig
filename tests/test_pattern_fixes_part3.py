@@ -422,14 +422,16 @@ class TestPatternFixesPart3(unittest.TestCase):
         self.assertIn("pub const F = type;", zig)
 
     def test_undeclared_function_identifier_fallback(self) -> None:
-        """Verify standalone call to imported/helper function point(x, y) generates pub const point = type; fallback."""
+        """Verify standalone call to function point(x, y) does not generate invalid pub const point = type; fallback."""
         code = """
         pub fn draw(x: f32, y: f32) {
             let p = point(x, y);
         }
         """
         zig = self._transpile_code(code)
-        self.assertIn("pub const point = type;", zig)
+        self.assertNotIn("pub const point = type;", zig)
+        self.assertIn("point(x, y)", zig)
+
 
 
     def test_and_or_reserved_keyword_escaping(self) -> None:

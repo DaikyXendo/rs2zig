@@ -197,6 +197,8 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
             raw_rhs = raw_rhs.lstrip(".{(").rstrip("})")
             items = [it.strip() for it in raw_rhs.split(",") if it.strip()]
             return f"\n{emitter_ctx._indent()}".join(f"_ = {it};" for it in items)
+        if expr_str.startswith("_ = "):
+            return f"{expr_str};" if not expr_str.endswith(";") else expr_str
         if isinstance(stmt.expr, (IfExpr, LoopExpr, MatchExpr)):
             return expr_str
         if expr_str.startswith("{") and expr_str.endswith("}") and not isinstance(stmt.expr, (ReturnExpr, AssignStmt, CallExpr, StructInitExpr)):
@@ -204,6 +206,7 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
         if expr_str.startswith("{") and not expr_str.endswith("}"):
             expr_str = f"({expr_str})"
         return f"{expr_str};"
+
 
     if isinstance(stmt, StructDecl):
         return emitter_ctx._emit_struct(stmt, [])
