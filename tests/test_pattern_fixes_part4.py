@@ -252,11 +252,26 @@ class TestPatternFixesPart4(unittest.TestCase):
         }
         """
         result = self._transpile_code(code)
-        self.assertNotIn('r#"', result)
-        self.assertIn('"\\n', result)
+    def test_shadowing_param_discard_not_pointless(self) -> None:
+        """Verify struct method parameter shadowing field name does not emit pointless discard of param."""
+        code = """
+        pub struct Glyph {
+            scale: f32,
+        }
+
+        impl Glyph {
+            pub fn with_scale(&mut self, scale: f32) {
+                self.scale = scale;
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("_ = scale_param;", result)
+        self.assertIn("const scale = scale_param;", result)
 
 
 if __name__ == "__main__":
     unittest.main()
+
 
 

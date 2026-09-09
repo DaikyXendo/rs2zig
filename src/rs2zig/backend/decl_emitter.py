@@ -163,12 +163,14 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                         body_lines = [re.sub(r"\b" + re.escape(clean_param_name) + r"\b", f"{clean_param_name}_param", line) for line in body_lines]
                         body_text = "\n".join(body_lines)
                         check_text = f"({params_str}) {ret_str}\n" + body_text
+                        check_name = f"{clean_param_name}_param"
+                        if len(re.findall(r"\b" + re.escape(check_name) + r"\b", check_text)) <= 1:
+                            discard_lines.append(f"{emitter_ctx._indent()}_ = {check_name};")
                     else:
-                        discard_lines.append(f"{emitter_ctx._indent()}const {clean_param_name} = {clean_param_name}_param;")
-                    check_name = f"{clean_param_name}_param" if clean_param_name == clean_fn_name else clean_param_name
-                    if len(re.findall(r"\b" + re.escape(check_name) + r"\b", check_text)) <= 1:
-                        discard_name = f"{clean_param_name}_param" if is_shadowing else clean_param_name
-                        discard_lines.append(f"{emitter_ctx._indent()}_ = {discard_name};")
+                        if re.search(r"\b" + re.escape(clean_param_name) + r"\b", body_text):
+                            discard_lines.append(f"{emitter_ctx._indent()}const {clean_param_name} = {clean_param_name}_param;")
+                        else:
+                            discard_lines.append(f"{emitter_ctx._indent()}_ = {clean_param_name}_param;")
                 elif raw_name.startswith("mut "):
                     real_name = raw_name[4:].strip()
                     discard_lines.append(f"{emitter_ctx._indent()}var {real_name}_var = p{p_idx}; _ = {real_name}_var;")
