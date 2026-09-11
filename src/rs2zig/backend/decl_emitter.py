@@ -123,8 +123,17 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
             gp_name = gp.name.split(":")[0].strip() if ":" in gp.name else gp.name
             gp_params.append(Param(name=f"comptime {gp_name}", param_type=TypeNode(name="type")))
 
+    prev_outer_params = getattr(emitter_ctx, "outer_fn_param_names", None)
     all_params = gp_params + fn.params
     params_str = emit_params_decl(all_params, parent_struct_name, field_names, emitter_ctx, parent_fn_name=fn_name)
+
+    current_params = {p.name.replace("mut ", "").strip() for p in all_params if p.name}
+    emitter_ctx.current_fn_param_names = current_params
+
+    new_outer_params = set(current_params)
+    if prev_outer_params:
+        new_outer_params.update(prev_outer_params)
+    emitter_ctx.outer_fn_param_names = new_outer_params
 
     if fn_name == "main":
         ret_str = "!void" if fn.return_type is None else map_type(fn.return_type, is_return_type=True)
@@ -139,56 +148,60 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
 
     lines: List[str] = [f"{vis}fn {fn_name}({params_str}) {ret_str} {{"]
 
-    emitter_ctx.current_indent += 1
-    if fn.body:
-        body_lines = emitter_ctx._emit_block_lines(fn.body)
-        body_text = "\n".join(body_lines)
-        discard_lines: List[str] = []
-        clean_fn_name = fn_name.strip('"@')
-        check_text = f"({params_str}) {ret_str}\n" + body_text
-        for p_idx, p in enumerate(all_params):
-            if p.is_self:
-                if not re.search(r"\bself\b", body_text):
-                    discard_lines.append(f"{emitter_ctx._indent()}_ = self;")
-            else:
-                raw_name = p.name or ""
-                clean_param_name = raw_name.replace("mut ", "").strip()
-                is_shadowing = (
-                    (field_names and clean_param_name in field_names)
-                    or (getattr(emitter_ctx, "all_declared_names", None) and clean_param_name in emitter_ctx.all_declared_names)
-                    or clean_param_name == clean_fn_name
-                    or (getattr(emitter_ctx, "current_block_vars", None) and clean_param_name in emitter_ctx.current_block_vars)
-                    or (getattr(emitter_ctx, "current_fn_param_names", None) and clean_param_name in emitter_ctx.current_fn_param_names)
-                )
-                if is_shadowing:
-                    body_lines = [re.sub(r"\b" + re.escape(clean_param_name) + r"\b", f"{clean_param_name}_param", line) for line in body_lines]
-                    body_text = "\n".join(body_lines)
-                    check_text = f"({params_str}) {ret_str}\n" + body_text
-                    check_name = f"{clean_param_name}_param"
-                    if len(re.findall(r"\b" + re.escape(check_name) + r"\b", check_text)) <= 1:
-                        discard_lines.append(f"{emitter_ctx._indent()}_ = {check_name};")
-                elif raw_name.startswith("mut "):
-                    real_name = raw_name[4:].strip()
-                    discard_lines.append(f"{emitter_ctx._indent()}var {real_name}_var = p{p_idx}; _ = {real_name}_var;")
-                elif raw_name.startswith("[") and raw_name.endswith("]"):
-                    elems = [e.strip() for e in raw_name[1:-1].split(",") if e.strip()]
-                    for e_idx, e in enumerate(elems):
-                        discard_lines.append(f"{emitter_ctx._indent()}const {e} = p{p_idx}[{e_idx}];")
-                elif raw_name.startswith("(") and raw_name.endswith(")"):
-                    elems = [e.strip() for e in raw_name[1:-1].split(",") if e.strip()]
-                    for e_idx, e in enumerate(elems):
-                        discard_lines.append(f'{emitter_ctx._indent()}const {e} = p{p_idx}.@"{e_idx}";')
-                elif raw_name and not raw_name.isidentifier() and not raw_name.startswith("comptime"):
-                    discard_lines.append(f"{emitter_ctx._indent()}_ = p{p_idx};")
-                elif raw_name and raw_name != "_":
-                    clean_raw = raw_name.replace("comptime ", "").replace("mut ", "").strip().strip('"@')
-                    if clean_raw and (raw_name.startswith("_") or len(re.findall(r"\b" + re.escape(clean_raw) + r"\b", check_text)) <= 1):
-                        pident = f'@"{clean_raw}"' if (clean_raw in ZIG_KEYWORDS_AND_PRIMITIVES and not clean_raw.startswith("@")) else clean_raw
-                        discard_lines.append(f"{emitter_ctx._indent()}_ = {pident};")
+    try:
+        emitter_ctx.current_indent += 1
+        if fn.body:
+            body_lines = emitter_ctx._emit_block_lines(fn.body)
+            body_text = "\n".join(body_lines)
+            discard_lines: List[str] = []
+            clean_fn_name = fn_name.strip('"@')
+            check_text = f"({params_str}) {ret_str}\n" + body_text
+            for p_idx, p in enumerate(all_params):
+                if p.is_self:
+                    if not re.search(r"\bself\b", body_text):
+                        discard_lines.append(f"{emitter_ctx._indent()}_ = self;")
+                else:
+                    raw_name = p.name or ""
+                    clean_param_name = raw_name.replace("mut ", "").strip()
+                    is_shadowing = (
+                        (field_names and clean_param_name in field_names)
+                        or (getattr(emitter_ctx, "all_declared_names", None) and clean_param_name in emitter_ctx.all_declared_names)
+                        or clean_param_name == clean_fn_name
+                        or (getattr(emitter_ctx, "current_block_vars", None) and clean_param_name in emitter_ctx.current_block_vars)
+                        or (prev_outer_params and clean_param_name in prev_outer_params)
+                    )
 
-        lines.extend(discard_lines)
-        lines.extend(body_lines)
-    emitter_ctx.current_indent -= 1
+                    if is_shadowing:
+                        body_lines = [re.sub(r"\b" + re.escape(clean_param_name) + r"\b", f"{clean_param_name}_param", line) for line in body_lines]
+                        body_text = "\n".join(body_lines)
+                        check_text = f"({params_str}) {ret_str}\n" + body_text
+                        check_name = f"{clean_param_name}_param"
+                        if len(re.findall(r"\b" + re.escape(check_name) + r"\b", check_text)) <= 1:
+                            discard_lines.append(f"{emitter_ctx._indent()}_ = {check_name};")
+                    elif raw_name.startswith("mut "):
+                        real_name = raw_name[4:].strip()
+                        discard_lines.append(f"{emitter_ctx._indent()}var {real_name}_var = p{p_idx}; _ = {real_name}_var;")
+                    elif raw_name.startswith("[") and raw_name.endswith("]"):
+                        elems = [e.strip() for e in raw_name[1:-1].split(",") if e.strip()]
+                        for e_idx, e in enumerate(elems):
+                            discard_lines.append(f"{emitter_ctx._indent()}const {e} = p{p_idx}[{e_idx}];")
+                    elif raw_name.startswith("(") and raw_name.endswith(")"):
+                        elems = [e.strip() for e in raw_name[1:-1].split(",") if e.strip()]
+                        for e_idx, e in enumerate(elems):
+                            discard_lines.append(f'{emitter_ctx._indent()}const {e} = p{p_idx}.@"{e_idx}";')
+                    elif raw_name and not raw_name.isidentifier() and not raw_name.startswith("comptime"):
+                        discard_lines.append(f"{emitter_ctx._indent()}_ = p{p_idx};")
+                    elif raw_name and raw_name != "_":
+                        clean_raw = raw_name.replace("comptime ", "").replace("mut ", "").strip().strip('"@')
+                        if clean_raw and (raw_name.startswith("_") or len(re.findall(r"\b" + re.escape(clean_raw) + r"\b", check_text)) <= 1):
+                            pident = f'@"{clean_raw}"' if (clean_raw in ZIG_KEYWORDS_AND_PRIMITIVES and not clean_raw.startswith("@")) else clean_raw
+                            discard_lines.append(f"{emitter_ctx._indent()}_ = {pident};")
+
+            lines.extend(discard_lines)
+            lines.extend(body_lines)
+        emitter_ctx.current_indent -= 1
+    finally:
+        emitter_ctx.outer_fn_param_names = prev_outer_params
 
     lines.append("}")
     return "\n".join(lines)
@@ -227,10 +240,12 @@ def emit_params_decl(params: List[Param], parent_struct_name: Optional[str] = No
                     or (getattr(emitter_ctx, "all_declared_names", None) and clean_name in emitter_ctx.all_declared_names)
                     or (clean_fn_name and clean_name == clean_fn_name)
                     or (getattr(emitter_ctx, "current_block_vars", None) and clean_name in emitter_ctx.current_block_vars)
-                    or (getattr(emitter_ctx, "current_fn_param_names", None) and clean_name in emitter_ctx.current_fn_param_names)
+                    or (getattr(emitter_ctx, "outer_fn_param_names", None) and clean_name in emitter_ctx.outer_fn_param_names)
                 )
                 if is_shadowing:
                     pname = f"{clean_name}_param"
+
+
 
 
                 else:

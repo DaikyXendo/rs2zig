@@ -23,7 +23,9 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
         List of formatted statement lines.
     """
     prev_vars = getattr(emitter_ctx, "current_block_vars", None)
+    prev_renamed = getattr(emitter_ctx, "current_renamed_vars", None)
     emitter_ctx.current_block_vars = set()
+    emitter_ctx.current_renamed_vars = dict(prev_renamed) if prev_renamed else {}
     try:
         lines: List[str] = []
         for stmt in block.stmts:
@@ -165,6 +167,11 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
         elif not is_dedup and vname in getattr(emitter_ctx, "all_declared_names", set()):
             vname = f"{vname}_local"
             was_renamed = True
+
+        clean_vname = vname.strip('"@')
+        if (was_renamed or is_dedup) and getattr(emitter_ctx, "current_renamed_vars", None) is not None:
+            emitter_ctx.current_renamed_vars[stmt.name] = clean_vname
+
         vname = f'@"{vname}"' if (vname in ZIG_RESERVED_KEYWORDS and not vname.startswith("@")) else vname
         type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
         val_expr_str = emitter_ctx._emit_expr(stmt.value).rstrip(";").strip() if stmt.value else ""
@@ -172,9 +179,10 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
             val_expr_str = f"({val_expr_str})"
         val_part = f" = {val_expr_str}" if stmt.value else ""
         res = f"{kw} {vname}{type_part}{val_part};"
-        clean_vname = vname.strip('"@')
-        if was_renamed or is_dedup or (clean_vname.startswith("_") and clean_vname != "_"):
+        if clean_vname.startswith("_") and clean_vname != "_":
             res += f"\n{emitter_ctx._indent()}_ = {vname};"
+
+
         if stmt.name == "ip":
             res += f"\n{emitter_ctx._indent()}_ = ip;"
         return res

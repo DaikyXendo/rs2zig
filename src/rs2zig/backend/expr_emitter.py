@@ -59,7 +59,11 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
 
     if isinstance(expr, IdentifierExpr):
         name = expr.name
+        renamed_vars = getattr(emitter_ctx, "current_renamed_vars", None)
+        if renamed_vars and name in renamed_vars:
+            name = renamed_vars[name]
         if " as " in name:
+
             name = re.sub(r'\b([a-zA-Z0-9_@".]+)\s+as\s+([a-zA-Z0-9_@"._]+)\b', r'@as(\2, \1)', name)
             name = name.replace("@as(_,", "@ptrCast(").replace("@as(*mut _,", "@ptrCast(")
         if name.endswith(".") and name[:-1].lstrip("-").isdigit():
