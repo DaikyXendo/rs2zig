@@ -60,8 +60,13 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
     if isinstance(expr, IdentifierExpr):
         name = expr.name
         renamed_vars = getattr(emitter_ctx, "current_renamed_vars", None)
-        if renamed_vars and name in renamed_vars:
-            name = renamed_vars[name]
+        if renamed_vars:
+            if name in renamed_vars:
+                name = renamed_vars[name]
+            else:
+                for old_v, new_v in renamed_vars.items():
+                    if old_v in name:
+                        name = re.sub(r"(?<!\.)\b" + re.escape(old_v) + r"\b", new_v, name)
         if " as " in name:
 
             name = re.sub(r'\b([a-zA-Z0-9_@".]+)\s+as\s+([a-zA-Z0-9_@"._]+)\b', r'@as(\2, \1)', name)
@@ -446,8 +451,11 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 target_part = parts[1].strip().rstrip(";").strip().replace("&mut ", "&")
                 cap_var = "item"
                 if "(" in pat_part and ")" in pat_part:
-                    cap_var = pat_part[pat_part.find("(")+1:pat_part.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
-                    if "," in cap_var or not cap_var.isidentifier():
+                    words = re.findall(r"\b[a-zA-Z_][a-zA-Z0-9_]*\b", pat_part)
+                    filtered = [w for w in words if w not in {"let", "Some", "Ok", "Err", "None", "ref", "mut", "as", "pub"} and not (w[0].isupper() and len(w) > 1)]
+                    if len(filtered) == 1:
+                        cap_var = filtered[0]
+                    else:
                         cap_var = "item"
                 elif pat_part and pat_part.isidentifier():
                     cap_var = pat_part

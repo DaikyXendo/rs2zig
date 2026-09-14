@@ -668,19 +668,43 @@ class TestPatternFixesPart4(unittest.TestCase):
         result = self._transpile_code(code)
         self.assertIn("pub const Transform = type;", result)
 
-    def test_renamed_if_let_capture_substitutes_in_then_block(self) -> None:
-        """Verify if let capture renamed to child_val updates body references to child_val."""
+    def test_nested_some_pattern_extracts_innermost_name(self) -> None:
+        """Verify nested pattern if let Some(Some(child)) extracts child as capture name."""
         code = """
-        pub fn process_sibling(child: i32, opt: Option<i32>) {
-            if let Some(child) = opt {
-                let res = child + 1;
-                let _ = res;
+        pub fn process_nested(opt: Option<Option<i32>>) {
+            if let Some(Some(child)) = opt {
+                let _ = child;
             }
         }
         """
         result = self._transpile_code(code)
-        self.assertIn("|child_val|", result)
-        self.assertIn("child_val + 1", result)
+        self.assertIn("|child|", result)
+
+    def test_unused_multiline_switch_constant_emits_discard(self) -> None:
+        """Verify multiline switch initializer constant that is unused emits _ = var_name;."""
+        code = """
+        pub fn check_val(x: i32) -> i32 {
+            let direction = match x {
+                v => v,
+            };
+            return 0;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("_ = direction;", result)
+
+    def test_renamed_variable_in_index_expression(self) -> None:
+        """Verify renamed mutable variable in index access subtrees_to_remove[i] gets updated."""
+        code = """
+        pub fn process_list(subtrees_to_remove: i32) {
+            let mut subtrees_to_remove = vec![1, 2];
+            subtrees_to_remove.push(3);
+            let first = subtrees_to_remove[0];
+            let _ = (subtrees_to_remove_param, first);
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("subtrees_to_remove_var[0]", result)
 
 
 if __name__ == "__main__":

@@ -43,6 +43,8 @@ class ZigEmitter:
             if imp and imp.isidentifier():
                 top_level_names.add(imp)
         top_level_names.update({"std", "core", "libc", "c_void", "crate", "Self", "io", "fmt", "mem", "math", "bevy", "bevy_ecs", "aok_core"})
+        if self.requires_bevy_runtime:
+            top_level_names.update({"Transform", "Velocity", "Time", "Entity", "Commands", "Query", "Res", "Startup", "Update", "App"})
         self.all_scope_names = top_level_names
 
         # Pre-scan undeclared fallback symbols so parameter shadowing detects generated headers
