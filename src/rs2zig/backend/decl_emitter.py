@@ -176,6 +176,7 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                         or (getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", None)) and clean_param_name in getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set())))
                         or clean_param_name == clean_fn_name
                         or (getattr(emitter_ctx, "current_block_vars", None) and clean_param_name in emitter_ctx.current_block_vars)
+                        or (getattr(emitter_ctx, "all_outer_block_vars", None) and clean_param_name in emitter_ctx.all_outer_block_vars)
                         or (prev_outer_params and clean_param_name in prev_outer_params)
                     )
 
@@ -259,6 +260,7 @@ def emit_params_decl(params: List[Param], parent_struct_name: Optional[str] = No
                     or (getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", None)) and clean_name in getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set())))
                     or (clean_fn_name and clean_name == clean_fn_name)
                     or (getattr(emitter_ctx, "current_block_vars", None) and clean_name in emitter_ctx.current_block_vars)
+                    or (getattr(emitter_ctx, "all_outer_block_vars", None) and clean_name in emitter_ctx.all_outer_block_vars)
                     or (getattr(emitter_ctx, "outer_fn_param_names", None) and clean_name in emitter_ctx.outer_fn_param_names)
                 )
                 if is_shadowing:

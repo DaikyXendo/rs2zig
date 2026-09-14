@@ -43,6 +43,22 @@ class ZigEmitter:
         top_level_names.update({"std", "core", "libc", "c_void", "crate", "Self", "io", "fmt", "mem", "math", "bevy", "bevy_ecs", "aok_core"})
         self.all_scope_names = top_level_names
 
+        # Pre-scan undeclared fallback symbols so parameter shadowing detects generated headers
+        saved_counter = self.tmp_var_counter
+        pre_headers: List[str] = []
+        raw_ast_text = " ".join([c.name for c in sf.constants] + [f.name for f in sf.functions] + [s.name for s in sf.structs])
+        for fn in sf.functions:
+            if fn.body:
+                raw_ast_text += " " + "\n".join(self._emit_block_lines(fn.body))
+        self.tmp_var_counter = saved_counter
+        local_vars = set(re.findall(r"\b(?:const|var|let)\s+([a-zA-Z0-9_]+)\b", raw_ast_text))
+        pre_declared = self.all_declared_names | local_vars
+        generate_fallback_headers(raw_ast_text, pre_declared, self.imported_modules, pre_headers)
+        for h in pre_headers:
+            m = re.search(r"\bconst\s+(?:@\")?([a-zA-Z0-9_]+)\"?\b", h)
+            if m:
+                self.all_scope_names.add(m.group(1))
+
         body_lines: List[str] = []
 
         for c in sf.constants:

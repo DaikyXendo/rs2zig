@@ -24,6 +24,13 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
     """
     prev_vars = getattr(emitter_ctx, "current_block_vars", None)
     prev_renamed = getattr(emitter_ctx, "current_renamed_vars", None)
+    prev_outer_block_vars = getattr(emitter_ctx, "all_outer_block_vars", None)
+
+    current_outer = set(prev_outer_block_vars) if prev_outer_block_vars else set()
+    if prev_vars:
+        current_outer.update(prev_vars)
+    emitter_ctx.all_outer_block_vars = current_outer
+
     emitter_ctx.current_block_vars = set()
     emitter_ctx.current_renamed_vars = dict(prev_renamed) if prev_renamed else {}
     try:
@@ -61,7 +68,7 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
                                 )
                                 if not has_mut:
                                     final_lines[-1] = final_lines[-1].replace("var " + raw_v, "const " + raw_v, 1)
-                            if not re.search(r"\b" + re.escape(raw_v) + r"\b", subsequent):
+                            if not re.search(r"(?<!\.)\b" + re.escape(raw_v) + r"\b", subsequent):
                                 indent = line[: len(line) - len(line.lstrip())]
                                 clean_ident = f'@"{raw_v}"' if raw_v in ZIG_RESERVED_KEYWORDS else raw_v
                                 final_lines.append(f"{indent}_ = {clean_ident};")
@@ -69,6 +76,7 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
         return final_lines
     finally:
         emitter_ctx.current_block_vars = prev_vars
+        emitter_ctx.all_outer_block_vars = prev_outer_block_vars
 
 
 def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
@@ -222,12 +230,26 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
 
 
     if isinstance(stmt, StructDecl):
-        return emitter_ctx._emit_struct(stmt, [])
+        s_code = emitter_ctx._emit_struct(stmt, [])
+        if emitter_ctx.current_indent > 0:
+            clean_sname = stmt.name.split("<")[0].strip()
+            if s_code.strip().startswith("fn "):
+                return f"const {clean_sname} = (struct {{ {s_code} }}).{clean_sname};"
+            return f"const {clean_sname} = {s_code};"
+        return s_code
 
     if isinstance(stmt, EnumDecl):
-        return emitter_ctx._emit_enum(stmt)
+        e_code = emitter_ctx._emit_enum(stmt)
+        if emitter_ctx.current_indent > 0:
+            clean_ename = stmt.name.split("<")[0].strip()
+            return f"const {clean_ename} = {e_code};"
+        return e_code
 
     if isinstance(stmt, FnDecl):
-        return emitter_ctx._emit_function(stmt)
+        f_code = emitter_ctx._emit_function(stmt)
+        if emitter_ctx.current_indent > 0:
+            clean_fname = stmt.name.split("<")[0].strip()
+            return f"const {clean_fname} = (struct {{ {f_code} }}).{clean_fname};"
+        return f_code
 
     return ""

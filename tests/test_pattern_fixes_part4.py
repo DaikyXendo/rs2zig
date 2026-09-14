@@ -468,9 +468,96 @@ class TestPatternFixesPart4(unittest.TestCase):
         self.assertNotIn("&&", result)
         self.assertIn("and", result)
 
+    def test_array_literal_comment_filtering(self) -> None:
+        """Verify comments inside array literals are filtered and do not corrupt closing braces."""
+        code = """
+        pub fn test_comments() {
+            let cases = [
+                ("a", "b"), // comment 1
+                ("c", "d"), // comment 2
+            ];
+            let _ = cases;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("// comment 1};", result)
+        self.assertIn("};", result)
+
+    def test_underscore_type_arg_mapping(self) -> None:
+        """Verify Rust generic calls with _ as type args map _ to anytype."""
+        code = """
+        pub fn test_turbofish(env: &Env) {
+            let binding = env.with_local_frame::<_, _, InternalAppError>(10, || {});
+            let _ = binding;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("with_local_frame(_, _,", result)
+        self.assertIn("with_local_frame(anytype, anytype,", result)
+
+    def test_fallback_header_param_shadowing(self) -> None:
+        """Verify function parameter named f shadows fallback header pub const f and is renamed."""
+        code = """
+        pub fn apply<F>(f: F) -> i32 {
+            let x = f();
+            let _ = f(1, 2, 3, 4); // triggers fallback f if undeclared
+            x
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("f_param: F", result)
+
+    def test_struct_init_target_parenthesized(self) -> None:
+        """Verify struct/block init call target before .into() is parenthesized."""
+        code = """
+        pub fn test_into() {
+            let equal: bool = ().into();
+            let _ = equal;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("({}).into()", result)
+
+    def test_local_fn_inside_function_body(self) -> None:
+        """Verify local struct/fn declared inside function body is emitted as a valid const declaration."""
+        code = """
+        pub fn await_output() {
+            struct Fut<T>(T);
+            let _ = Fut(10);
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("    fn Fut(comptime T: type)", result)
+
+    def test_param_matching_method_name_unused(self) -> None:
+        """Verify unused local variable name is assigned _ = name even if face.name() is called later."""
+        code = """
+        pub fn process_names(face: &Face) {
+            let name = face.names();
+            let _ = face.name();
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("_ = name;", result)
+
+    def test_nested_fn_param_shadows_outer_var(self) -> None:
+        """Verify parameter of nested function matching outer variable name is renamed with _param suffix."""
+        code = """
+        pub fn update() {
+            let grafts_to_remove = 10;
+            let traverse = |grafts_to_remove: i32| {
+                let _ = grafts_to_remove;
+            };
+            let _ = grafts_to_remove;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("grafts_to_remove_param: i32", result)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

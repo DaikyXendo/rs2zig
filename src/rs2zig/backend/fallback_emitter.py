@@ -32,6 +32,16 @@ def generate_fallback_headers(
         imported_modules: Set of imported module identifiers.
         header_lines: List of header code lines to append to.
     """
+    fn_params = set(re.findall(r"fn\s+[a-zA-Z0-9_]+\s*\(([^)]*)\)", clean_body))
+    param_names: Set[str] = set()
+    for p_group in fn_params:
+        for p in p_group.split(","):
+            if ":" in p:
+                p_ident = p.split(":")[0].strip().replace("comptime ", "")
+                if p_ident and p_ident.isidentifier():
+                    param_names.add(p_ident)
+    all_declared_names = all_declared_names | param_names
+
     if (re.search(r"\bcrate\b", clean_body) or "crate" in imported_modules) and "crate" not in all_declared_names and not any("const crate" in h for h in header_lines):
         header_lines.append("pub const crate = @This();")
     if (re.search(r"\bc_void\b", clean_body)) and "c_void" not in all_declared_names and not any("c_void" in h for h in header_lines):

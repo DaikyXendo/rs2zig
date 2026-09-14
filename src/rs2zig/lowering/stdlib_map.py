@@ -25,6 +25,7 @@ RUST_TO_ZIG_TYPES: Dict[str, str] = {
     "f64": "f64",
     "bool": "bool",
     "char": "u21",
+    "_": "anyopaque",
     "str": "[]const u8",
     "String": "[]u8",
     "alloc::string::String": "[]u8",

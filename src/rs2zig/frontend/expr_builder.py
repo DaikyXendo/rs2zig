@@ -195,7 +195,7 @@ def build_expr(builder: Any, node: tree_sitter.Node) -> Expr:
             count_clean = parts[1].strip()
             return LiteralExpr(value=f"([_]u8{{{val_clean}}} ** {count_clean})", kind="array")
         else:
-            elem_nodes = [c for c in node.children if get_node_type(c) not in ("[", "]", ",")]
+            elem_nodes = [c for c in node.children if get_node_type(c) not in ("[", "]", ",", "line_comment", "block_comment", "comment")]
             if elem_nodes:
                 inits = [
                     StructFieldInit(field_name=str(idx), value=build_expr(builder, c))
@@ -235,7 +235,7 @@ def build_expr(builder: Any, node: tree_sitter.Node) -> Expr:
         )
 
     if ntype in ("tuple_expression", "parenthesized_expression"):
-        children = [c for c in node.children if get_node_type(c) not in ("(", ")", ",")]
+        children = [c for c in node.children if get_node_type(c) not in ("(", ")", ",", "line_comment", "block_comment", "comment")]
         if len(children) > 1 or ntype == "tuple_expression":
             tuple_inits: List[StructFieldInit] = []
             for elem_idx, child in enumerate(children):
@@ -383,6 +383,9 @@ def build_expr(builder: Any, node: tree_sitter.Node) -> Expr:
 
     if ntype == "block":
         return builder._build_block(node)
+
+    if ntype in ("line_comment", "block_comment", "comment"):
+        return LiteralExpr(value="", kind="comment")
 
     # Fallback expression wrapper
     return IdentifierExpr(name=builder.get_text(node))

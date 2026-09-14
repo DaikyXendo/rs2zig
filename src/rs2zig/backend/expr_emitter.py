@@ -85,7 +85,12 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             else:
                 gen_part, _, trailing = rest.partition(">")
             base_str = emit_expr(IdentifierExpr(name=base), emitter_ctx)
-            gen_type = map_type(gen_part.strip()) if gen_part.strip() else "void"
+            if gen_part.strip():
+                from rs2zig.lowering.stdlib_map import _split_top_level_commas
+                g_parts = ["anytype" if p.strip() == "_" else map_type(p.strip()) for p in _split_top_level_commas(gen_part) if p.strip()]
+                gen_type = ", ".join(g_parts)
+            else:
+                gen_type = "void"
             name = f"{base_str}({gen_type}){trailing}"
         if "::" in name:
             parts = [p.strip() for p in name.split("::") if p.strip()]
@@ -201,7 +206,9 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
 
     if isinstance(expr, FieldAccessExpr):
         target_str = emit_expr(expr.target, emitter_ctx)
-        if target_str == "{}" or target_str == "()" or target_str.startswith("{"):
+        if target_str in ("()", "{}"):
+            target_str = "({})"
+        elif target_str.startswith("{"):
             target_str = f"({target_str})"
         fname = expr.field_name
         if fname == "await":
@@ -215,7 +222,12 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 _, gen_part, trailing = split_res
             else:
                 gen_part, _, trailing = rest.partition(">")
-            gen_type = map_type(gen_part.strip()) if gen_part.strip() else "void"
+            if gen_part.strip():
+                from rs2zig.lowering.stdlib_map import _split_top_level_commas
+                g_parts = ["anytype" if p.strip() == "_" else map_type(p.strip()) for p in _split_top_level_commas(gen_part) if p.strip()]
+                gen_type = ", ".join(g_parts)
+            else:
+                gen_type = "void"
             fname = f"{base}({gen_type}){trailing}"
         if isinstance(expr.target, StructInitExpr):
             return f"({target_str}).{fname}"

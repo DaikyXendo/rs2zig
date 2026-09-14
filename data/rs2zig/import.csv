@@ -100,6 +100,8 @@ src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.loweri
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.lowering.control_flow,lower_println_macro,,14
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.backend.emitter_constants,ZIG_RESERVED_KEYWORDS,,15
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.backend.emitter_constants,ZIG_KEYWORDS_AND_PRIMITIVES,,15
+src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.lowering.stdlib_map,_split_top_level_commas,,89
+src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.lowering.stdlib_map,_split_top_level_commas,,226
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,re,,,4
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,typing,Set,,5
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,typing,List,,5
