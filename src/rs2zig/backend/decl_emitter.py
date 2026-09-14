@@ -146,6 +146,9 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
     elif "Self" in ret_str:
         ret_str = re.sub(r"\bSelf\b", stype, ret_str)
 
+    prev_current_fn = getattr(emitter_ctx, "current_fn_name", None)
+    clean_fn_name = fn_name.strip('"@')
+    emitter_ctx.current_fn_name = clean_fn_name
     lines: List[str] = [f"{vis}fn {fn_name}({params_str}) {ret_str} {{"]
 
     try:
@@ -154,7 +157,6 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
             body_lines = emitter_ctx._emit_block_lines(fn.body)
             body_text = "\n".join(body_lines)
             discard_lines: List[str] = []
-            clean_fn_name = fn_name.strip('"@')
             check_text = f"({params_str}) {ret_str}\n" + body_text
             for p_idx, p in enumerate(all_params):
                 if p.is_self:
@@ -172,7 +174,7 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                     )
 
                     if is_shadowing:
-                        body_lines = [re.sub(r"\b" + re.escape(clean_param_name) + r"\b", f"{clean_param_name}_param", line) for line in body_lines]
+                        body_lines = [re.sub(r"(?<!\blet\s)(?<!\bconst\s)(?<!\bvar\s)\b" + re.escape(clean_param_name) + r"\b", f"{clean_param_name}_param", line) for line in body_lines]
                         body_text = "\n".join(body_lines)
                         check_text = f"({params_str}) {ret_str}\n" + body_text
                         check_name = f"{clean_param_name}_param"
@@ -181,6 +183,8 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                     elif raw_name.startswith("mut "):
                         real_name = raw_name[4:].strip()
                         discard_lines.append(f"{emitter_ctx._indent()}var {real_name}_var = p{p_idx}; _ = {real_name}_var;")
+                        body_lines = [re.sub(r"(?<!\blet\s)(?<!\bconst\s)(?<!\bvar\s)\b" + re.escape(real_name) + r"\b", f"{real_name}_var", line) for line in body_lines]
+
                     elif raw_name.startswith("[") and raw_name.endswith("]"):
                         elems = [e.strip() for e in raw_name[1:-1].split(",") if e.strip()]
                         for e_idx, e in enumerate(elems):
@@ -202,6 +206,7 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
         emitter_ctx.current_indent -= 1
     finally:
         emitter_ctx.outer_fn_param_names = prev_outer_params
+        emitter_ctx.current_fn_name = prev_current_fn
 
     lines.append("}")
     return "\n".join(lines)
@@ -227,7 +232,14 @@ def emit_params_decl(params: List[Param], parent_struct_name: Optional[str] = No
             clean_name = p.name or ""
             if clean_name.startswith("comptime "):
                 real_ident = clean_name[9:].strip()
-                if real_ident in ZIG_RESERVED_KEYWORDS and not real_ident.startswith("@"):
+                is_shadowing = (
+                    (field_names and real_ident in field_names)
+                    or (getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", None)) and real_ident in getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set())))
+                    or (clean_fn_name and real_ident == clean_fn_name)
+                )
+                if is_shadowing:
+                    real_ident = f"{real_ident}_param"
+                elif real_ident in ZIG_RESERVED_KEYWORDS and not real_ident.startswith("@"):
                     real_ident = f'@"{real_ident}"'
                 pname = f"comptime {real_ident}"
             else:

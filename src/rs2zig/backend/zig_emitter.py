@@ -33,9 +33,6 @@ class ZigEmitter:
         impl_map = {impl.struct_name: impl.methods for impl in sf.impls}
 
         top_level_names = {c.name for c in sf.constants} | {s.name for s in sf.structs} | {e.name for e in sf.enums} | {t.name for t in sf.traits} | {f.name for f in sf.functions}
-        for impl in sf.impls:
-            top_level_names.update(m.name for m in impl.methods)
-
         self.all_declared_names = set(top_level_names)
 
         # Expanded scope includes imports — used for local shadowing detection
@@ -43,6 +40,7 @@ class ZigEmitter:
         for imp in getattr(sf, "imports", []):
             if imp and imp.isidentifier():
                 top_level_names.add(imp)
+        top_level_names.update({"std", "core", "libc", "c_void", "crate", "Self", "io", "fmt", "mem", "math", "bevy", "bevy_ecs", "aok_core"})
         self.all_scope_names = top_level_names
 
         body_lines: List[str] = []

@@ -153,6 +153,10 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
 
         kw = "var" if stmt.is_mutable else "const"
         vname = stmt.name
+        val_expr_str = emitter_ctx._emit_expr(stmt.value).rstrip(";").strip() if stmt.value else ""
+        if val_expr_str.startswith("{") and not val_expr_str.endswith("}"):
+            val_expr_str = f"({val_expr_str})"
+
         is_dedup = False
         if hasattr(emitter_ctx, "current_block_vars") and emitter_ctx.current_block_vars is not None:
             if vname in emitter_ctx.current_block_vars:
@@ -161,11 +165,14 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
             else:
                 emitter_ctx.current_block_vars.add(vname)
         was_renamed = False
-        if vname in getattr(emitter_ctx, "current_fn_param_names", set()):
+        scope_names = getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", None))
+        current_fn = getattr(emitter_ctx, "current_fn_name", None)
+        if (
+            vname in getattr(emitter_ctx, "current_fn_param_names", set())
+            or (scope_names and vname in scope_names)
+            or (current_fn and vname == current_fn)
+        ):
             vname = f"{vname}_var"
-            was_renamed = True
-        elif not is_dedup and vname in getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set())):
-            vname = f"{vname}_local"
             was_renamed = True
 
         clean_vname = vname.strip('"@')
@@ -174,10 +181,8 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
 
         vname = f'@"{vname}"' if (vname in ZIG_RESERVED_KEYWORDS and not vname.startswith("@")) else vname
         type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
-        val_expr_str = emitter_ctx._emit_expr(stmt.value).rstrip(";").strip() if stmt.value else ""
-        if val_expr_str.startswith("{") and not val_expr_str.endswith("}"):
-            val_expr_str = f"({val_expr_str})"
         val_part = f" = {val_expr_str}" if stmt.value else ""
+
         res = f"{kw} {vname}{type_part}{val_part};"
         if clean_vname.startswith("_") and clean_vname != "_":
             res += f"\n{emitter_ctx._indent()}_ = {vname};"

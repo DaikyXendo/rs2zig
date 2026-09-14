@@ -179,7 +179,7 @@ class TestPatternFixesPart4(unittest.TestCase):
         result = self._transpile_code(code)
         # The local variable should be renamed to avoid shadowing the function
         self.assertNotIn("const stdout = 42", result)
-        self.assertIn("stdout_local", result)
+        self.assertTrue("stdout_var" in result or "stdout_local" in result)
 
     def test_local_const_shadows_top_level_const(self) -> None:
         """Verify local const with same name as top-level const gets renamed."""
@@ -193,7 +193,7 @@ class TestPatternFixesPart4(unittest.TestCase):
         """
         result = self._transpile_code(code)
         # Inside the function, MAX should be renamed
-        self.assertIn("MAX_local", result)
+        self.assertTrue("MAX_var" in result or "MAX_local" in result)
 
     def test_slice_generic_type_parsing(self) -> None:
         """Verify &[Box<dyn Any>] maps to []const *anyopaque without truncated '[Box'."""
@@ -329,8 +329,48 @@ class TestPatternFixesPart4(unittest.TestCase):
 
 
 
+    def test_top_level_symbol_shadowing_renames_local_var(self) -> None:
+        """Verify local variable shadowing a top-level function is renamed cleanly."""
+        code = """
+        pub fn stdout() -> i32 {
+            let stdout = 42;
+            stdout
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("const stdout_var = 42;", result)
+        self.assertIn("return stdout_var;", result)
+
+    def test_top_level_import_shadowing_renames_local_var(self) -> None:
+        """Verify local variable shadowing top-level import like 'fmt' is renamed cleanly."""
+        code = """
+        use std::fmt;
+
+        pub fn format_node() {
+            let mut fmt = 100;
+            fmt += 1;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("var fmt_var = 100;", result)
+
+    def test_comptime_param_shadowing_renames_param(self) -> None:
+        """Verify comptime parameter shadowing top-level struct is renamed cleanly."""
+        code = """
+        pub struct S;
+
+        pub fn process_s<S>(item: S) {
+            let _ = item;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("comptime S: type,", result)
+        self.assertIn("comptime S_param: type", result)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

@@ -50,13 +50,14 @@ script/rs2zig_query.py,script.rs2zig_query,EXTRACT_SCRIPT,"os.path.join(PROJECT_
 script/rs2zig_query.py,script.rs2zig_query,CSV_FILES,"{'file': os.path.join(DATA_DIR, 'file.csv'), 'function': os.path.join(DATA_DIR, 'function.csv'), 'cl",21
 src/main.py,src.main,logger,logging.getLogger('rs2zig'),15
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,logger,logging.getLogger('rs2zig.backend.build_zig_gen'),10
-src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,ZIG_PRIMITIVE_TYPES,"{'u8', 'u16', 'u32', 'u64', 'u128', 'i8', 'i16', 'i32', 'i64', 'i128', 'usize', 'isize', 'f16', 'f32",5
-src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,ZIG_RESERVED_KEYWORDS,"{'addrspace', 'align', 'allowzero', 'and', 'anyframe', 'anytype', 'asm', 'async', 'await', 'break', ",11
-src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,ZIG_KEYWORDS_AND_PRIMITIVES,ZIG_PRIMITIVE_TYPES | ZIG_RESERVED_KEYWORDS,20
+src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,ZIG_PRIMITIVE_TYPES,"{'u8', 'u16', 'u32', 'u64', 'u128', 'i8', 'i16', 'i32', 'i64', 'i128', 'usize', 'isize', 'f16', 'f32",7
+src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,_ZIG_ARBITRARY_INT_RE,re.compile('^[iu]\\d+$'),19
+src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,ZIG_RESERVED_KEYWORDS,"{'addrspace', 'align', 'allowzero', 'and', 'anyframe', 'anytype', 'asm', 'async', 'await', 'break', ",40
+src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,ZIG_KEYWORDS_AND_PRIMITIVES,ZIG_PRIMITIVE_TYPES | ZIG_RESERVED_KEYWORDS,49
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,STD_SUBMODULES,"{'std', 'self', 'super', 'crate', 'bevy', 'bevy_ecs', 'aok_core', 'core', 'libc', 'mem', 'io', 'os',",9
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,STD_TYPES,"{'std', 'anytype', 'void', 'bool', 'usize', 'isize', 'i8', 'i16', 'i32', 'i64', 'i128', 'u8', 'u16',",15
 src/rs2zig/cli.py,src.rs2zig.cli,logger,logging.getLogger('rs2zig.cli'),33
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),54
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),42
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,logger,logging.getLogger('rs2zig.frontend.cargo_parser'),13
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,logger,logging.getLogger('rs2zig.frontend.macro_expand'),12
 src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,logger,logging.getLogger('rs2zig.frontend.mod_resolver'),11
