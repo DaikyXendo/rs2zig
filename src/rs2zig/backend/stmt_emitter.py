@@ -164,7 +164,7 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
         if vname in getattr(emitter_ctx, "current_fn_param_names", set()):
             vname = f"{vname}_var"
             was_renamed = True
-        elif not is_dedup and vname in getattr(emitter_ctx, "all_declared_names", set()):
+        elif not is_dedup and vname in getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set())):
             vname = f"{vname}_local"
             was_renamed = True
 

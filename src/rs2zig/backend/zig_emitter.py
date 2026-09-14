@@ -9,7 +9,7 @@ import re
 from typing import List, Optional, Set
 from rs2zig.ir.nodes import SourceFile, StructDecl, EnumDecl, TraitDecl, FnDecl, BlockExpr, Stmt, Expr
 from rs2zig.lowering.stdlib_map import map_type
-from rs2zig.backend.emitter_constants import ZIG_KEYWORDS_AND_PRIMITIVES
+from rs2zig.backend.emitter_constants import ZIG_KEYWORDS_AND_PRIMITIVES, is_zig_primitive
 from rs2zig.backend.decl_emitter import emit_trait_decl, emit_enum_decl, emit_struct_decl, emit_function_decl
 from rs2zig.backend.fallback_emitter import generate_fallback_headers
 from rs2zig.backend.stmt_emitter import emit_stmt, emit_block_lines
@@ -36,7 +36,14 @@ class ZigEmitter:
         for impl in sf.impls:
             top_level_names.update(m.name for m in impl.methods)
 
-        self.all_declared_names = top_level_names
+        self.all_declared_names = set(top_level_names)
+
+        # Expanded scope includes imports — used for local shadowing detection
+        # so that local `const rng = rng();` is detected as shadowing `pub const rng = ...`
+        for imp in getattr(sf, "imports", []):
+            if imp and imp.isidentifier():
+                top_level_names.add(imp)
+        self.all_scope_names = top_level_names
 
         body_lines: List[str] = []
 
@@ -98,6 +105,8 @@ class ZigEmitter:
             if mod_name.isidentifier() and not mod_name.startswith("const") and mod_name not in ("self", "super", "crate", "std", "bevy", "bevy_ecs", "aok_core", "create_app", "serde", "Serialize", "Deserialize", "HashMap", "thread", "BTreeMap", "HashSet", "BTreeSet", "Vec", "String", "Option", "Result", "cell", "rc", "sync"):
 
                 if mod_name in self.all_declared_names:
+                    continue
+                if is_zig_primitive(mod_name):
                     continue
                 clean_mod_name = f'@"{mod_name}"' if mod_name in ZIG_KEYWORDS_AND_PRIMITIVES else mod_name
                 if mod_name == "aok":

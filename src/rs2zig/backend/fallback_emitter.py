@@ -3,7 +3,7 @@ Header and Fallback Type Generator for Zig Source Code Emitter.
 """
 import re
 from typing import Set, List
-from rs2zig.backend.emitter_constants import ZIG_KEYWORDS_AND_PRIMITIVES
+from rs2zig.backend.emitter_constants import ZIG_KEYWORDS_AND_PRIMITIVES, is_zig_primitive
 
 
 STD_SUBMODULES = {
@@ -54,6 +54,7 @@ def generate_fallback_headers(
             mod_prefix not in all_declared_names
             and mod_prefix not in imported_modules
             and mod_prefix not in STD_SUBMODULES
+            and not is_zig_primitive(mod_prefix)
             and not any(f"const {mod_prefix}" in h for h in header_lines)
             and not any(f'const @"{mod_prefix}"' in h for h in header_lines)
         ):
@@ -78,6 +79,6 @@ def generate_fallback_headers(
                 if not any("const Self" in h for h in header_lines):
                     header_lines.append("pub const Self = @This();")
             elif not re.search(r"\.\s*" + re.escape(ext_type) + r"\b", clean_body_no_ats):
-                if not any(f"const {ext_type}" in h for h in header_lines):
+                if not any(f"const {ext_type}" in h for h in header_lines) and not is_zig_primitive(ext_type):
                     header_lines.append(f"pub const {ext_type} = type;")
 

@@ -422,6 +422,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                     cap_var = pat_part[pat_part.find("(")+1:pat_part.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
                     if "," in cap_var or not cap_var.isidentifier():
                         cap_var = "item"
+                if cap_var in ZIG_KEYWORDS_AND_PRIMITIVES:
+                    cap_var = "item"
                 if pat_part.startswith("Err"):
                     lines = [f"_ = {target_part} catch |{cap_var}| {{", f"{emitter_ctx.indent_str * (emitter_ctx.current_indent + 1)}_ = {cap_var};"]
                 else:
