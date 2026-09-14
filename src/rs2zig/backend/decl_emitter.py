@@ -181,10 +181,13 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                     )
 
                     if is_shadowing:
-                        body_lines = [re.sub(r"(?<!\blet\s)(?<!\bconst\s)(?<!\bvar\s)\b" + re.escape(clean_param_name) + r"\b", f"{clean_param_name}_param", line) for line in body_lines]
+                        target_param_name = f"{clean_param_name}_param"
+                        if prev_outer_params and target_param_name in prev_outer_params:
+                            target_param_name = f"{target_param_name}_inner"
+                        body_lines = [re.sub(r"(?<!\blet\s)(?<!\bconst\s)(?<!\bvar\s)\b" + re.escape(clean_param_name) + r"\b", target_param_name, line) for line in body_lines]
                         body_text = "\n".join(body_lines)
                         check_text = f"({params_str}) {ret_str}\n" + body_text
-                        check_name = f"{clean_param_name}_param"
+                        check_name = target_param_name
                         if len(re.findall(r"\b" + re.escape(check_name) + r"\b", check_text)) <= 1:
                             discard_lines.append(f"{emitter_ctx._indent()}_ = {check_name};")
                     elif raw_name.startswith("mut "):
@@ -266,10 +269,8 @@ def emit_params_decl(params: List[Param], parent_struct_name: Optional[str] = No
                 )
                 if is_shadowing:
                     pname = f"{clean_name}_param"
-
-
-
-
+                    if getattr(emitter_ctx, "outer_fn_param_names", None) and pname in emitter_ctx.outer_fn_param_names:
+                        pname = f"{pname}_inner"
                 else:
                     pname = f'@"{clean_name}"' if (clean_name in ZIG_RESERVED_KEYWORDS and not clean_name.startswith("@")) else clean_name
             parts.append(f"{pname}: {ptype}")

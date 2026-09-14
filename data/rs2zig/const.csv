@@ -37,6 +37,10 @@ script/extract_data/find_imports.py,script.extract_data.find_imports,PROJECT_ROO
 script/extract_data/find_imports.py,script.extract_data.find_imports,DATA_DIR,"os.path.join(PROJECT_ROOT, 'data', 'rs2zig')",13
 script/extract_data/find_imports.py,script.extract_data.find_imports,OUTPUT_CSV,"os.path.join(DATA_DIR, 'import.csv')",14
 script/extract_data/find_imports.py,script.extract_data.find_imports,EXCLUDE_DIRS,"{'.git', 'venv', '.venv', '__pycache__', 'data', '.agents', '.mypy_cache', '.pytest_cache', '.ruff_c",16
+script/fast_batch_recheck.py,script.fast_batch_recheck,VENDOR_RUST_DIR,'/Users/levanthanh/Documents/code/rust/aok/vendor',12
+script/fast_batch_recheck.py,script.fast_batch_recheck,OUTPUT_ZIG_DIR,'aok_converted/vendor',13
+script/fast_batch_recheck.py,script.fast_batch_recheck,CSV_PROGRESS_PATH,'data/aok_batch_progress.csv',14
+script/fast_batch_recheck.py,script.fast_batch_recheck,CSV_FILE_STATUS_PATH,'data/aok_file_status.csv',15
 script/incremental_batch_convert.py,script.incremental_batch_convert,CSV_PROGRESS_PATH,'data/aok_batch_progress.csv',30
 script/incremental_batch_convert.py,script.incremental_batch_convert,CSV_FILE_STATUS_PATH,'data/aok_file_status.csv',31
 script/incremental_batch_convert.py,script.incremental_batch_convert,DEFAULT_STEP_SIZE,20,32

@@ -119,8 +119,10 @@ def _prepare_local_var(raw_vname: str, emitter_ctx: Any, is_mutable: bool = Fals
     scope_names = getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", None))
     current_fn = getattr(emitter_ctx, "current_fn_name", None)
     outer_block_vars = getattr(emitter_ctx, "all_outer_block_vars", None)
+    outer_fn_params = getattr(emitter_ctx, "outer_fn_param_names", None)
     if (
         vname in getattr(emitter_ctx, "current_fn_param_names", set())
+        or (outer_fn_params and (vname in outer_fn_params or f"{vname}_param" in outer_fn_params))
         or (scope_names and vname in scope_names)
         or (current_fn and vname == current_fn)
         or (outer_block_vars and vname in outer_block_vars)
@@ -137,6 +139,7 @@ def _prepare_local_var(raw_vname: str, emitter_ctx: Any, is_mutable: bool = Fals
 
 def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
     """Emit single statement string without leading indent."""
+
     if isinstance(stmt, FnDecl):
         fn_code = emitter_ctx._emit_function(stmt)
         if getattr(emitter_ctx, "current_fn", None) is not None or emitter_ctx.current_indent > 0:
@@ -254,7 +257,11 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
 
         vname = f'@"{vname}"' if (vname in ZIG_RESERVED_KEYWORDS and not vname.startswith("@")) else vname
         type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
-        val_part = f" = {val_expr_str}" if stmt.value else ""
+        if not stmt.value:
+            kw = "var"
+            val_part = " = undefined"
+        else:
+            val_part = f" = {val_expr_str}" if val_expr_str else " = undefined"
 
         res = f"{kw} {vname}{type_part}{val_part};"
         if clean_vname.startswith("_") and clean_vname != "_":

@@ -422,5 +422,58 @@ class TestPatternFixesPart5(unittest.TestCase):
         self.assertIn(".{ .Some, .None }, .{ .None, .Some } => true,", result)
 
 
+    def test_uninitialized_let_stmt_emits_var_undefined(self) -> None:
+        """Verify uninitialized let statement emits var with = undefined initializer in Zig."""
+        code = """
+        pub fn process() {
+            let error_generic_member_access;
+            if true {
+                error_generic_member_access = true;
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("var error_generic_member_access = undefined;", result)
+        self.assertNotIn("const error_generic_member_access;", result)
+
+    def test_closure_tuple_param_destructuring_identifier_preservation(self) -> None:
+        """Verify closure tuple pattern destructuring preserves parameter identifier without adding underscores."""
+        code = """
+        pub fn resolve(fields: Vec<i32>) {
+            fields.iter().find(|(_, f)| f.data_type() == 0);
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("const f = p0.[\"1\"]", result.replace("@\"1\"", "[\"1\"]"))
+        self.assertIn("f.data_type()", result)
+        self.assertNotIn("_f.data_type()", result)
+
+    def test_nested_function_param_shadowing_outer_param(self) -> None:
+        """Verify nested function parameter shadowing outer function parameter gets distinct non-duplicate name."""
+        code = """
+        pub fn outer(parent: i32) {
+            let inner = |parent: i32| {
+                let _ = parent;
+            };
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("pub fn outer(parent: i32)", result)
+        self.assertIn("fn run(parent_param: i32)", result)
+
+    def test_fallback_bevy_and_ndk_namespaces(self) -> None:
+        """Verify bevy and ndk module references emit pub const bevy / ndk fallback declarations."""
+        code = """
+        pub const NORMAL: i32 = bevy.color.BLUE;
+        pub fn setup() {
+            let _ = ndk.input.event;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("pub const bevy = *anyopaque;", result)
+        self.assertIn("pub const ndk = *anyopaque;", result)
+
+
 if __name__ == "__main__":
     unittest.main()
+

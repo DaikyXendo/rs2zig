@@ -76,8 +76,10 @@ def generate_fallback_headers(
     found_types = set(re.findall(r"\b(_?[A-Z][a-zA-Z0-9_]*)\b", clean_body_no_ats))
     found_types.update(re.findall(r"\b(_bindgen_[a-zA-Z0-9_]*)\b", clean_body_no_ats))
 
-    if (re.search(r"\bbevy\b", clean_body) or "bevy" in imported_modules) and "bevy" not in all_declared_names and not any("const bevy" in h for h in header_lines):
+    if re.search(r"\bbevy\b", clean_body) and not any("const bevy" in h for h in header_lines) and not re.search(r"\b(?:const|var|fn|struct|enum|union)\s+bevy\b", clean_body):
         header_lines.append("pub const bevy = *anyopaque;")
+    if re.search(r"\bndk\b", clean_body) and not any("const ndk" in h for h in header_lines) and not re.search(r"\b(?:const|var|fn|struct|enum|union)\s+ndk\b", clean_body):
+        header_lines.append("pub const ndk = *anyopaque;")
 
     for ext_type in sorted(found_types):
         if (

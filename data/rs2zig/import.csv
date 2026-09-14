@@ -28,6 +28,15 @@ script/extract_data/find_functions.py,script.extract_data.find_functions,ast,,,9
 script/extract_data/find_imports.py,script.extract_data.find_imports,os,,,7
 script/extract_data/find_imports.py,script.extract_data.find_imports,csv,,,8
 script/extract_data/find_imports.py,script.extract_data.find_imports,ast,,,9
+script/fast_batch_recheck.py,script.fast_batch_recheck,os,,,3
+script/fast_batch_recheck.py,script.fast_batch_recheck,csv,,,4
+script/fast_batch_recheck.py,script.fast_batch_recheck,time,,,5
+script/fast_batch_recheck.py,script.fast_batch_recheck,shutil,,,6
+script/fast_batch_recheck.py,script.fast_batch_recheck,datetime,datetime,,7
+script/fast_batch_recheck.py,script.fast_batch_recheck,concurrent.futures,ThreadPoolExecutor,,8
+script/fast_batch_recheck.py,script.fast_batch_recheck,concurrent.futures,as_completed,,8
+script/fast_batch_recheck.py,script.fast_batch_recheck,rs2zig.cli,run_transpile,,9
+script/fast_batch_recheck.py,script.fast_batch_recheck,rs2zig.validate.zig_fmt_check,ZigValidator,,10
 script/incremental_batch_convert.py,script.incremental_batch_convert,os,,,7
 script/incremental_batch_convert.py,script.incremental_batch_convert,csv,,,8
 script/incremental_batch_convert.py,script.incremental_batch_convert,glob,,,9

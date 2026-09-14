@@ -266,8 +266,11 @@ def build_expr(builder: Any, node: tree_sitter.Node) -> Expr:
                     if c_type == "parameter":
                         pn = child.child_by_field_name("pattern")
                         pt = child.child_by_field_name("type")
-                        p_name = builder.get_text(pn) if pn else "arg"
-                        p_name = p_name.replace("(", "").replace(")", "").replace(" ", "_").replace("&", "").strip()
+                        raw_p = builder.get_text(pn) if pn else "arg"
+                        if "," in raw_p or (raw_p.startswith("(") and raw_p.endswith(")")):
+                            p_name = raw_p.strip()
+                        else:
+                            p_name = raw_p.replace("(", "").replace(")", "").replace(" ", "_").replace("&", "").strip()
                         closure_params.append(
                             Param(
                                 name=p_name if p_name else "arg",
@@ -275,7 +278,11 @@ def build_expr(builder: Any, node: tree_sitter.Node) -> Expr:
                             )
                         )
                     else:
-                        p_name = builder.get_text(child).replace("(", "").replace(")", "").replace(" ", "_").replace("&", "").strip()
+                        raw_p = builder.get_text(child)
+                        if "," in raw_p or (raw_p.startswith("(") and raw_p.endswith(")")):
+                            p_name = raw_p.strip()
+                        else:
+                            p_name = raw_p.replace("(", "").replace(")", "").replace(" ", "_").replace("&", "").strip()
                         closure_params.append(
                             Param(
                                 name=p_name if p_name else "arg",
