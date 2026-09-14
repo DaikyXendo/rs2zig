@@ -16,10 +16,10 @@ src/rs2zig/backend/__init__.py,src.rs2zig.backend,5,101
 src/rs2zig/backend/build_zig_gen.py,src.rs2zig.backend.build_zig_gen,70,1985
 src/rs2zig/backend/decl_emitter.py,src.rs2zig.backend.decl_emitter,277,14746
 src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,50,1725
-src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,605,29836
+src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,608,30067
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,121,7642
 src/rs2zig/backend/stmt_emitter.py,src.rs2zig.backend.stmt_emitter,309,15286
-src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,193,9305
+src/rs2zig/backend/zig_emitter.py,src.rs2zig.backend.zig_emitter,194,9411
 src/rs2zig/cli.py,src.rs2zig.cli,282,11593
 src/rs2zig/frontend/__init__.py,src.rs2zig.frontend,5,126
 src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,230,9071
@@ -54,4 +54,4 @@ tests/test_pattern_fixes.py,tests.test_pattern_fixes,668,24519
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,144,4831
 tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,563,20924
 tests/test_pattern_fixes_part4.py,tests.test_pattern_fixes_part4,420,13920
-tests/test_pattern_fixes_part5.py,tests.test_pattern_fixes_part5,540,20509
+tests/test_pattern_fixes_part5.py,tests.test_pattern_fixes_part5,564,21324

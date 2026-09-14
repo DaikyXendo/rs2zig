@@ -218,7 +218,10 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
         fname = expr.field_name
         if fname == "await":
             return target_str
-        if (fname.isdigit() or fname in ZIG_RESERVED_KEYWORDS) and not fname.startswith("@"):
+        if "." in fname and not fname.startswith("@"):
+            parts = [f'@"{p}"' if (p.isdigit() or p in ZIG_RESERVED_KEYWORDS) and not p.startswith("@") else p for p in fname.split(".")]
+            fname = ".".join(parts)
+        elif (fname.isdigit() or fname in ZIG_RESERVED_KEYWORDS) and not fname.startswith("@"):
             fname = f'@"{fname}"'
         if "::<" in fname:
             base, rest = fname.split("::<", 1)

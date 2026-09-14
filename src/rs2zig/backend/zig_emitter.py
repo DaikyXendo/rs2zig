@@ -32,7 +32,8 @@ class ZigEmitter:
         self.imported_modules.clear()
         impl_map = {impl.struct_name: impl.methods for impl in sf.impls}
 
-        top_level_names = {c.name for c in sf.constants} | {s.name for s in sf.structs} | {e.name for e in sf.enums} | {t.name for t in sf.traits} | {f.name for f in sf.functions}
+        impl_methods = {m.name for impl in sf.impls for m in getattr(impl, "methods", [])}
+        top_level_names = {c.name for c in sf.constants} | {s.name for s in sf.structs} | {e.name for e in sf.enums} | {t.name for t in sf.traits} | {f.name for f in sf.functions} | impl_methods
         variant_names = {v.name for e in sf.enums for v in getattr(e, "variants", [])}
         top_level_names.update(variant_names)
         self.all_declared_names = set(top_level_names)

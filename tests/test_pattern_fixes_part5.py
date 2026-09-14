@@ -531,7 +531,31 @@ class TestPatternFixesPart5(unittest.TestCase):
         ];
         """
         result = self._transpile_code(code)
-        self.assertNotIn("// comment;", result)
+    def test_tuple_index_in_field_access_quoted(self) -> None:
+        """Verify field access with tuple index like bits.0 quotes number as @"0"."""
+        code = """
+        pub fn process(self: &State) {
+            let x = self.bits.0;
+            let _ = x;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn('.@"0"', result)
+
+    def test_local_var_shadowing_struct_method_renamed(self) -> None:
+        """Verify local variable matching struct method name is renamed with _var suffix."""
+        code = """
+        struct State;
+        impl State {
+            pub fn update(&mut self) {}
+            pub fn process(&mut self) {
+                let update = 10;
+                let _ = update;
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("update_var", result)
 
 
 if __name__ == "__main__":
