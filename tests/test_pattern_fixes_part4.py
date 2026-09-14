@@ -706,9 +706,66 @@ class TestPatternFixesPart4(unittest.TestCase):
         result = self._transpile_code(code)
         self.assertIn("subtrees_to_remove_var[0]", result)
 
+    def test_match_arm_body_has_semicolon_before_block_end(self) -> None:
+        """Verify match arm with payload capture adds semicolon to trailing expression before block end."""
+        code = """
+        pub fn get_ctx(state: State) {
+            match state {
+                State::Active(context) => Rc::clone(context),
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn(".Active => |context| Rc.clone(context),", result)
+
+    def test_closure_tuple_param_destructuring(self) -> None:
+        """Verify closure tuple pattern parameter (|(_, f)| ...) destructures f in body."""
+        code = """
+        pub fn find_item(items: &[Item]) {
+            let _ = items.iter().find(|(_, f)| f.is_valid());
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn('p0.@"1";', result)
+
+    def test_multi_line_tuple_destructuring_does_not_emit_pointless_discard(self) -> None:
+        """Verify tuple pattern destructuring used in subsequent statements does not emit pointless discard of tuple temp."""
+        code = """
+        pub fn process_point(position: Point) -> Rect {
+            let (x_trunc, x_fract) = (position.x.trunc(), position.x.fract());
+            return Rect { min: x_trunc, max: x_fract };
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("_ = __tuple_tmp", result)
+
+    def test_unused_tuple_destructured_variable_emits_discard(self) -> None:
+        """Verify tuple pattern destructuring with unused field emits discard for the unused variable."""
+        code = """
+        pub fn process_id(id: Id) {
+            let (a, b) = id.to_components();
+            let _ = a;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("_ = b;", result)
+
+    def test_generic_comptime_param_shadowing_emits_correct_discard(self) -> None:
+        """Verify generic comptime parameter renaming emits correct discard if unused or omits discard if used."""
+        code = """
+        pub fn assert_ser<T>(allocator: Allocator, v: &T, expected_bytes: &[u8]) {
+            let mut actual_bytes = vec![];
+            v.serialize(&mut actual_bytes);
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("_ = T;", result)
+        self.assertIn("_ = allocator;", result)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

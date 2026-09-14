@@ -146,7 +146,7 @@ class TestPatternFixesPart3(unittest.TestCase):
         }
         """
         zig = self._transpile_code(code)
-        self.assertIn("_ = arg0;", zig)
+        self.assertIn("_ = p0;", zig)
 
     def test_method_parameter_struct_field_shadowing_fix(self) -> None:
         """Verify struct method parameter matching struct field name origin does not shadow declaration in Zig signature."""

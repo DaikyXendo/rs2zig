@@ -8,7 +8,7 @@ from rs2zig.ir.nodes import (
     Expr, LiteralExpr, IdentifierExpr, BinaryExpr, UnaryExpr, CallExpr,
     FieldAccessExpr, StructInitExpr, MacroCallExpr, ReturnExpr, IfExpr,
     LoopExpr, MatchExpr, TryExpr, OptionalUnwrapExpr, ClosureExpr, BlockExpr, TypeNode,
-    BreakExpr, ContinueExpr, FnDecl, Param
+    BreakExpr, ContinueExpr, FnDecl, Param, LetStmt, Stmt
 )
 from rs2zig.lowering.stdlib_map import map_type, _split_angle_brackets
 from rs2zig.lowering.control_flow import lower_println_macro
@@ -414,8 +414,13 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                     else:
                         clean_b = body_str.strip()
                         if clean_b.startswith("{") and clean_b.endswith("}"):
-                            body_str = f"{{ _ = {clean_cap}; {clean_b[1:-1].strip()} }}"
+                            inner_b = clean_b[1:-1].strip()
+                            if inner_b and not inner_b.endswith(";") and not inner_b.endswith("}"):
+                                inner_b += ";"
+                            body_str = f"{{ _ = {clean_cap}; {inner_b} }}" if inner_b else f"{{ _ = {clean_cap}; }}"
                         else:
+                            if not clean_b.endswith(";") and not clean_b.endswith("}"):
+                                clean_b += ";"
                             body_str = f"{{ _ = {clean_cap}; {clean_b} }}"
 
             if guard_cond:
@@ -546,13 +551,29 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 ret_type = TypeNode(name="i32")
 
         cleaned_params = []
+        prepended_stmts: List[Stmt] = []
         for idx, p in enumerate(expr.params):
-            pname = p.name
-            if not pname or pname == "_":
-                pname = f"arg{idx}"
+            raw_pname = p.name or ""
+            pname = f"p{idx}" if (not raw_pname or raw_pname == "_" or not raw_pname.isidentifier()) else raw_pname
             cleaned_params.append(Param(name=pname, param_type=p.param_type, is_self=p.is_self))
+            if "," in raw_pname or (raw_pname.startswith("(") and raw_pname.endswith(")")):
+                clean_p = raw_pname.strip("()")
+                inner_vars = [v.strip() for v in clean_p.split(",") if v.strip()]
+                for e_idx, vname in enumerate(inner_vars):
+                    clean_v = vname.replace("mut ", "").strip()
+                    if clean_v and clean_v != "_" and clean_v.isidentifier():
+                        prepended_stmts.append(
+                            LetStmt(
+                                name=clean_v,
+                                var_type=None,
+                                value=FieldAccessExpr(target=IdentifierExpr(name=pname), field_name=str(e_idx)),
+                                is_mutable=vname.startswith("mut ")
+                            )
+                        )
 
         body_node = expr.body if isinstance(expr.body, BlockExpr) else BlockExpr(trailing_expr=expr.body)
+        if prepended_stmts:
+            body_node = BlockExpr(stmts=prepended_stmts + body_node.stmts, trailing_expr=body_node.trailing_expr)
         fn_decl = FnDecl(
             name="run",
             params=cleaned_params,

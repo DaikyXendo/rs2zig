@@ -34,31 +34,40 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
     emitter_ctx.current_block_vars = set()
     emitter_ctx.current_renamed_vars = dict(prev_renamed) if prev_renamed else {}
     try:
-        lines: List[str] = []
+        raw_lines: List[str] = []
         for stmt in block.stmts:
             stmt_str = emit_stmt(stmt, emitter_ctx)
             if stmt_str and stmt_str.strip() != ";":
-                lines.append(f"{emitter_ctx._indent()}{stmt_str}")
+                for sub_line in stmt_str.split("\n"):
+                    sub_stripped = sub_line.strip()
+                    if sub_stripped and sub_stripped != ";":
+                        raw_lines.append(f"{emitter_ctx._indent()}{sub_stripped}")
 
         if block.trailing_expr:
             expr_str = emitter_ctx._emit_expr(block.trailing_expr)
             if expr_str.strip() in ("()", ".{}", "void"):
-                lines.append(f"{emitter_ctx._indent()}return;")
+                raw_lines.append(f"{emitter_ctx._indent()}return;")
             else:
-                lines.append(f"{emitter_ctx._indent()}return {expr_str};")
+                for sub_line in f"return {expr_str};".split("\n"):
+                    sub_stripped = sub_line.strip()
+                    if sub_stripped and sub_stripped != ";":
+                        raw_lines.append(f"{emitter_ctx._indent()}{sub_stripped}")
 
-        full_text = "\n".join(lines)
+        lines = raw_lines
         final_lines: List[str] = []
         for i, line in enumerate(lines):
             final_lines.append(line)
             stripped = line.strip()
-            if (stripped.startswith("const ") or stripped.startswith("var ")) and "=" in stripped:
+            is_const = stripped.startswith("const ") or stripped.startswith("pub const ")
+            is_var = stripped.startswith("var ") or stripped.startswith("pub var ")
+            if (is_const or is_var) and "=" in stripped:
                 parts = stripped.split()
-                if len(parts) >= 2:
-                    raw_v = parts[1].split(":")[0].split("=")[0].strip().strip('";@')
+                name_idx = 2 if (parts[0] == "pub" and len(parts) >= 3) else 1
+                if len(parts) > name_idx:
+                    raw_v = parts[name_idx].split(":")[0].split("=")[0].strip().strip('";@')
                     if raw_v and raw_v != "_" and raw_v.isidentifier():
                         subsequent = "\n".join(lines[i+1:])
-                        if stripped.startswith("var "):
+                        if is_var:
                             has_mut = (
                                 re.search(r"\b" + re.escape(raw_v) + r"\b\s*(?:\.[a-zA-Z0-9_@]+)*\s*(?:[\+\-\*\/\%\&\|\^\<\>]?=|=(?![=>]))", subsequent)
                                 or re.search(r"&\s*" + re.escape(raw_v) + r"\b", subsequent)

@@ -178,7 +178,7 @@ def build_expr(builder: Any, node: tree_sitter.Node) -> Expr:
         args: List[Expr] = []
         if args_node:
             for child in args_node.children:
-                if get_node_type(child) not in ("(", ")", ",", "comment", "line_comment", "block_comment"):
+                if get_node_type(child) not in ("(", ")", ",", "comment", "line_comment", "block_comment", "attribute_item", "inner_attribute_item"):
                     args.append(build_expr(builder, child))
 
         return CallExpr(
@@ -195,7 +195,7 @@ def build_expr(builder: Any, node: tree_sitter.Node) -> Expr:
             count_clean = parts[1].strip()
             return LiteralExpr(value=f"([_]u8{{{val_clean}}} ** {count_clean})", kind="array")
         else:
-            elem_nodes = [c for c in node.children if get_node_type(c) not in ("[", "]", ",", "line_comment", "block_comment", "comment")]
+            elem_nodes = [c for c in node.children if get_node_type(c) not in ("[", "]", ",", "line_comment", "block_comment", "comment", "attribute_item", "inner_attribute_item")]
             if elem_nodes:
                 inits = [
                     StructFieldInit(field_name=str(idx), value=build_expr(builder, c))
@@ -235,7 +235,7 @@ def build_expr(builder: Any, node: tree_sitter.Node) -> Expr:
         )
 
     if ntype in ("tuple_expression", "parenthesized_expression"):
-        children = [c for c in node.children if get_node_type(c) not in ("(", ")", ",", "line_comment", "block_comment", "comment")]
+        children = [c for c in node.children if get_node_type(c) not in ("(", ")", ",", "line_comment", "block_comment", "comment", "attribute_item", "inner_attribute_item")]
         if len(children) > 1 or ntype == "tuple_expression":
             tuple_inits: List[StructFieldInit] = []
             for elem_idx, child in enumerate(children):

@@ -170,7 +170,7 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                         discard_lines.append(f"{emitter_ctx._indent()}_ = self;")
                 else:
                     raw_name = p.name or ""
-                    clean_param_name = raw_name.replace("mut ", "").strip()
+                    clean_param_name = raw_name.replace("comptime ", "").replace("mut ", "").strip()
                     is_shadowing = (
                         (field_names and clean_param_name in field_names)
                         or (getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", None)) and clean_param_name in getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set())))
