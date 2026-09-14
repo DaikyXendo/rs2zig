@@ -80,6 +80,8 @@ def generate_fallback_headers(
         header_lines.append("pub const bevy = *anyopaque;")
     if re.search(r"\bndk\b", clean_body) and not any("const ndk" in h for h in header_lines) and not re.search(r"\b(?:const|var|fn|struct|enum|union)\s+ndk\b", clean_body):
         header_lines.append("pub const ndk = *anyopaque;")
+    if re.search(r"\bthread\b", clean_body) and not any("const thread" in h for h in header_lines) and not re.search(r"\b(?:const|var|fn|struct|enum|union)\s+thread\b", clean_body):
+        header_lines.append("pub const thread = *anyopaque;")
 
     for ext_type in sorted(found_types):
         if (

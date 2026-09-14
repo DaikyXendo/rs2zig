@@ -87,7 +87,7 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
                             )
                             if not has_mut:
                                 final_lines[-1] = final_lines[-1].replace("var " + raw_v, "const " + raw_v, 1)
-                        if not re.search(r"(?<!\.)\b" + re.escape(raw_v) + r"\b", subsequent):
+                        if not re.search(r"(?<![^.]\.)\b" + re.escape(raw_v) + r"\b", subsequent):
                             indent = line[: len(line) - len(line.lstrip())]
                             clean_ident = f'@"{raw_v}"' if raw_v in ZIG_RESERVED_KEYWORDS else raw_v
                             discard_stmt = f"{indent}_ = {clean_ident};"
@@ -108,13 +108,6 @@ def _prepare_local_var(raw_vname: str, emitter_ctx: Any, is_mutable: bool = Fals
     vname = raw_vname.replace("mut ", "").strip()
     if vname == "_" or not vname:
         return "_"
-    is_dedup = False
-    if hasattr(emitter_ctx, "current_block_vars") and emitter_ctx.current_block_vars is not None:
-        if vname in emitter_ctx.current_block_vars:
-            vname = f"{vname}_alt"
-            is_dedup = True
-        else:
-            emitter_ctx.current_block_vars.add(vname)
     was_renamed = False
     scope_names = getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", None))
     current_fn = getattr(emitter_ctx, "current_fn_name", None)
@@ -129,6 +122,13 @@ def _prepare_local_var(raw_vname: str, emitter_ctx: Any, is_mutable: bool = Fals
     ):
         vname = f"{vname}_var"
         was_renamed = True
+
+    is_dedup = False
+    if hasattr(emitter_ctx, "current_block_vars") and emitter_ctx.current_block_vars is not None:
+        while vname in emitter_ctx.current_block_vars:
+            vname = f"{vname}_alt"
+            is_dedup = True
+        emitter_ctx.current_block_vars.add(vname)
 
     clean_vname = vname.strip('"@')
     if (was_renamed or is_dedup) and getattr(emitter_ctx, "current_renamed_vars", None) is not None:
@@ -233,29 +233,8 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
         if val_expr_str.startswith("{") and not val_expr_str.endswith("}"):
             val_expr_str = f"({val_expr_str})"
 
-        is_dedup = False
-        if hasattr(emitter_ctx, "current_block_vars") and emitter_ctx.current_block_vars is not None:
-            if vname in emitter_ctx.current_block_vars:
-                vname = f"{vname}_alt"
-                is_dedup = True
-            else:
-                emitter_ctx.current_block_vars.add(vname)
-        was_renamed = False
-        scope_names = getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", None))
-        current_fn = getattr(emitter_ctx, "current_fn_name", None)
-        if (
-            vname in getattr(emitter_ctx, "current_fn_param_names", set())
-            or (scope_names and vname in scope_names)
-            or (current_fn and vname == current_fn)
-        ):
-            vname = f"{vname}_var"
-            was_renamed = True
-
-        clean_vname = vname.strip('"@')
-        if (was_renamed or is_dedup) and getattr(emitter_ctx, "current_renamed_vars", None) is not None:
-            emitter_ctx.current_renamed_vars[stmt.name] = clean_vname
-
-        vname = f'@"{vname}"' if (vname in ZIG_RESERVED_KEYWORDS and not vname.startswith("@")) else vname
+        clean_vname = _prepare_local_var(stmt.name, emitter_ctx, stmt.is_mutable).strip('"@')
+        vname = f'@"{clean_vname}"' if (clean_vname in ZIG_RESERVED_KEYWORDS and not clean_vname.startswith("@")) else clean_vname
         type_part = f": {map_type(stmt.var_type)}" if stmt.var_type else ""
         if not stmt.value:
             kw = "var"

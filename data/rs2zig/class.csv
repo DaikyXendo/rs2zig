@@ -67,4 +67,4 @@ tests/test_pattern_fixes.py,tests.test_pattern_fixes,TestPatternFixes,unittest.T
 tests/test_pattern_fixes_part2.py,tests.test_pattern_fixes_part2,TestPatternFixesPart2,unittest.TestCase,13,,Test cases for transpiler fixes part 2.,9,140
 tests/test_pattern_fixes_part3.py,tests.test_pattern_fixes_part3,TestPatternFixesPart3,unittest.TestCase,48,,Test cases for transpiler fixes part 3.,9,556
 tests/test_pattern_fixes_part4.py,tests.test_pattern_fixes_part4,TestPatternFixesPart4,unittest.TestCase,28,,Test cases for transpiler fixes part 4.,17,408
-tests/test_pattern_fixes_part5.py,tests.test_pattern_fixes_part5,TestPatternFixesPart5,unittest.TestCase,37,,Test cases for transpiler fixes part 5.,16,474
+tests/test_pattern_fixes_part5.py,tests.test_pattern_fixes_part5,TestPatternFixesPart5,unittest.TestCase,40,,Test cases for transpiler fixes part 5.,16,512

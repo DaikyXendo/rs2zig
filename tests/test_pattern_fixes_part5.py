@@ -474,6 +474,45 @@ class TestPatternFixesPart5(unittest.TestCase):
         self.assertIn("pub const ndk = *anyopaque;", result)
 
 
+    def test_multiple_shadowing_let_stmts_emit_unique_alt_names(self) -> None:
+        """Verify multiple shadowing let statements generate unique dedup names without duplicate redeclarations."""
+        code = """
+        pub fn process_point(point: i32) {
+            let point = point + 1;
+            let point = point + 2;
+            let point = point + 3;
+            let _ = point;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("point_var", result)
+        self.assertIn("point_var_alt", result)
+        self.assertIn("point_var_alt_alt", result)
+
+    def test_fallback_thread_namespace(self) -> None:
+        """Verify thread module references emit pub const thread fallback declaration."""
+        code = """
+        pub fn run_thread() {
+            thread::scope(|s| { let _ = s; });
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("pub const thread = *anyopaque;", result)
+
+    def test_range_slice_upper_bound_usage_prevents_pointless_discard(self) -> None:
+        """Verify variable used as range slice upper bound (..end) is detected as used and not discarded."""
+        code = """
+        pub fn get_slice(buf: &[u8], idx: usize, byte_width: usize) -> &[u8] {
+            let start = idx * byte_width;
+            let end = start + byte_width;
+            &buf[start..end]
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("_ = end;", result)
+
+
 if __name__ == "__main__":
     unittest.main()
+
 
