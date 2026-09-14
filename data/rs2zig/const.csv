@@ -57,7 +57,7 @@ src/rs2zig/backend/emitter_constants.py,src.rs2zig.backend.emitter_constants,ZIG
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,STD_SUBMODULES,"{'std', 'self', 'super', 'crate', 'bevy', 'bevy_ecs', 'aok_core', 'core', 'libc', 'mem', 'io', 'os',",9
 src/rs2zig/backend/fallback_emitter.py,src.rs2zig.backend.fallback_emitter,STD_TYPES,"{'std', 'anytype', 'void', 'bool', 'usize', 'isize', 'i8', 'i16', 'i32', 'i64', 'i128', 'u8', 'u16',",15
 src/rs2zig/cli.py,src.rs2zig.cli,logger,logging.getLogger('rs2zig.cli'),33
-src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),42
+src/rs2zig/frontend/ast_builder.py,src.rs2zig.frontend.ast_builder,logger,logging.getLogger('rs2zig.frontend.ast_builder'),43
 src/rs2zig/frontend/cargo_parser.py,src.rs2zig.frontend.cargo_parser,logger,logging.getLogger('rs2zig.frontend.cargo_parser'),13
 src/rs2zig/frontend/macro_expand.py,src.rs2zig.frontend.macro_expand,logger,logging.getLogger('rs2zig.frontend.macro_expand'),12
 src/rs2zig/frontend/mod_resolver.py,src.rs2zig.frontend.mod_resolver,logger,logging.getLogger('rs2zig.frontend.mod_resolver'),11

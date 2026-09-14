@@ -368,6 +368,77 @@ class TestPatternFixesPart4(unittest.TestCase):
         self.assertIn("comptime S_param: type", result)
 
 
+    def test_nested_use_declaration_extracts_nested_symbols(self) -> None:
+        """Verify nested use declarations extract symbols like Node and NodeId into imports."""
+        code = """
+        use crate::{
+            filters::FilterResult,
+            node::{Node, NodeId},
+        };
+
+        pub fn get_node(node: ?Node, id: NodeId) -> FilterResult {
+            let _ = (node, id);
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("pub const Node = type;", result)
+        self.assertIn("pub const NodeId = type;", result)
+
+    def test_undeclared_function_call_generates_function_fallback(self) -> None:
+        """Verify undeclared function calls like px(12) generate a function stub in header."""
+        code = """
+        pub fn setup() {
+            let w = px(12);
+            let p = percent(50);
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("pub const px = (struct {", result)
+        self.assertIn("pub const percent = (struct {", result)
+
+    def test_prefix_type_name_does_not_block_fallback_header(self) -> None:
+        """Verify NodeId fallback header does not block Node fallback header generation."""
+        code = """
+        pub fn process(id: NodeId, n: Node) {
+            let _ = (id, n);
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("pub const Node = type;", result)
+        self.assertIn("pub const NodeId = type;", result)
+
+
+    def test_sibling_function_does_not_inherit_renamed_vars(self) -> None:
+        """Verify sibling function does not inherit renamed_vars from previous function."""
+        code = """
+        pub fn func1(origin: i32) -> i32 {
+            let mut origin = origin;
+            origin += 1;
+            origin
+        }
+
+        pub fn func2(origin: i32) -> i32 {
+            origin
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("fn func2(origin: i32) i32", result)
+        self.assertNotIn("origin_var", result.split("func2")[1])
+
+    def test_payload_capture_shadows_outer_param_is_renamed(self) -> None:
+        """Verify optional payload capture shadowing outer function parameter is renamed cleanly."""
+        code = """
+        pub fn process_changes(changes: Option<i32>) {
+            if let Some(changes) = changes {
+                let _ = changes;
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("|changes_param|", result)
+        self.assertIn("|changes_val|", result)
+
+
 if __name__ == "__main__":
     unittest.main()
 

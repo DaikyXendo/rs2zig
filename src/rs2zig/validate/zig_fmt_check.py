@@ -52,11 +52,12 @@ class ZigValidator:
             logger.error("Error executing `zig fmt`: %s", err)
             return zig_code
 
-    def check_syntax(self, zig_code: str) -> Tuple[bool, str]:
+    def check_syntax(self, zig_code: str, file_path: Optional[str] = None) -> Tuple[bool, str]:
         """Validate Zig source code by invoking `zig ast-check` or `zig build-obj`.
 
         Args:
             zig_code: Input Zig source code string.
+            file_path: Optional path to actual generated file on disk.
 
         Returns:
             Tuple of (is_valid: bool, error_message: str).
@@ -70,9 +71,14 @@ class ZigValidator:
             if not os.path.exists(runtime_dst):
                 shutil.copy(runtime_src, runtime_dst)
 
-        with tempfile.NamedTemporaryFile("w", suffix=".zig", delete=False) as temp_file:
-            temp_file.write(zig_code)
-            temp_path = temp_file.name
+        created_temp = False
+        if file_path and os.path.exists(file_path):
+            temp_path = os.path.abspath(file_path)
+        else:
+            created_temp = True
+            with tempfile.NamedTemporaryFile("w", suffix=".zig", delete=False) as temp_file:
+                temp_file.write(zig_code)
+                temp_path = temp_file.name
 
         try:
             # Try zig ast-check first
@@ -100,5 +106,5 @@ class ZigValidator:
             logger.error("Error validating Zig code with compiler: %s", err)
             return (False, str(err))
         finally:
-            if os.path.exists(temp_path):
+            if created_temp and os.path.exists(temp_path):
                 os.remove(temp_path)

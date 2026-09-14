@@ -79,6 +79,26 @@ def generate_fallback_headers(
                 if not any("const Self" in h for h in header_lines):
                     header_lines.append("pub const Self = @This();")
             elif not re.search(r"\.\s*" + re.escape(ext_type) + r"\b", clean_body_no_ats):
-                if not any(f"const {ext_type}" in h for h in header_lines) and not is_zig_primitive(ext_type):
+                if not any(re.search(r"\bconst\s+(?:@\")?" + re.escape(ext_type) + r"\"?\b", h) for h in header_lines) and not is_zig_primitive(ext_type):
                     header_lines.append(f"pub const {ext_type} = type;")
+
+    found_fns = set(re.findall(r"(?<!\.)\b([a-z_][a-zA-Z0-9_]*)\s*\(", clean_body_no_ats))
+    ignored_fns = {
+        "if", "while", "for", "switch", "return", "catch", "try", "orelse", "struct", "enum", "union",
+        "pub", "const", "var", "fn", "comptime", "undefined", "unreachable", "null", "true", "false",
+        "std", "core", "libc", "c_void", "crate", "self", "super", "bevy", "bevy_ecs", "aok_core"
+    }
+    for fn_name in sorted(found_fns):
+        if (
+            fn_name not in ignored_fns
+            and fn_name not in all_declared_names
+            and fn_name not in imported_modules
+            and not is_zig_primitive(fn_name)
+            and not re.search(r"\b(?:fn|const|var)\s+" + re.escape(fn_name) + r"\b", clean_body_no_ats)
+            and not any(re.search(r"\bconst\s+(?:@\")?" + re.escape(fn_name) + r"\"?\b", h) for h in header_lines)
+        ):
+            clean_fn = f'@"{fn_name}"' if fn_name in ZIG_KEYWORDS_AND_PRIMITIVES else fn_name
+            header_lines.append(
+                f"pub const {clean_fn} = (struct {{ fn f(p0: anytype, p1: anytype, p2: anytype, p3: anytype) *anyopaque {{ _ = p0; _ = p1; _ = p2; _ = p3; return undefined; }} }}).f;"
+            )
 

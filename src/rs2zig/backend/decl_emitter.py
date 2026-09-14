@@ -151,6 +151,8 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
     emitter_ctx.current_fn_name = clean_fn_name
     lines: List[str] = [f"{vis}fn {fn_name}({params_str}) {ret_str} {{"]
 
+    prev_renamed_vars = getattr(emitter_ctx, "current_renamed_vars", None)
+    emitter_ctx.current_renamed_vars = {}
     try:
         emitter_ctx.current_indent += 1
         if fn.body:
@@ -207,6 +209,7 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
     finally:
         emitter_ctx.outer_fn_param_names = prev_outer_params
         emitter_ctx.current_fn_name = prev_current_fn
+        emitter_ctx.current_renamed_vars = prev_renamed_vars
 
     lines.append("}")
     return "\n".join(lines)

@@ -24,7 +24,7 @@ def check_zig_file_syntax(file_path: str) -> Tuple[bool, str]:
     with open(file_path, "r", encoding="utf-8") as f:
         code = f.read()
     validator = ZigValidator()
-    return validator.check_syntax(code)
+    return validator.check_syntax(code, file_path=file_path)
 
 
 CSV_PROGRESS_PATH = "data/aok_batch_progress.csv"

@@ -5,6 +5,7 @@ Converts tree-sitter Rust CST (Concrete Syntax Tree) nodes into rs2zig IR datacl
 Delegates declaration building to decl_builder and expression building to expr_builder.
 """
 
+import re
 import logging
 from typing import List, Optional
 import tree_sitter
@@ -93,23 +94,17 @@ class ASTBuilder:
             elif ntype == "use_declaration":
                 text = self.get_text(child).replace("use ", "").replace(";", "").strip()
                 if "{" in text and "}" in text:
-                    prefix = text[:text.find("{")].rstrip(":")
-                    if prefix:
-                        base_mod = prefix.split("::")[0].strip()
-                        if base_mod:
-                            sf.imports.append(base_mod)
                     body = text[text.find("{") + 1 : text.rfind("}")].strip()
-                    items = [it.strip().split(" as ")[0].split("::")[-1].strip() for it in body.split(",") if it.strip()]
-                    for item in items:
-                        if item and item.isidentifier():
-                            sf.imports.append(item)
+                    words = re.findall(r"\b([a-zA-Z_][a-zA-Z0-9_]*)\b", body)
+                    for w in words:
+                        if w not in ("as", "crate", "self", "super", "pub"):
+                            sf.imports.append(w)
                 else:
                     parts = [p.strip() for p in text.split("::") if p.strip()]
                     if parts:
-                        sf.imports.append(parts[0])
-                        last_item = parts[-1].split(" as ")[0].strip()
-                        if last_item and last_item.isidentifier():
-                            sf.imports.append(last_item)
+                        last_part = parts[-1].split(" as ")[0].strip()
+                        if last_part and last_part.isidentifier() and last_part not in ("as", "crate", "self", "super", "pub"):
+                            sf.imports.append(last_part)
 
         return sf
 
