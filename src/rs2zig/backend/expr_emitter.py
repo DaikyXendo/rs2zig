@@ -317,86 +317,103 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             elif arm.guard:
                 guard_cond = emit_expr(arm.guard, emitter_ctx)
 
-            if pat_str == "_":
-                pat = "else"
-            elif pat_str.startswith("Ok(") or pat_str.startswith("Some("):
-                var_name = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip()
-                if var_name and var_name != "_":
-                    scope_names = getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set()))
-                    fn_params = getattr(emitter_ctx, "current_fn_param_names", set())
-                    if var_name in scope_names or var_name in fn_params:
-                        var_name = f"{var_name}_val"
-                    pat = f"else => |{var_name}|"
-                else:
-                    pat = "else"
-            elif pat_str.startswith("Err(") or pat_str == "None":
-                var_name = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip() if "(" in pat_str else ""
-                pat = "else" if not has_else else "error.Unknown"
-            elif pat_str.startswith("(") and pat_str.endswith(")"):
-                inner = pat_str[1:-1].strip()
-                if "," in inner:
-                    raw_items = []
-                    curr_item = []
-                    paren_depth = 0
-                    for ch in inner:
-                        if ch in "({[":
-                            paren_depth += 1
-                            curr_item.append(ch)
-                        elif ch in ")}]":
-                            paren_depth -= 1
-                            curr_item.append(ch)
-                        elif ch == "," and paren_depth == 0:
+            def _lower_single_pat(p_str: str) -> str:
+                p_str = p_str.strip()
+                if p_str == "_":
+                    return "else"
+                if p_str.startswith("Ok(") or p_str.startswith("Some("):
+                    var_name = p_str[p_str.find("(")+1:p_str.rfind(")")].strip()
+                    if var_name and var_name != "_":
+                        scope_names = getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set()))
+                        fn_params = getattr(emitter_ctx, "current_fn_param_names", set())
+                        if var_name in scope_names or var_name in fn_params:
+                            var_name = f"{var_name}_val"
+                        return f"else => |{var_name}|"
+                    return "else"
+                if p_str.startswith("Err(") or p_str == "None":
+                    return "else" if not has_else else "error.Unknown"
+                if p_str.startswith("(") and p_str.endswith(")"):
+                    inner = p_str[1:-1].strip()
+                    if "," in inner:
+                        raw_items = []
+                        curr_item = []
+                        paren_depth = 0
+                        for ch in inner:
+                            if ch in "({[":
+                                paren_depth += 1
+                                curr_item.append(ch)
+                            elif ch in ")}]":
+                                paren_depth -= 1
+                                curr_item.append(ch)
+                            elif ch == "," and paren_depth == 0:
+                                raw_items.append("".join(curr_item).strip())
+                                curr_item = []
+                            else:
+                                curr_item.append(ch)
+                        if curr_item:
                             raw_items.append("".join(curr_item).strip())
-                            curr_item = []
-                        else:
-                            curr_item.append(ch)
-                    if curr_item:
-                        raw_items.append("".join(curr_item).strip())
 
-                    mapped_items = []
-                    for it in raw_items:
-                        if not it:
-                            continue
-                        if "::" in it:
-                            mapped_items.append(f".{it.split('::')[-1]}")
-                        elif "(" in it and it[0].isupper():
-                            vname = it[:it.find("(")].strip().split("::")[-1].lstrip(".")
-                            mapped_items.append(f".{vname}")
-                        elif it and it[0].isupper() and not it.startswith("."):
-                            mapped_items.append(f".{it}")
-                        else:
-                            mapped_items.append(it)
-                    pat = f".{{ {', '.join(mapped_items)} }}"
-                elif "::" in inner:
-                    pat = f".{inner.split('::')[-1]}"
-                else:
-                    pat = pat_str
-            elif "(" in pat_str and ")" in pat_str:
-                variant_part = pat_str[:pat_str.find("(")].strip()
-                if "::" in variant_part:
-                    variant_part = variant_part.split("::")[-1]
-                variant_name = variant_part.lstrip(".")
-                if not variant_name:
-                    pat = pat_str
-                else:
-                    cap_var = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
+                        mapped_items = []
+                        for it in raw_items:
+                            if not it:
+                                continue
+                            if "::" in it:
+                                mapped_items.append(f".{it.split('::')[-1]}")
+                            elif "(" in it and it[0].isupper():
+                                vname = it[:it.find("(")].strip().split("::")[-1].lstrip(".")
+                                mapped_items.append(f".{vname}")
+                            elif it and it[0].isupper() and not it.startswith("."):
+                                mapped_items.append(f".{it}")
+                            else:
+                                mapped_items.append(it)
+                        return f".{{ {', '.join(mapped_items)} }}"
+                    elif "::" in inner:
+                        return f".{inner.split('::')[-1]}"
+                    else:
+                        return p_str
+                if "(" in p_str and ")" in p_str:
+                    variant_part = p_str[:p_str.find("(")].strip()
+                    if "::" in variant_part:
+                        variant_part = variant_part.split("::")[-1]
+                    variant_name = variant_part.lstrip(".")
+                    if not variant_name:
+                        return p_str
+                    cap_var = p_str[p_str.find("(")+1:p_str.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
                     if cap_var and cap_var.isidentifier() and cap_var != "_":
                         clean_cap = cap_var.lower() if cap_var[0].isupper() else cap_var
                         scope_names = getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set()))
                         fn_params = getattr(emitter_ctx, "current_fn_param_names", set())
                         if clean_cap in scope_names or clean_cap in fn_params:
                             clean_cap = f"{clean_cap}_val"
-                        pat = f".{variant_name} => |{clean_cap}|"
-                    else:
-                        pat = f".{variant_name}"
-            elif "::" in pat_str or "{" in pat_str:
-                clean_enum_variant = re.sub(r"\{.*\}", "", pat_str, flags=re.DOTALL)
-                clean_enum_variant = re.sub(r"\([^\)]*\)", "", clean_enum_variant, flags=re.DOTALL)
-                clean_enum_variant = clean_enum_variant.split("::")[-1]
-                clean_enum_variant = re.sub(r"[^a-zA-Z0-9_]", "", clean_enum_variant).strip()
-                pat = f".{clean_enum_variant}" if clean_enum_variant else "else"
+                        return f".{variant_name} => |{clean_cap}|"
+                    return f".{variant_name}"
+                if "::" in p_str or "{" in p_str:
+                    clean_enum_variant = re.sub(r"\{.*\}", "", p_str, flags=re.DOTALL)
+                    clean_enum_variant = re.sub(r"\([^\)]*\)", "", clean_enum_variant, flags=re.DOTALL)
+                    clean_enum_variant = clean_enum_variant.split("::")[-1]
+                    clean_enum_variant = re.sub(r"[^a-zA-Z0-9_]", "", clean_enum_variant).strip()
+                    return f".{clean_enum_variant}" if clean_enum_variant else "else"
+                return p_str
+
+            if " | " in pat_str:
+                sub_pats = []
+                curr = []
+                pd = 0
+                for c in pat_str:
+                    if c in "({[": pd += 1
+                    elif c in ")}]": pd -= 1
+                    curr.append(c)
+                    if pd == 0 and "".join(curr).endswith(" | "):
+                        sub_pats.append("".join(curr[:-3]).strip())
+                        curr = []
+                if curr:
+                    sub_pats.append("".join(curr).strip())
+                if len(sub_pats) > 1:
+                    pat = ", ".join(_lower_single_pat(sp) for sp in sub_pats)
+                else:
+                    pat = _lower_single_pat(pat_str)
             else:
-                pat = pat_str
+                pat = _lower_single_pat(pat_str)
 
             if pat.startswith("else"):
                 if has_else:

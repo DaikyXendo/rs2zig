@@ -55,6 +55,7 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
 
         lines = raw_lines
         final_lines: List[str] = []
+        pending_discards: dict = {}
         for i, line in enumerate(lines):
             final_lines.append(line)
             stripped = line.strip()
@@ -66,7 +67,18 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
                 if len(parts) > name_idx:
                     raw_v = parts[name_idx].split(":")[0].split("=")[0].strip().strip('";@')
                     if raw_v and raw_v != "_" and raw_v.isidentifier():
-                        subsequent = "\n".join(lines[i+1:])
+                        end_j = i
+                        depth = 0
+                        for idx in range(i, len(lines)):
+                            l_str = lines[idx]
+                            depth += l_str.count("{") - l_str.count("}")
+                            depth += l_str.count("(") - l_str.count(")")
+                            if depth <= 0 and (l_str.strip().endswith(";") or l_str.strip().endswith("}") or l_str.strip().endswith(",")):
+                                end_j = idx
+                                break
+                            end_j = idx
+
+                        subsequent = "\n".join(lines[end_j+1:])
                         if is_var:
                             has_mut = (
                                 re.search(r"\b" + re.escape(raw_v) + r"\b\s*(?:\.[a-zA-Z0-9_@]+)*\s*(?:[\+\-\*\/\%\&\|\^\<\>]?=|=(?![=>]))", subsequent)
@@ -78,7 +90,12 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
                         if not re.search(r"(?<!\.)\b" + re.escape(raw_v) + r"\b", subsequent):
                             indent = line[: len(line) - len(line.lstrip())]
                             clean_ident = f'@"{raw_v}"' if raw_v in ZIG_RESERVED_KEYWORDS else raw_v
-                            final_lines.append(f"{indent}_ = {clean_ident};")
+                            discard_stmt = f"{indent}_ = {clean_ident};"
+                            pending_discards.setdefault(end_j, []).append(discard_stmt)
+
+            if i in pending_discards:
+                for disc in pending_discards.pop(i):
+                    final_lines.append(disc)
 
         return final_lines
     finally:
