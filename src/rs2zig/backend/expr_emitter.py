@@ -87,7 +87,7 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             base_str = emit_expr(IdentifierExpr(name=base), emitter_ctx)
             if gen_part.strip():
                 from rs2zig.lowering.stdlib_map import _split_top_level_commas
-                g_parts = ["anytype" if p.strip() == "_" else map_type(p.strip()) for p in _split_top_level_commas(gen_part) if p.strip()]
+                g_parts = ["anyopaque" if p.strip() == "_" else map_type(p.strip()) for p in _split_top_level_commas(gen_part) if p.strip()]
                 gen_type = ", ".join(g_parts)
             else:
                 gen_type = "void"
@@ -224,7 +224,7 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 gen_part, _, trailing = rest.partition(">")
             if gen_part.strip():
                 from rs2zig.lowering.stdlib_map import _split_top_level_commas
-                g_parts = ["anytype" if p.strip() == "_" else map_type(p.strip()) for p in _split_top_level_commas(gen_part) if p.strip()]
+                g_parts = ["anyopaque" if p.strip() == "_" else map_type(p.strip()) for p in _split_top_level_commas(gen_part) if p.strip()]
                 gen_type = ", ".join(g_parts)
             else:
                 gen_type = "void"

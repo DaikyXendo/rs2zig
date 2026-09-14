@@ -119,6 +119,24 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
                 kw = "var" if stmt.is_mutable else "const"
                 return f"{kw} {clean_vname} = {val_str} orelse return;"
 
+        if "(" in stmt.name and stmt.name.endswith(")") and not stmt.name.startswith("("):
+            prefix, inner_pat = stmt.name.split("(", 1)
+            inner_pat = inner_pat[:-1].strip()
+            val_str = emitter_ctx._emit_expr(stmt.value) if stmt.value else "undefined"
+            emitter_ctx.tmp_var_counter += 1
+            tmp_var = f"__enum_pattern_tmp_{emitter_ctx.tmp_var_counter}"
+            lines = [f"const {tmp_var} = {val_str};"]
+            if inner_pat:
+                inner_vars = [v.strip() for v in inner_pat.split(",") if v.strip()]
+                kw = "var" if stmt.is_mutable else "const"
+                for idx, vname in enumerate(inner_vars):
+                    clean_vname = vname.replace("mut ", "").strip()
+                    if clean_vname and clean_vname != "_":
+                        clean_vname = f'@"{clean_vname}"' if clean_vname in ZIG_RESERVED_KEYWORDS else clean_vname
+                        lines.append(f"{kw} {clean_vname} = undefined;")
+            lines.append(f"_ = {tmp_var};")
+            return f"\n{emitter_ctx._indent()}".join(lines)
+
         if stmt.name.startswith("(") and stmt.name.endswith(")"):
             vars_str = stmt.name[1:-1]
             var_list = [v.strip() for v in vars_str.split(",") if v.strip()]
@@ -233,8 +251,11 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
         s_code = emitter_ctx._emit_struct(stmt, [])
         if emitter_ctx.current_indent > 0:
             clean_sname = stmt.name.split("<")[0].strip()
-            if s_code.strip().startswith("fn "):
+            s_strip = s_code.strip()
+            if s_strip.startswith("fn "):
                 return f"const {clean_sname} = (struct {{ {s_code} }}).{clean_sname};"
+            if s_strip.startswith("const ") or s_strip.startswith("pub const "):
+                return s_code
             return f"const {clean_sname} = {s_code};"
         return s_code
 

@@ -204,7 +204,7 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                         discard_lines.append(f"{emitter_ctx._indent()}_ = p{p_idx};")
                     elif raw_name and raw_name != "_":
                         clean_raw = raw_name.replace("comptime ", "").replace("mut ", "").strip().strip('"@')
-                        if clean_raw and (raw_name.startswith("_") or len(re.findall(r"\b" + re.escape(clean_raw) + r"\b", check_text)) <= 1):
+                        if clean_raw and (raw_name.startswith("_") or len(re.findall(r"(?<!\.)\b" + re.escape(clean_raw) + r"\b", check_text)) <= 1):
                             pident = f'@"{clean_raw}"' if (clean_raw in ZIG_KEYWORDS_AND_PRIMITIVES and not clean_raw.startswith("@")) else clean_raw
                             discard_lines.append(f"{emitter_ctx._indent()}_ = {pident};")
 

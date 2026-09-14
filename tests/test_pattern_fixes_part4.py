@@ -493,7 +493,7 @@ class TestPatternFixesPart4(unittest.TestCase):
         """
         result = self._transpile_code(code)
         self.assertNotIn("with_local_frame(_, _,", result)
-        self.assertIn("with_local_frame(anytype, anytype,", result)
+        self.assertIn("with_local_frame(anyopaque, anyopaque,", result)
 
     def test_fallback_header_param_shadowing(self) -> None:
         """Verify function parameter named f shadows fallback header pub const f and is renamed."""
@@ -553,6 +553,51 @@ class TestPatternFixesPart4(unittest.TestCase):
         """
         result = self._transpile_code(code)
         self.assertIn("grafts_to_remove_param: i32", result)
+
+    def test_local_struct_decl_no_duplicate_const(self) -> None:
+        """Verify local struct inside function body does not emit duplicate const R = const R = struct."""
+        code = """
+        pub fn test_local_struct() {
+            struct R { read: usize }
+            let _ = R { read: 0 };
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("const R = const R =", result)
+        self.assertIn("const R = struct", result)
+
+    def test_turbofish_call_arg_uses_anyopaque(self) -> None:
+        """Verify turbofish call arg _ maps to anyopaque instead of anytype."""
+        code = """
+        pub fn test_frame(env: &Env) {
+            let _ = env.with_local_frame::<_, _, Error>(10, || {});
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("with_local_frame(anytype", result)
+        self.assertIn("with_local_frame(anyopaque", result)
+
+    def test_unused_param_with_struct_field_name(self) -> None:
+        """Verify parameter view gets _ = view even if .view = val is present in body."""
+        code = """
+        pub fn create_adapter(view: *c_void) {
+            let state = State { view: 10 };
+            let _ = state;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("_ = view;", result)
+
+    def test_enum_pattern_let_destructuring(self) -> None:
+        """Verify let Enum::Variant(a, b) = val does not output invalid const Enum::Variant syntax."""
+        code = """
+        pub fn process_data(array: &Array) {
+            let DataType::FixedSizeList(inner, size) = array.data_type();
+            let _ = (inner, size);
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("const DataType::FixedSizeList", result)
 
 
 if __name__ == "__main__":
