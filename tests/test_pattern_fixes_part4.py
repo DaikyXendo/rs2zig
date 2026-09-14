@@ -599,9 +599,93 @@ class TestPatternFixesPart4(unittest.TestCase):
         result = self._transpile_code(code)
         self.assertNotIn("const DataType::FixedSizeList", result)
 
+    def test_if_let_identifier_payload_capture(self) -> None:
+        """Verify if let child = opt uses child as payload capture name."""
+        code = """
+        pub fn process_children(opt: Option<i32>) {
+            if let child = opt {
+                let _ = child;
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("|child|", result)
+        self.assertNotIn("|item|", result)
+
+    def test_tuple_destructuring_shadows_outer_var(self) -> None:
+        """Verify tuple pattern destructuring renames variable if outer variable of same name exists."""
+        code = """
+        pub fn update_tree() {
+            let tree_index = 100;
+            let helper = || {
+                let (_, tree_index) = get_pair();
+                let _ = tree_index;
+            };
+            let _ = tree_index;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("const tree_index =", result.split("helper")[1])
+
+    def test_mut_param_destructuring_uses_correct_pname(self) -> None:
+        """Verify mut parameter generates var var_name_var = var_name, not p0."""
+        from rs2zig.ir.nodes import FnDecl, Param, TypeNode, BlockExpr
+        fn = FnDecl(
+            name="new",
+            params=[Param(name="mut view", param_type=TypeNode(name="i32"))],
+            body=BlockExpr(stmts=[]),
+            is_pub=True,
+        )
+        result = self.emitter._emit_function(fn)
+        self.assertIn("var view_var = view;", result)
+        self.assertNotIn("var view_var = p0;", result)
+
+    def test_payload_capture_shadowing_module_constant(self) -> None:
+        """Verify payload capture renaming when capture name shadows a top-level module constant."""
+        code = """
+        mod context;
+        pub fn process(state: State) {
+            match state {
+                State::Active(context) => { let _ = context; }
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("|context|", result)
+        self.assertIn("|context_val|", result)
+
+    def test_standalone_type_fallback_header(self) -> None:
+        """Verify standalone type usage generates fallback type header even if prefixed usage exists."""
+        code = """
+        struct Rect {
+            transform: Transform,
+        }
+        pub fn update() {
+            let t = bevy_ecs::Transform::identity();
+            let _ = t;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("pub const Transform = type;", result)
+
+    def test_renamed_if_let_capture_substitutes_in_then_block(self) -> None:
+        """Verify if let capture renamed to child_val updates body references to child_val."""
+        code = """
+        pub fn process_sibling(child: i32, opt: Option<i32>) {
+            if let Some(child) = opt {
+                let res = child + 1;
+                let _ = res;
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("|child_val|", result)
+        self.assertIn("child_val + 1", result)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
 

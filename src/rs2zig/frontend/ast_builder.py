@@ -105,6 +105,13 @@ class ASTBuilder:
                         last_part = parts[-1].split(" as ")[0].strip()
                         if last_part and last_part.isidentifier() and last_part not in ("as", "crate", "self", "super", "pub"):
                             sf.imports.append(last_part)
+            elif ntype == "mod_item":
+                for c in child.children:
+                    if c.type == "identifier":
+                        mname = self.get_text(c)
+                        if mname and mname.isidentifier():
+                            sf.imports.append(mname)
+                        break
 
         return sf
 

@@ -316,7 +316,14 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 pat = "else"
             elif pat_str.startswith("Ok(") or pat_str.startswith("Some("):
                 var_name = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip()
-                pat = f"else => |{var_name}|" if (var_name and var_name != "_") else "else"
+                if var_name and var_name != "_":
+                    scope_names = getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set()))
+                    fn_params = getattr(emitter_ctx, "current_fn_param_names", set())
+                    if var_name in scope_names or var_name in fn_params:
+                        var_name = f"{var_name}_val"
+                    pat = f"else => |{var_name}|"
+                else:
+                    pat = "else"
             elif pat_str.startswith("Err(") or pat_str == "None":
                 var_name = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip() if "(" in pat_str else ""
                 pat = "else" if not has_else else "error.Unknown"
@@ -370,6 +377,10 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                     cap_var = pat_str[pat_str.find("(")+1:pat_str.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
                     if cap_var and cap_var.isidentifier() and cap_var != "_":
                         clean_cap = cap_var.lower() if cap_var[0].isupper() else cap_var
+                        scope_names = getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set()))
+                        fn_params = getattr(emitter_ctx, "current_fn_param_names", set())
+                        if clean_cap in scope_names or clean_cap in fn_params:
+                            clean_cap = f"{clean_cap}_val"
                         pat = f".{variant_name} => |{clean_cap}|"
                     else:
                         pat = f".{variant_name}"
@@ -438,8 +449,12 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                     cap_var = pat_part[pat_part.find("(")+1:pat_part.rfind(")")].strip().replace("ref mut ", "").replace("ref ", "").replace("mut ", "").strip()
                     if "," in cap_var or not cap_var.isidentifier():
                         cap_var = "item"
+                elif pat_part and pat_part.isidentifier():
+                    cap_var = pat_part
+                old_cap = cap_var
+                scope_names = getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", set()))
                 fn_params = getattr(emitter_ctx, "current_fn_param_names", set())
-                if cap_var in fn_params or f"{cap_var}_param" in target_part:
+                if cap_var in scope_names or cap_var in fn_params or f"{cap_var}_param" in target_part:
                     cap_var = f"{cap_var}_val"
                 elif cap_var in ZIG_KEYWORDS_AND_PRIMITIVES:
                     cap_var = "item"
@@ -448,6 +463,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
                 else:
                     lines = [f"if ({target_part}) |{cap_var}| {{"]
                     then_lines = emitter_ctx._emit_block_lines(expr.then_block)
+                    if cap_var != old_cap and old_cap != "item" and old_cap != "_":
+                        then_lines = [re.sub(r"(?<!\blet\s)(?<!\bconst\s)(?<!\bvar\s)\b" + re.escape(old_cap) + r"\b", cap_var, l) for l in then_lines]
                     then_str = "\n".join(then_lines)
                     if cap_var != "_" and not re.search(r"\b" + re.escape(cap_var) + r"\b", then_str):
                         lines.append(f"{emitter_ctx.indent_str * (emitter_ctx.current_indent + 1)}_ = {cap_var};")

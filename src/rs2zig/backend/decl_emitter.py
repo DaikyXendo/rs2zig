@@ -189,7 +189,8 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
                             discard_lines.append(f"{emitter_ctx._indent()}_ = {check_name};")
                     elif raw_name.startswith("mut "):
                         real_name = raw_name[4:].strip()
-                        discard_lines.append(f"{emitter_ctx._indent()}var {real_name}_var = p{p_idx}; _ = {real_name}_var;")
+                        pident = f'@"{real_name}"' if real_name in ZIG_RESERVED_KEYWORDS else real_name
+                        discard_lines.append(f"{emitter_ctx._indent()}var {real_name}_var = {pident}; _ = {real_name}_var;")
                         body_lines = [re.sub(r"(?<!\blet\s)(?<!\bconst\s)(?<!\bvar\s)\b" + re.escape(real_name) + r"\b", f"{real_name}_var", line) for line in body_lines]
 
                     elif raw_name.startswith("[") and raw_name.endswith("]"):

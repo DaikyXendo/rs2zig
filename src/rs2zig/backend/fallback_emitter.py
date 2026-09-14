@@ -76,6 +76,9 @@ def generate_fallback_headers(
     found_types = set(re.findall(r"\b(_?[A-Z][a-zA-Z0-9_]*)\b", clean_body_no_ats))
     found_types.update(re.findall(r"\b(_bindgen_[a-zA-Z0-9_]*)\b", clean_body_no_ats))
 
+    if (re.search(r"\bbevy\b", clean_body) or "bevy" in imported_modules) and "bevy" not in all_declared_names and not any("const bevy" in h for h in header_lines):
+        header_lines.append("pub const bevy = *anyopaque;")
+
     for ext_type in sorted(found_types):
         if (
             len(ext_type) >= 1
@@ -88,7 +91,7 @@ def generate_fallback_headers(
             if ext_type == "Self":
                 if not any("const Self" in h for h in header_lines):
                     header_lines.append("pub const Self = @This();")
-            elif not re.search(r"\.\s*" + re.escape(ext_type) + r"\b", clean_body_no_ats):
+            elif re.search(r"(?<!\.)\b" + re.escape(ext_type) + r"\b", clean_body_no_ats):
                 if not any(re.search(r"\bconst\s+(?:@\")?" + re.escape(ext_type) + r"\"?\b", h) for h in header_lines) and not is_zig_primitive(ext_type):
                     header_lines.append(f"pub const {ext_type} = type;")
 

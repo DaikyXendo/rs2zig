@@ -438,3 +438,7 @@ tests/test_pattern_fixes_part4.py,tests.test_pattern_fixes_part4,unittest,,,11
 tests/test_pattern_fixes_part4.py,tests.test_pattern_fixes_part4,rs2zig.frontend.ts_parser,RustParser,,12
 tests/test_pattern_fixes_part4.py,tests.test_pattern_fixes_part4,rs2zig.frontend.ast_builder,ASTBuilder,,13
 tests/test_pattern_fixes_part4.py,tests.test_pattern_fixes_part4,rs2zig.backend.zig_emitter,ZigEmitter,,14
+tests/test_pattern_fixes_part4.py,tests.test_pattern_fixes_part4,rs2zig.ir.nodes,FnDecl,,632
+tests/test_pattern_fixes_part4.py,tests.test_pattern_fixes_part4,rs2zig.ir.nodes,Param,,632
+tests/test_pattern_fixes_part4.py,tests.test_pattern_fixes_part4,rs2zig.ir.nodes,TypeNode,,632
+tests/test_pattern_fixes_part4.py,tests.test_pattern_fixes_part4,rs2zig.ir.nodes,BlockExpr,,632

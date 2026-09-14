@@ -79,16 +79,40 @@ def emit_block_lines(block: BlockExpr, emitter_ctx: Any) -> List[str]:
         emitter_ctx.all_outer_block_vars = prev_outer_block_vars
 
 
+def _prepare_local_var(raw_vname: str, emitter_ctx: Any, is_mutable: bool = False) -> str:
+    """Prepare a local variable name, handling deduplication and outer scope shadowing."""
+    vname = raw_vname.replace("mut ", "").strip()
+    if vname == "_" or not vname:
+        return "_"
+    is_dedup = False
+    if hasattr(emitter_ctx, "current_block_vars") and emitter_ctx.current_block_vars is not None:
+        if vname in emitter_ctx.current_block_vars:
+            vname = f"{vname}_alt"
+            is_dedup = True
+        else:
+            emitter_ctx.current_block_vars.add(vname)
+    was_renamed = False
+    scope_names = getattr(emitter_ctx, "all_scope_names", getattr(emitter_ctx, "all_declared_names", None))
+    current_fn = getattr(emitter_ctx, "current_fn_name", None)
+    outer_block_vars = getattr(emitter_ctx, "all_outer_block_vars", None)
+    if (
+        vname in getattr(emitter_ctx, "current_fn_param_names", set())
+        or (scope_names and vname in scope_names)
+        or (current_fn and vname == current_fn)
+        or (outer_block_vars and vname in outer_block_vars)
+    ):
+        vname = f"{vname}_var"
+        was_renamed = True
+
+    clean_vname = vname.strip('"@')
+    if (was_renamed or is_dedup) and getattr(emitter_ctx, "current_renamed_vars", None) is not None:
+        emitter_ctx.current_renamed_vars[raw_vname.replace("mut ", "").strip()] = clean_vname
+
+    return f'@"{vname}"' if (vname in ZIG_RESERVED_KEYWORDS and not vname.startswith("@")) else vname
+
+
 def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
-    """Emit single statement string without leading indent.
-
-    Args:
-        stmt: Statement IR node.
-        emitter_ctx: ZigEmitter context reference.
-
-    Returns:
-        Formatted Zig statement string.
-    """
+    """Emit single statement string without leading indent."""
     if isinstance(stmt, FnDecl):
         fn_code = emitter_ctx._emit_function(stmt)
         if getattr(emitter_ctx, "current_fn", None) is not None or emitter_ctx.current_indent > 0:
@@ -108,14 +132,14 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
                 lines = [f"const __opt_tmp = {val_str} orelse return;"]
                 kw = "var" if stmt.is_mutable else "const"
                 for idx, vname in enumerate(inner_vars):
-                    clean_vname = vname.replace("mut ", "").strip()
+                    clean_vname = _prepare_local_var(vname, emitter_ctx, stmt.is_mutable)
                     if clean_vname == "_":
                         lines.append(f"_ = __opt_tmp.@\"{idx}\";")
                     else:
                         lines.append(f"{kw} {clean_vname} = __opt_tmp.@\"{idx}\";")
                 return f"\n{emitter_ctx._indent()}".join(lines)
             else:
-                clean_vname = inner_pat.replace("mut ", "").strip()
+                clean_vname = _prepare_local_var(inner_pat, emitter_ctx, stmt.is_mutable)
                 kw = "var" if stmt.is_mutable else "const"
                 return f"{kw} {clean_vname} = {val_str} orelse return;"
 
@@ -130,9 +154,8 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
                 inner_vars = [v.strip() for v in inner_pat.split(",") if v.strip()]
                 kw = "var" if stmt.is_mutable else "const"
                 for idx, vname in enumerate(inner_vars):
-                    clean_vname = vname.replace("mut ", "").strip()
-                    if clean_vname and clean_vname != "_":
-                        clean_vname = f'@"{clean_vname}"' if clean_vname in ZIG_RESERVED_KEYWORDS else clean_vname
+                    clean_vname = _prepare_local_var(vname, emitter_ctx, stmt.is_mutable)
+                    if clean_vname != "_":
                         lines.append(f"{kw} {clean_vname} = undefined;")
             lines.append(f"_ = {tmp_var};")
             return f"\n{emitter_ctx._indent()}".join(lines)
@@ -146,7 +169,7 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
             lines = [f"const {tmp_var} = {val_str};"]
             kw = "var" if stmt.is_mutable else "const"
             for idx, vname in enumerate(var_list):
-                clean_vname = vname.replace("mut ", "").strip()
+                clean_vname = _prepare_local_var(vname, emitter_ctx, stmt.is_mutable)
                 if clean_vname == "_":
                     lines.append(f"_ = {tmp_var}.@\"{idx}\";")
                 else:
@@ -169,7 +192,7 @@ def emit_stmt(stmt: Stmt, emitter_ctx: Any) -> str:
                 else:
                     fname = fitem.replace("mut ", "").strip()
                     vname = fname
-                clean_vname = f'@"{vname}"' if vname in ZIG_RESERVED_KEYWORDS else vname
+                clean_vname = _prepare_local_var(vname, emitter_ctx, stmt.is_mutable)
                 clean_fname = f'@"{fname}"' if fname in ZIG_RESERVED_KEYWORDS else fname
                 if clean_vname == "_":
                     lines.append(f"_ = {tmp_var}.{clean_fname};")
