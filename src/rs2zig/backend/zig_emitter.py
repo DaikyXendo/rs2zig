@@ -69,7 +69,10 @@ class ZigEmitter:
             vis = "pub " if c.is_pub else ""
             type_str = map_type(c.const_type)
             val_str = self._emit_expr(c.value).rstrip(";").strip()
-            body_lines.append(f"{vis}const {c.name}: {type_str} = {val_str};")
+            if "//" in val_str.split("\n")[-1]:
+                body_lines.append(f"{vis}const {c.name}: {type_str} = {val_str}\n;")
+            else:
+                body_lines.append(f"{vis}const {c.name}: {type_str} = {val_str};")
             body_lines.append("")
 
         seen_trait_names: Set[str] = set()

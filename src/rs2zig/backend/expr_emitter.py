@@ -598,6 +598,8 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             body=body_node
         )
         fn_code = emitter_ctx._emit_function(fn_decl)
-        return f"(struct {{ {fn_code} }}.run)"
+        clean_fn_code = re.sub(r"//.*$", "", fn_code, flags=re.MULTILINE)
+        compact_fn_code = " ".join(clean_fn_code.split())
+        return f"(struct {{ {compact_fn_code} }}.run)"
 
     return "{}"

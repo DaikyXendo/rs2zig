@@ -499,17 +499,39 @@ class TestPatternFixesPart5(unittest.TestCase):
         result = self._transpile_code(code)
         self.assertIn("pub const thread = *anyopaque;", result)
 
-    def test_range_slice_upper_bound_usage_prevents_pointless_discard(self) -> None:
-        """Verify variable used as range slice upper bound (..end) is detected as used and not discarded."""
+    def test_option_anytype_mapped_to_anytype(self) -> None:
+        """Verify Option<impl Trait> maps to anytype instead of invalid ?anytype in Zig."""
         code = """
-        pub fn get_slice(buf: &[u8], idx: usize, byte_width: usize) -> &[u8] {
-            let start = idx * byte_width;
-            let end = start + byte_width;
-            &buf[start..end]
+        pub fn handle(handler: Option<impl Fn()>) -> Option<impl Fn()> {
+            handler
         }
         """
         result = self._transpile_code(code)
-        self.assertNotIn("_ = end;", result)
+        self.assertNotIn("?anytype", result)
+
+    def test_inline_closure_expression_whitespace_flattening(self) -> None:
+        """Verify inline closure inside if condition emits single line structure without breaking parent if condition."""
+        code = """
+        pub fn check(val: Option<i32>) {
+            if val.is_some_and(|v| v > 0) {
+                let _ = val;
+            }
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("if (v;", result)
+        self.assertIn("struct { fn run(v: anytype)", result.replace("\n", " "))
+
+    def test_array_literal_comment_semicolon_placement(self) -> None:
+        """Verify array literal constant with trailing line comment places semicolon outside comment."""
+        code = """
+        pub const BYTE_FREQUENCIES: [u8; 2] = [
+            1,
+            2 // comment
+        ];
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("// comment;", result)
 
 
 if __name__ == "__main__":

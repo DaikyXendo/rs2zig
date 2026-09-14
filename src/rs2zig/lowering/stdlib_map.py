@@ -251,6 +251,8 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
                 res = f"?{mapped_gen}{suffix_mapped}"
                 while res.startswith("??"):
                     res = res[1:]
+                if res.startswith("?anytype"):
+                    res = "anytype" + res[8:]
                 return res
             if base_clean in ("Vec", "alloc::vec::Vec", "std::vec::Vec"):
                 return f"std.ArrayList({mapped_gen}){suffix_mapped}"
@@ -299,4 +301,6 @@ def map_type(rust_type: Union[TypeNode, str], is_return_type: bool = False) -> s
             if not (mapped.startswith("*") or mapped.startswith("[]") or mapped.startswith("?")):
                 prefix = "*" if rust_type.is_mutable else "*const "
                 return f"{prefix}{mapped}"
+        if mapped.startswith("?anytype"):
+            return "anytype" + mapped[8:]
         return mapped
