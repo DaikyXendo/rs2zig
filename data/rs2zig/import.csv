@@ -93,6 +93,8 @@ src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.ir.nod
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.ir.nodes,TypeNode,,7
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.ir.nodes,BreakExpr,,7
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.ir.nodes,ContinueExpr,,7
+src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.ir.nodes,FnDecl,,7
+src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.ir.nodes,Param,,7
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.lowering.stdlib_map,map_type,,13
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.lowering.stdlib_map,_split_angle_brackets,,13
 src/rs2zig/backend/expr_emitter.py,src.rs2zig.backend.expr_emitter,rs2zig.lowering.control_flow,lower_println_macro,,14

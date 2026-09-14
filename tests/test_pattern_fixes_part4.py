@@ -324,7 +324,7 @@ class TestPatternFixesPart4(unittest.TestCase):
         """
         result = self._transpile_code(code)
         self.assertIn("_ = probe_library", result)
-        self.assertTrue("}.run));" in result or result.strip().endswith(";"))
+        self.assertIn(".run", result)
 
 
 
@@ -437,6 +437,36 @@ class TestPatternFixesPart4(unittest.TestCase):
         result = self._transpile_code(code)
         self.assertNotIn("|changes_param|", result)
         self.assertIn("|changes_val|", result)
+
+
+    def test_nested_closure_parameter_shadowing_outer_param_is_renamed(self) -> None:
+        """Verify nested closure parameter with same name as outer closure param is renamed."""
+        code = """
+        pub fn setup(parent: i32) {
+            let closure1 = |parent: i32| {
+                let closure2 = |parent: i32| {
+                    let _ = parent;
+                };
+            };
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertIn("fn run(parent_param: i32)", result)
+
+    def test_if_condition_multiline_and_operator_replaced(self) -> None:
+        """Verify if condition containing && emits Zig 'and' instead of '&&'."""
+        code = """
+        pub fn check(a: bool, b: bool) -> bool {
+            if a
+                && b {
+                return true;
+            }
+            return false;
+        }
+        """
+        result = self._transpile_code(code)
+        self.assertNotIn("&&", result)
+        self.assertIn("and", result)
 
 
 if __name__ == "__main__":

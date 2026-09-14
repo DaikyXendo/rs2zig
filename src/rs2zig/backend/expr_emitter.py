@@ -8,7 +8,7 @@ from rs2zig.ir.nodes import (
     Expr, LiteralExpr, IdentifierExpr, BinaryExpr, UnaryExpr, CallExpr,
     FieldAccessExpr, StructInitExpr, MacroCallExpr, ReturnExpr, IfExpr,
     LoopExpr, MatchExpr, TryExpr, OptionalUnwrapExpr, ClosureExpr, BlockExpr, TypeNode,
-    BreakExpr, ContinueExpr
+    BreakExpr, ContinueExpr, FnDecl, Param
 )
 from rs2zig.lowering.stdlib_map import map_type, _split_angle_brackets
 from rs2zig.lowering.control_flow import lower_println_macro
@@ -407,6 +407,10 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
 
     if isinstance(expr, IfExpr):
         cond_str = emit_expr(expr.condition, emitter_ctx)
+        if "&&" in cond_str:
+            cond_str = cond_str.replace("&&", " and ")
+        if "||" in cond_str:
+            cond_str = cond_str.replace("||", " or ")
         lines = []
         if "=" in cond_str and not any(op in cond_str for op in ("==", "!=", "<=", ">=")) and not cond_str.startswith("if "):
             clean_cond = cond_str
@@ -497,57 +501,28 @@ def emit_expr(expr: Expr, emitter_ctx: Any) -> str:
             return "\n".join(lines)
 
     if isinstance(expr, ClosureExpr):
-        params_parts = []
-        param_names = []
-        for idx, p in enumerate(expr.params):
-            ptype = map_type(p.param_type) if (p.param_type and p.param_type.name != "anytype") else "anytype"
-            raw_name = p.name.split(":")[0].strip() if p.name else ""
-            pname = raw_name.replace("(", "").replace(")", "").replace(" ", "_").replace("&", "").strip() if raw_name else f"arg{idx}"
-            if "," in pname or not pname.isidentifier() or pname == "_":
-                pname = f"arg{idx}"
-            if pname in ZIG_RESERVED_KEYWORDS and not pname.startswith("@"):
-                pname = f'@"{pname}"'
-            params_parts.append(f"{pname}: {ptype}")
-            param_names.append(pname)
-        params_str = ", ".join(params_parts)
-        if expr.return_type:
-            ret_type = map_type(expr.return_type)
-        elif isinstance(expr.body, BlockExpr) and not expr.body.trailing_expr and not any(isinstance(s, ReturnExpr) and s.value for s in expr.body.stmts):
-            ret_type = "void"
-        else:
-            ret_type = "i32"
-
-        if isinstance(expr.body, BlockExpr):
-            body_lines = emitter_ctx._emit_block_lines(expr.body)
-            body_text = "\n".join(body_lines)
-            discard_lines = [
-                f"{emitter_ctx._indent()}_ = {pname};"
-                for pname in param_names
-                if pname and pname != "_"
-                and not re.search(r"\b" + re.escape(pname.strip('"@')) + r"\b", body_text)
-            ]
-            lines = [f"(struct {{ fn run({params_str}) {ret_type} {{"]
-            emitter_ctx.current_indent += 1
-            lines.extend(discard_lines)
-            lines.extend(body_lines)
-            emitter_ctx.current_indent -= 1
-            lines.append(f"{emitter_ctx._indent()}}} }}.run)")
-            return "\n".join(lines)
-        else:
-            body_str = emit_expr(expr.body, emitter_ctx)
-            discards = [
-                f"_ = {pname}; " for pname in param_names
-                if pname and pname != "_"
-                and not re.search(r"\b" + re.escape(pname.strip('"@')) + r"\b", body_str)
-            ]
-            discard_prefix = "".join(discards)
-            body_expr_str = body_str.strip().rstrip(";")
-            if body_expr_str.startswith("return"):
-                ret_statement = f"{body_expr_str};"
-            elif body_expr_str in ("()", ".{}", "void"):
-                ret_statement = "return;"
+        ret_type = expr.return_type
+        if ret_type is None:
+            if isinstance(expr.body, BlockExpr) and not expr.body.trailing_expr and not any(isinstance(s, ReturnExpr) and s.value for s in expr.body.stmts):
+                ret_type = TypeNode(name="void")
             else:
-                ret_statement = f"return {body_expr_str};"
-            return f"(struct {{ fn run({params_str}) {ret_type} {{ {discard_prefix}{ret_statement} }} }}.run)"
+                ret_type = TypeNode(name="i32")
+
+        cleaned_params = []
+        for idx, p in enumerate(expr.params):
+            pname = p.name
+            if not pname or pname == "_":
+                pname = f"arg{idx}"
+            cleaned_params.append(Param(name=pname, param_type=p.param_type, is_self=p.is_self))
+
+        body_node = expr.body if isinstance(expr.body, BlockExpr) else BlockExpr(trailing_expr=expr.body)
+        fn_decl = FnDecl(
+            name="run",
+            params=cleaned_params,
+            return_type=ret_type,
+            body=body_node
+        )
+        fn_code = emitter_ctx._emit_function(fn_decl)
+        return f"(struct {{ {fn_code} }}.run)"
 
     return "{}"

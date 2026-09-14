@@ -125,11 +125,15 @@ def emit_function_decl(fn: FnDecl, emitter_ctx: Any, parent_struct_name: Optiona
 
     prev_outer_params = getattr(emitter_ctx, "outer_fn_param_names", None)
     all_params = gp_params + fn.params
-    params_str = emit_params_decl(all_params, parent_struct_name, field_names, emitter_ctx, parent_fn_name=fn_name)
 
     current_params = {p.name.replace("mut ", "").strip() for p in all_params if p.name}
     emitter_ctx.current_fn_param_names = current_params
 
+    # outer_fn_param_names during emit_params_decl should be prev_outer_params
+    emitter_ctx.outer_fn_param_names = prev_outer_params
+    params_str = emit_params_decl(all_params, parent_struct_name, field_names, emitter_ctx, parent_fn_name=fn_name)
+
+    # outer_fn_param_names for body should include current function's parameters
     new_outer_params = set(current_params)
     if prev_outer_params:
         new_outer_params.update(prev_outer_params)
